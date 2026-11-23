@@ -11,6 +11,35 @@
 (function () {
   "use strict";
 
+  // Force page to ALWAYS start at top (scrollY = 0) on open, reload (F5), unload or navigation
+  if ("scrollRestoration" in history) {
+    history.scrollRestoration = "manual";
+  }
+  document.documentElement.classList.add("is-initial-loading");
+  window.scrollTo(0, 0);
+  document.documentElement.scrollTop = 0;
+  if (document.body) document.body.scrollTop = 0;
+
+  if (window.location.hash) {
+    history.replaceState(null, "", window.location.pathname + window.location.search);
+  }
+
+  const forceScrollToTop = () => {
+    window.scrollTo(0, 0);
+    document.documentElement.scrollTop = 0;
+    if (document.body) document.body.scrollTop = 0;
+  };
+
+  window.addEventListener("beforeunload", forceScrollToTop);
+  window.addEventListener("pagehide", forceScrollToTop);
+  window.addEventListener("pageshow", forceScrollToTop);
+  window.addEventListener("load", () => {
+    forceScrollToTop();
+    setTimeout(() => {
+      document.documentElement.classList.remove("is-initial-loading");
+    }, 450);
+  });
+
   const GL_ROOT = "assets/gl";
 
   const ASSETS = {
@@ -2289,6 +2318,7 @@
     if (loaderEl) {
       setTimeout(() => {
         loaderEl.classList.add("is-loaded");
+        forceScrollToTop();
       }, 280);
     }
 
@@ -2636,6 +2666,60 @@
     const easeInOutCubic = (x) => (x < 0.5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2);
     const easeOutCubic = (x) => 1 - Math.pow(1 - x, 3);
 
+    // Fullscreen Character Mode / Boxes Toggle Button inside #morphin-dock:
+    // Locks the scroll and keeps the character photo in clean full screen without framing borders or boxes
+    const heroOverlayLayout = document.getElementById("hero-overlay-layout");
+    const btnToggleBoxesVis = document.getElementById("btn-toggle-boxes-visibility");
+    let isHeroLocked = false;
+
+    if (btnToggleBoxesVis && heroOverlayLayout) {
+      btnToggleBoxesVis.addEventListener("click", () => {
+        isHeroLocked = !isHeroLocked;
+        heroOverlayLayout.classList.toggle("is-boxes-transparent", isHeroLocked);
+        document.body.classList.toggle("hero-scroll-locked", isHeroLocked);
+        document.documentElement.classList.toggle("hero-scroll-locked", isHeroLocked);
+
+        if (isHeroLocked) {
+          window.scrollTo({ top: 0, behavior: "smooth" });
+          btnToggleBoxesVis.textContent = "👁 Mostrar Boxes";
+          btnToggleBoxesVis.title = "Restaurar boxes e liberar o scroll da página";
+        } else {
+          btnToggleBoxesVis.textContent = "👁 Boxes";
+          btnToggleBoxesVis.title = "Tela cheia: ocultar boxes e prender o scroll";
+        }
+      });
+    }
+
+    // Block wheel, touch and keyboard page scroll while hero-scroll-locked is active
+    window.addEventListener(
+      "wheel",
+      (e) => {
+        if (isHeroLocked) {
+          e.preventDefault();
+        }
+      },
+      { passive: false }
+    );
+
+    window.addEventListener(
+      "touchmove",
+      (e) => {
+        if (isHeroLocked) {
+          e.preventDefault();
+        }
+      },
+      { passive: false }
+    );
+
+    window.addEventListener("keydown", (e) => {
+      if (
+        isHeroLocked &&
+        ["Space", "ArrowDown", "ArrowUp", "PageDown", "PageUp", "Home", "End"].includes(e.code)
+      ) {
+        e.preventDefault();
+      }
+    });
+
     // Live state for Slower, Smoother First-Scroll Box Entrance & Damped Scroll Inertia
     const menuCards = Array.from(document.querySelectorAll(".parallax-menu-card"));
     let rightBoxTriggered = false;
@@ -2652,21 +2736,26 @@
     let lastTickTime = performance.now();
 
     function applyTimelineAt(rawScrollY, scrollY, now, dtSec) {
+      if (isHeroLocked) {
+        rawScrollY = 0;
+        scrollY = 0;
+      }
+
       const vh = window.innerHeight || 800;
       const vw = window.innerWidth || 1280;
-      // .hero-scroll-track is 300vh tall and #habilidades (Menu 1) starts at docY = 215vh (margin-top: -85vh).
-      // So #habilidades enters the bottom of the screen (100vh) when scrollY = 115vh,
-      // and reaches the top (15vh) when scrollY = 200vh.
+      const isMobile = vw <= 768;
       const section2EnterScrollPx = vh * 1.15;
 
       // 0. Initial Scroll Cue: visible at scrollY = 0 when ONLY the character + name sign are on screen
       if (heroScrollCue) {
-        heroScrollCue.classList.toggle("is-cue-hidden", rawScrollY > 10);
+        heroScrollCue.classList.toggle("is-cue-hidden", rawScrollY > 10 || isHeroLocked);
       }
 
-      // 1. Trigger sequence on First Scroll (rawScrollY >= 10px), with slower, smoother entrance & typing:
-      //    - Right Box (#morphin-dock) + Header appear first
-      //    - After a calm pause (1250ms) or deeper scroll (scrollY >= 24vh), Left Box (#hero-intro-box) rises
+      // 1. Trigger sequence on First Scroll (rawScrollY >= 10px):
+      //    - On Mobile (isMobile): 1st scroll lifts the character UP (-12vh) and shows ONLY #morphin-dock below him!
+      //      Then scrolling further (scrollY >= 48vh) swaps #morphin-dock out and brings #hero-intro-box into the bottom dock!
+      //    - On Desktop (!isMobile): 1st scroll brings #morphin-dock on the right, and after 1.15s (or scrollY >= 24vh)
+      //      brings #hero-intro-box on the left.
       if (rawScrollY < 8) {
         rightBoxTriggered = false;
         leftBoxTriggered = false;
@@ -2682,7 +2771,13 @@
           rightBoxTriggered = true;
           firstScrollTimestamp = now;
         }
-        if (!leftBoxTriggered && (now - firstScrollTimestamp >= 1250 || scrollY >= vh * 0.24)) {
+        if (isMobile) {
+          leftBoxTriggered = scrollY >= vh * 0.48;
+          if (!leftBoxTriggered) {
+            leftEnterProgress = Math.max(0, leftEnterProgress - dtSec * 2.2);
+            leftAutoType = 0;
+          }
+        } else if (!leftBoxTriggered && (now - firstScrollTimestamp >= 1250 || scrollY >= vh * 0.24)) {
           leftBoxTriggered = true;
         }
       }
@@ -2703,7 +2798,9 @@
       }
 
       const pEnterR = Math.max(easeOutCubic(rightEnterProgress), easeOutCubic(rangeProgress(scrollY, 15, vh * 0.30)));
-      const pEnterL = Math.max(easeOutCubic(leftEnterProgress), easeOutCubic(rangeProgress(scrollY, vh * 0.20, vh * 0.48)));
+      const pEnterL = isMobile
+        ? Math.max(easeOutCubic(leftEnterProgress), easeOutCubic(rangeProgress(scrollY, vh * 0.48, vh * 0.76)))
+        : Math.max(easeOutCubic(leftEnterProgress), easeOutCubic(rangeProgress(scrollY, vh * 0.20, vh * 0.48)));
       const pEnterH = Math.max(easeOutCubic(hintEnterProgress), easeOutCubic(rangeProgress(scrollY, vh * 0.25, vh * 0.52)));
 
       // Header follows Right Box entrance on first scroll
@@ -2714,70 +2811,98 @@
       }
 
       // 2. Main Character Stage (#hero-frame-card):
-      //    - LOCKED ON SCREEN (pushUpPx = 0) for the entire first 115vh of scrolling!
-      //    - Slowly closes its ~2cm (76px) frame border at scrollY: 42vh -> 110vh while boxes stay outside
-      //    - When Menu 1 (#habilidades, z-index: 21) enters at scrollY > 115vh and rises OVER #hero-frame-card (z-index: 10),
-      //      #hero-frame-card recedes smoothly in true parallax (0.42x speed, scale 1.0 -> 0.935, brightness 1.0 -> 0.52)!
+      //    - In Fullscreen Mode (isHeroLocked): expands to 100% full screen with no border framing, no lift, no fade
+      //    - On Mobile: on the 1st scroll, lifts the character canvas UP (--char-lift-y: -12vh) so the color switcher
+      //      fits cleanly BELOW the character without covering his face!
+      //    - Closes its frame border at scrollY: 42vh -> 110vh
+      //    - Recedes smoothly in parallax as Menu 1 (#habilidades) rises over it
       if (heroFrameCard && heroViewport) {
-        const pFrame = easeInOutCubic(rangeProgress(scrollY, vh * 0.42, vh * 1.10));
-        const pHeroCovered = easeInOutCubic(rangeProgress(scrollY, section2EnterScrollPx, vh * 2.10));
-        const maxFramePx = vw > 1100 ? 76 : vw > 680 ? 28 : 14;
-        const padPx = (pFrame * maxFramePx).toFixed(1);
-        const radius = Math.round(pFrame * (vw > 680 ? 26 : 20));
-        const borderW = (pFrame * 4).toFixed(1);
+        if (isHeroLocked) {
+          heroViewport.style.padding = "0px";
+          heroViewport.style.visibility = "visible";
+          heroFrameCard.style.borderRadius = "0px";
+          heroFrameCard.style.borderWidth = "0px";
+          heroFrameCard.style.transform = "none";
+          heroFrameCard.style.filter = "brightness(1)";
+          heroFrameCard.style.pointerEvents = "auto";
+          heroFrameCard.style.setProperty("--char-lift-y", "0px");
+        } else {
+          const pFrame = easeInOutCubic(rangeProgress(scrollY, vh * 0.42, vh * 1.10));
+          const pHeroCovered = easeInOutCubic(rangeProgress(scrollY, section2EnterScrollPx, vh * 2.10));
+          const maxFramePx = vw > 1100 ? 76 : vw > 680 ? 28 : 14;
+          const padPx = (pFrame * maxFramePx).toFixed(1);
+          const radius = Math.round(pFrame * (vw > 680 ? 26 : 20));
+          const borderW = (pFrame * 4).toFixed(1);
 
-        const parallaxLiftPx = -Math.max(0, scrollY - section2EnterScrollPx) * 0.42;
-        const heroScale = 1 - pHeroCovered * 0.065;
-        const heroBright = 1 - pHeroCovered * 0.48;
+          const mobileCharLiftPx = isMobile ? -pEnterR * (vh * 0.12) : 0;
+          heroFrameCard.style.setProperty("--char-lift-y", `${mobileCharLiftPx.toFixed(1)}px`);
 
-        heroViewport.style.padding = `${padPx}px`;
-        heroViewport.style.visibility = scrollY > vh * 2.35 ? "hidden" : "visible";
-        heroFrameCard.style.borderRadius = `${radius}px`;
-        heroFrameCard.style.borderWidth = `${borderW}px`;
-        heroFrameCard.style.transform = `translate3d(0, ${parallaxLiftPx.toFixed(1)}px, 0) scale(${heroScale.toFixed(4)})`;
-        heroFrameCard.style.filter = `brightness(${heroBright.toFixed(3)})`;
-        heroFrameCard.style.pointerEvents = scrollY > vh * 1.55 ? "none" : "auto";
+          const parallaxLiftPx = -Math.max(0, scrollY - section2EnterScrollPx) * 0.42;
+          const heroScale = 1 - pHeroCovered * 0.065;
+          const heroBright = 1 - pHeroCovered * 0.48;
+
+          heroViewport.style.padding = `${padPx}px`;
+          heroViewport.style.visibility = scrollY > vh * 2.35 ? "hidden" : "visible";
+          heroFrameCard.style.borderRadius = `${radius}px`;
+          heroFrameCard.style.borderWidth = `${borderW}px`;
+          heroFrameCard.style.transform = `translate3d(0, ${parallaxLiftPx.toFixed(1)}px, 0) scale(${heroScale.toFixed(4)})`;
+          heroFrameCard.style.filter = `brightness(${heroBright.toFixed(3)})`;
+          heroFrameCard.style.pointerEvents = scrollY > vh * 1.55 ? "none" : "auto";
+        }
       }
 
       // 3. Right Box (#morphin-dock):
-      //    - Once entered, STAYS IN THE EXACT SAME PLACE ON SCREEN (--scroll-y: 0px) while the frame closes!
-      //    - Then rises UP slowly first (one box at a time) at scrollY: 112vh -> 178vh
+      //    - In Fullscreen Mode (isHeroLocked): dock container stays visible so the ghost button can be clicked to exit
+      //    - On Mobile: appears below the lifted character on 1st scroll, then rises/fades out at 46vh -> 78vh as Left Box enters
+      //    - On Desktop: stays in place while the frame closes, then rises UP at 112vh -> 178vh
       if (morphinDock) {
-        const pExitR = easeInOutCubic(rangeProgress(scrollY, vh * 1.12, vh * 1.78));
-        const enterOffsetPx = (1 - pEnterR) * 80;
-        const exitOffsetPx = -pExitR * (vh * 1.05);
-        const totalRightY = enterOffsetPx + exitOffsetPx;
-        const rightOpacity = pEnterR * (1 - rangeProgress(scrollY, vh * 1.62, vh * 1.80));
+        if (isHeroLocked) {
+          morphinDock.classList.remove("is-entrance-hidden");
+          morphinDock.style.setProperty("--scroll-y", "0px");
+          morphinDock.style.setProperty("--box-opacity", "1");
+        } else {
+          const exitStartR = isMobile ? vh * 0.46 : vh * 1.12;
+          const exitEndR = isMobile ? vh * 0.80 : vh * 1.78;
+          const fadeStartR = isMobile ? vh * 0.56 : vh * 1.62;
+          const pExitR = easeInOutCubic(rangeProgress(scrollY, exitStartR, exitEndR));
+          const enterOffsetPx = (1 - pEnterR) * 80;
+          const exitOffsetPx = -pExitR * (isMobile ? vh * 0.45 : vh * 1.05);
+          const totalRightY = enterOffsetPx + exitOffsetPx;
+          const rightOpacity = pEnterR * (1 - rangeProgress(scrollY, fadeStartR, exitEndR));
 
-        morphinDock.classList.toggle("is-entrance-hidden", rightOpacity < 0.02);
-        morphinDock.style.setProperty("--scroll-y", `${totalRightY.toFixed(1)}px`);
-        morphinDock.style.setProperty("--box-opacity", rightOpacity.toFixed(3));
+          morphinDock.classList.toggle("is-entrance-hidden", rightOpacity < 0.02);
+          morphinDock.style.setProperty("--scroll-y", `${totalRightY.toFixed(1)}px`);
+          morphinDock.style.setProperty("--box-opacity", rightOpacity.toFixed(3));
 
-        const scrollTypeR = rangeProgress(scrollY, 25, vh * 0.38);
-        rightBoxTyper.setProgress(rawScrollY < 8 ? 0 : Math.max(rightAutoType, scrollTypeR));
+          const scrollTypeR = rangeProgress(scrollY, 25, vh * 0.38);
+          rightBoxTyper.setProgress(rawScrollY < 8 ? 0 : Math.max(rightAutoType, scrollTypeR));
+        }
       }
 
       // 4. Left Box (#hero-intro-box):
-      //    - Once entered, STAYS IN THE EXACT SAME PLACE ON SCREEN (--scroll-y: 0px) while the frame closes
-      //      AND while the Right Box starts rising!
-      //    - Then rises UP slowly second at scrollY: 148vh -> 215vh while Menu 1 rises in parallax!
       if (heroIntroBox) {
-        const pExitL = easeInOutCubic(rangeProgress(scrollY, vh * 1.48, vh * 2.15));
+        const exitStartL = isMobile ? vh * 0.86 : vh * 1.48;
+        const exitEndL = isMobile ? vh * 1.25 : vh * 2.15;
+        const fadeStartL = isMobile ? vh * 0.98 : vh * 1.98;
+        const pExitL = easeInOutCubic(rangeProgress(scrollY, exitStartL, exitEndL));
         const enterOffsetPx = (1 - pEnterL) * 80;
-        const exitOffsetPx = -pExitL * (vh * 1.05);
+        const exitOffsetPx = -pExitL * (isMobile ? vh * 0.45 : vh * 1.05);
         const totalLeftY = enterOffsetPx + exitOffsetPx;
-        const leftOpacity = pEnterL * (1 - rangeProgress(scrollY, vh * 1.98, vh * 2.16));
+        const leftOpacity = pEnterL * (1 - rangeProgress(scrollY, fadeStartL, exitEndL));
 
         heroIntroBox.classList.toggle("is-entrance-hidden", leftOpacity < 0.02);
         heroIntroBox.style.setProperty("--scroll-y", `${totalLeftY.toFixed(1)}px`);
         heroIntroBox.style.setProperty("--box-opacity", leftOpacity.toFixed(3));
 
-        const scrollTypeL = rangeProgress(scrollY, vh * 0.22, vh * 0.56);
+        const scrollTypeL = rangeProgress(
+          scrollY,
+          isMobile ? vh * 0.48 : vh * 0.22,
+          isMobile ? vh * 0.74 : vh * 0.56
+        );
         leftBoxTyper.setProgress(rawScrollY < 8 ? 0 : Math.max(leftAutoType, scrollTypeL));
       }
 
       // 5. Center Hint (#hero-center-hint):
-      //    - Stays in the exact same place on screen while the frame closes, then rises at scrollY: 105vh -> 158vh
       if (heroCenterHint) {
         const pExitH = easeInOutCubic(rangeProgress(scrollY, vh * 1.05, vh * 1.58));
         const hintY = (1 - pEnterH) * 35 - pExitH * (vh * 0.95);
@@ -2792,60 +2917,37 @@
       }
 
       // 6. Stacked Menu Sections Parallax (#habilidades -> #exemplos -> #processo -> #contato):
-      //    - Section 2 (#habilidades) slides in FROM THE RIGHT completely EMPTY while #hero-intro-box exits on the left,
-      //      locks in place below .site-header, and writes out its title + 4 skill cards as you scroll!
-      //    - Then each subsequent menu card rises over the previous menu card in true parallax.
-      const pinTopPx = 82;
-      const pinRunwayPx = vh * 1.25;
-      let s2ExtraHeight = 0;
-      let s2PinY = 0;
-      let s2SlideX = 0;
+      //    - Pure untransformed coordinates for 60fps smooth flow with zero layout thrashing
+      //    - Section 2 (#habilidades) slides in FROM THE RIGHT (+48vw -> 0px) and its cards write on scroll
+      //    - Section 3 (#exemplos, idx 1) connects cleanly BELOW Section 2's card box (does NOT cover Section 2)
+      const untransformedTops = menuCards.map((card) => {
+        const r = card.getBoundingClientRect();
+        return r.top - (card.__lastAppliedY || 0);
+      });
 
-      if (section2Track && section2Card) {
-        const s2Height = section2Card.offsetHeight || vh * 0.8;
-        const availH = Math.max(320, vh - 104);
-        s2ExtraHeight = Math.max(0, s2Height - availH);
-        const maxPinTranslate = Math.max(0, pinRunwayPx - s2ExtraHeight);
-        section2Track.style.paddingBottom = `${maxPinTranslate.toFixed(1)}px`;
-
-        const trackRect = section2Track.getBoundingClientRect();
-
-        // Slide in from the right (+68vw -> 0px) as #habilidades enters from the bottom (trackRect.top: 98vh -> 82px)
-        const pSlideIn = easeOutCubic(rangeProgress(vh - trackRect.top, vh * 0.04, vh - pinTopPx));
-        s2SlideX = (1 - pSlideIn) * (vw * 0.68);
-
-        // Pin #habilidades at top = 82px across pinRunwayPx while its content writes out on scroll
-        const scrolledPastPin = Math.min(Math.max(pinTopPx - trackRect.top, 0), pinRunwayPx);
-        const pPin = clamp01(scrolledPastPin / Math.max(pinRunwayPx, 1));
-        const panUpPx = easeInOutCubic(rangeProgress(pPin, 0.34, 0.94)) * s2ExtraHeight;
-        s2PinY = scrolledPastPin - panUpPx;
-
-        // Keep #habilidades 100% EMPTY while sliding in from the right; start writing only once it settles into frame
-        const pWrite = clamp01((pinTopPx + vh * 0.08 - trackRect.top) / Math.max(pinRunwayPx + vh * 0.08, 1));
-        section2Typer.setProgress(pSlideIn < 0.82 ? 0 : pWrite);
-      }
-
-      const cardRects = menuCards.map((card) => card.getBoundingClientRect());
       menuCards.forEach((card, idx) => {
-        const rect = cardRects[idx];
-        const nextRect = idx + 1 < cardRects.length ? cardRects[idx + 1] : null;
+        const uTop = untransformedTops[idx];
+        const nextUTop = idx + 1 < untransformedTops.length ? untransformedTops[idx + 1] : null;
 
-        // Inner content parallax drift as the card enters from the bottom
-        const enterP = easeOutCubic(rangeProgress(vh - rect.top, 0, vh * 0.85));
-        const innerY = idx === 0 ? 0 : (1 - enterP) * 34;
+        // Slide in from the right (+48vw -> 0px) as the card enters from the bottom
+        const pSlideIn = easeOutCubic(rangeProgress(vh - uTop, vh * 0.02, vh * 0.62));
+        const slideXPx = (1 - pSlideIn) * (vw * 0.48);
 
-        // Receding parallax when the next menu card rises over this card
+        const enterP = easeOutCubic(rangeProgress(vh - uTop, 0, vh * 0.82));
+        const innerY = (1 - enterP) * 24;
+
         let coverP = 0;
-        if (nextRect) {
-          coverP = easeInOutCubic(rangeProgress(vh - nextRect.top, vh * 0.04, vh * 0.88));
+        // Section 3 (#exemplos, idx === 1) connects cleanly BELOW Section 2 (#habilidades, idx === 0)!
+        // Therefore Section 2 does NOT get covered or dimmed by Section 3!
+        if (nextUTop !== null && idx !== 0) {
+          coverP = easeInOutCubic(rangeProgress(vh - nextUTop, vh * 0.04, vh * 0.88));
         }
 
-        const basePinY = idx === 0 ? s2PinY : 0;
-        const slideXPx = idx === 0 ? s2SlideX : 0;
-        const cardParallaxY = basePinY + coverP * (vh * 0.22);
-        const cardScale = 1 - coverP * 0.048;
-        const cardBrightness = 1 - coverP * 0.42;
+        const cardParallaxY = coverP * (vh * 0.16);
+        const cardScale = 1 - coverP * 0.04;
+        const cardBrightness = 1 - coverP * 0.36;
 
+        card.__lastAppliedY = cardParallaxY;
         card.style.setProperty("--inner-parallax-y", `${innerY.toFixed(1)}px`);
         card.style.setProperty("--card-slide-x", `${slideXPx.toFixed(1)}px`);
         card.style.setProperty("--card-parallax-y", `${cardParallaxY.toFixed(1)}px`);
@@ -2853,10 +2955,16 @@
         card.style.setProperty("--card-brightness", cardBrightness.toFixed(3));
       });
 
+      // Drive typewriter on Section 2 (#habilidades) as it settles into view
+      const s2UTop = untransformedTops[0] !== undefined ? untransformedTops[0] : vh;
+      const s2WriteP = clamp01((vh * 0.88 - s2UTop) / (vh * 0.65));
+      section2Typer.setProgress(s2WriteP);
+
       // Drive scroll-based typewriter on the headers/steps of Menu 2, Menu 3, Menu 4 as they enter
-      extraSectionTypers.forEach(({ secEl, typer }) => {
-        const r = secEl.getBoundingClientRect();
-        const pSecWrite = clamp01((vh * 0.78 - r.top) / (vh * 0.58));
+      extraSectionTypers.forEach(({ secEl, typer }, tIdx) => {
+        const cardIdx = tIdx + 1;
+        const uTop = untransformedTops[cardIdx] !== undefined ? untransformedTops[cardIdx] : vh;
+        const pSecWrite = clamp01((vh * 0.85 - uTop) / (vh * 0.58));
         typer.setProgress(pSecWrite);
       });
 

@@ -39,6 +39,58 @@ html {
   scroll-behavior: smooth;
 }
 
+html.is-initial-loading {
+  scroll-behavior: auto !important;
+}
+
+/* Locked Fullscreen Character Mode: locks scroll and expands hero stage */
+html.hero-scroll-locked,
+body.hero-scroll-locked {
+  overflow: hidden !important;
+  height: 100vh !important;
+  max-height: 100vh !important;
+  touch-action: none !important;
+  overscroll-behavior: none !important;
+}
+
+body.hero-scroll-locked .hero-sticky-viewport {
+  padding: 0 !important;
+}
+
+body.hero-scroll-locked .hero-frame-card {
+  border-radius: 0 !important;
+  border-width: 0 !important;
+  border-color: transparent !important;
+  box-shadow: none !important;
+  transform: none !important;
+  filter: brightness(1) !important;
+  --char-lift-y: 0px !important;
+}
+
+body.hero-scroll-locked .gl-canvas,
+body.hero-scroll-locked .gl-wrap {
+  transform: none !important;
+}
+
+body.hero-scroll-locked .hero-scroll-cue {
+  opacity: 0 !important;
+  pointer-events: none !important;
+}
+
+body.hero-scroll-locked .parallax-sections-stack {
+  opacity: 0 !important;
+  pointer-events: none !important;
+}
+
+body.hero-scroll-locked .site-header {
+  opacity: 0.25 !important;
+  transition: opacity 0.3s ease;
+}
+
+body.hero-scroll-locked .site-header:hover {
+  opacity: 1 !important;
+}
+
 html,
 body {
   margin: 0;
@@ -696,10 +748,12 @@ canvas.gl {
 
 .morphin-dock-actions {
   display: flex;
+  gap: 0.45rem;
+  width: 100%;
 }
 
 .morphin-lock-btn {
-  width: 100%;
+  flex: 1 1 auto;
   appearance: none;
   border: 1px solid rgba(255, 255, 255, 0.75);
   background: rgba(255, 255, 255, 0.42);
@@ -713,6 +767,7 @@ canvas.gl {
   cursor: pointer;
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.85);
   transition: all 0.2s ease;
+  white-space: nowrap;
 }
 
 .morphin-lock-btn:hover,
@@ -720,6 +775,74 @@ canvas.gl {
   background: rgba(20, 23, 16, 0.88);
   color: var(--accent);
   border-color: rgba(20, 23, 16, 0.88);
+}
+
+.morphin-ghost-btn {
+  flex: 1 1 auto;
+  appearance: none;
+  border: 1px solid rgba(255, 255, 255, 0.75);
+  background: rgba(255, 255, 255, 0.42);
+  color: var(--ink-dark);
+  font-family: var(--font-display);
+  font-size: 0.95rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  padding: 0.48rem 0.9rem;
+  border-radius: 999px;
+  cursor: pointer;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.85);
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.morphin-ghost-btn:hover {
+  background: rgba(20, 23, 16, 0.88);
+  color: var(--accent);
+  border-color: rgba(20, 23, 16, 0.88);
+}
+
+/* Boxes Transparent State when ghost button / fullscreen character is toggled */
+.hero-overlay-layout.is-boxes-transparent .hero-intro-box,
+.hero-overlay-layout.is-boxes-transparent .hero-center-hint {
+  opacity: 0 !important;
+  pointer-events: none !important;
+  transform: scale(0.96) !important;
+  transition: opacity 0.35s ease, transform 0.35s ease;
+}
+
+.hero-overlay-layout.is-boxes-transparent .morphin-dock {
+  background: transparent !important;
+  border-color: transparent !important;
+  box-shadow: none !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  pointer-events: none !important;
+  opacity: 1 !important;
+}
+
+.hero-overlay-layout.is-boxes-transparent .morphin-dock-top,
+.hero-overlay-layout.is-boxes-transparent .morphin-balls,
+.hero-overlay-layout.is-boxes-transparent .morphin-lock-btn {
+  opacity: 0 !important;
+  pointer-events: none !important;
+  transition: opacity 0.25s ease;
+}
+
+.hero-overlay-layout.is-boxes-transparent .morphin-ghost-btn {
+  opacity: 0.72 !important;
+  pointer-events: auto !important;
+  background: rgba(20, 23, 16, 0.88) !important;
+  color: #ffffff !important;
+  border-color: rgba(255, 255, 255, 0.45) !important;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35) !important;
+  cursor: pointer !important;
+  transform: scale(1.04);
+}
+
+.hero-overlay-layout.is-boxes-transparent .morphin-ghost-btn:hover {
+  opacity: 0.98 !important;
+  background: rgba(20, 23, 16, 0.98) !important;
+  transform: scale(1.08);
 }
 
 /* =========================================================================
@@ -759,7 +882,12 @@ canvas.gl {
   transition: border-color 0.45s ease;
 }
 
-.section2-scroll-track + .parallax-menu-card,
+/* Section 3 (#exemplos) connects cleanly BELOW the Section 2 (#habilidades) card box */
+.section2-scroll-track + #exemplos.parallax-menu-card {
+  margin-top: 3.5rem;
+}
+
+#exemplos.parallax-menu-card + .parallax-menu-card,
 .parallax-menu-card + .parallax-menu-card {
   margin-top: -11vh;
 }
@@ -1637,56 +1765,64 @@ canvas.gl {
   }
 }
 
-@media (max-width: 680px) {
+@media (max-width: 768px) {
   .brand-name {
-    font-size: 1.15rem;
+    font-size: 1.18rem;
   }
 
+  .cta-pill,
   .header-cta {
-    padding: 0.38rem 0.72rem;
+    padding: 0.32rem 0.68rem;
     font-size: 0.76rem;
   }
 
   .hero-scroll-track {
-    height: 300vh;
+    height: 290vh;
   }
 
+  /* On mobile, position both Hero boxes in the bottom dock slot below the lifted character so they never stack over his face */
   .hero-overlay-layout {
-    display: flex;
-    flex-direction: column;
-    justify-content: flex-end;
-    align-items: stretch;
-    gap: 0.55rem;
-    padding: 5.8rem 0.75rem 0.75rem;
+    display: grid;
+    grid-template-columns: 1fr;
+    grid-template-rows: 1fr;
+    align-items: end;
+    padding: 5.5rem 0.75rem 0.85rem;
   }
 
-  /* Put Morphin selector compactly above Intro Box on mobile so user can swap Ranger immediately */
-  .morphin-dock {
-    order: 1;
+  .morphin-dock,
+  .hero-intro-box {
+    grid-column: 1;
+    grid-row: 1;
+    align-self: end;
+    width: 100%;
     max-width: 100%;
-    padding: 0.72rem 0.85rem;
-    border-radius: 1.05rem;
-    gap: 0.48rem;
+    margin-bottom: 0;
+  }
+
+  .morphin-dock {
+    padding: 0.75rem 0.88rem;
+    border-radius: 1.1rem;
+    gap: 0.5rem;
   }
 
   .morphin-balls {
-    gap: 0.38rem;
+    gap: 0.35rem;
   }
 
   .morphin-ball {
-    width: 1.85rem;
-    height: 1.85rem;
+    width: 1.9rem;
+    height: 1.9rem;
   }
 
-  .morphin-lock-btn {
-    padding: 0.36rem 0.6rem;
-    font-size: 0.74rem;
+  .morphin-lock-btn,
+  .morphin-ghost-btn {
+    padding: 0.38rem 0.62rem;
+    font-size: 0.78rem;
   }
 
   .hero-intro-box {
-    order: 2;
-    padding: 0.85rem 0.95rem;
-    border-radius: 1.05rem;
+    padding: 0.88rem 0.98rem;
+    border-radius: 1.1rem;
   }
 
   .status-pill {
@@ -1719,6 +1855,14 @@ canvas.gl {
     justify-content: center;
     padding: 0.52rem 0.72rem;
     font-size: 0.82rem;
+  }
+
+  .parallax-sections-stack {
+    margin-top: -65vh;
+  }
+
+  .section2-scroll-track + #exemplos.parallax-menu-card {
+    margin-top: 1.75rem;
   }
 
   .parallax-menu-card {
