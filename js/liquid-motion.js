@@ -1703,6 +1703,8 @@
       ];
 
       const planeGeo = new THREE.PlaneGeometry(0.19, 0.23);
+      const totalDepth = 0.068;
+      const sliceCount = 28;
 
       rows.forEach((row) => {
         const chars = row.text.split("");
@@ -1713,33 +1715,60 @@
           const posX = startX + i * row.spacing;
           const posY = row.y;
 
+          const TextureCtor = (this.assets && this.assets.textures && this.assets.textures.head && this.assets.textures.head.diffuse)
+            ? this.assets.textures.head.diffuse.constructor
+            : (window.THREE.Texture || window.THREE.CanvasTexture);
+
+          // 1. Front & Back Face Texture (Middle fill + border)
           const canvas = document.createElement("canvas");
           canvas.width = 256;
           canvas.height = 256;
           const ctx = canvas.getContext("2d");
-          const TextureCtor = (this.assets && this.assets.textures && this.assets.textures.head && this.assets.textures.head.diffuse)
-            ? this.assets.textures.head.diffuse.constructor
-            : (window.THREE.Texture || window.THREE.CanvasTexture);
           const tex = new TextureCtor(canvas);
           tex.minFilter = THREE.LinearFilter;
           tex.magFilter = THREE.LinearFilter;
           tex.needsUpdate = true;
 
-          const frontMat = new THREE.MeshBasicMaterial({
+          // 2. Solid 3D Extrusion Wall Texture (Depth volume between front and back faces)
+          const sideCanvas = document.createElement("canvas");
+          sideCanvas.width = 256;
+          sideCanvas.height = 256;
+          const sideCtx = sideCanvas.getContext("2d");
+          const sideTex = new TextureCtor(sideCanvas);
+          sideTex.minFilter = THREE.LinearFilter;
+          sideTex.magFilter = THREE.LinearFilter;
+          sideTex.needsUpdate = true;
+
+          const faceMat = new THREE.MeshBasicMaterial({
             map: tex,
             transparent: true,
+            alphaTest: 0.35,
+            depthWrite: true,
+            depthTest: true,
             side: THREE.DoubleSide,
           });
 
-          // 3D double-sided letter block with depth
+          const sideMat = new THREE.MeshBasicMaterial({
+            map: sideTex,
+            transparent: true,
+            alphaTest: 0.35,
+            depthWrite: true,
+            depthTest: true,
+            side: THREE.DoubleSide,
+          });
+
+          // True Solid 3D Extruded Letter Block:
+          // 28 closely-packed Z-slices with identical X/Y orientation (NO mirrored Math.PI flip!)
+          // and hardware Z-buffer alphaTest occlusion so side walls form a continuous 3D volume.
           const letterMesh = new THREE.Group();
-          const frontMesh = new THREE.Mesh(planeGeo, frontMat);
-          frontMesh.position.z = 0.012;
-          const backMesh = new THREE.Mesh(planeGeo, frontMat);
-          backMesh.position.z = -0.012;
-          backMesh.rotation.y = Math.PI;
-          letterMesh.add(frontMesh);
-          letterMesh.add(backMesh);
+          for (let s = 0; s < sliceCount; s++) {
+            const t = s / (sliceCount - 1); // 0 (back) -> 1 (front)
+            const zPos = (t - 0.5) * totalDepth;
+            const isCap = s === 0 || s === sliceCount - 1;
+            const sliceMesh = new THREE.Mesh(planeGeo, isCap ? faceMat : sideMat);
+            sliceMesh.position.z = zPos;
+            letterMesh.add(sliceMesh);
+          }
 
           letterMesh.position.set(posX, posY, 0);
           this.lettersGroup.add(letterMesh);
@@ -1749,6 +1778,9 @@
             canvas,
             ctx,
             tex,
+            sideCanvas,
+            sideCtx,
+            sideTex,
             mesh: letterMesh,
             baseX: posX,
             baseY: posY,
@@ -1768,6 +1800,7 @@
       const strokeHex = profile.letterStroke || profile.frameHex || profile.accentHex || "#11130E";
 
       this.letterItems.forEach((item) => {
+        // 1. Draw Front/Back Face (e.g. White center + Black border on Black Ranger)
         const ctx = item.ctx;
         ctx.clearRect(0, 0, 256, 256);
         ctx.save();
@@ -1775,21 +1808,47 @@
         ctx.textBaseline = "middle";
         ctx.lineJoin = "round";
         ctx.miterLimit = 2;
-
-        // Pure Times New Roman, bold, elegant
         ctx.font = 'bold 172px "Times New Roman", Georgia, serif';
 
-        // Outer border stroke first (Black border on Black Ranger)
         ctx.lineWidth = 14;
         ctx.strokeStyle = strokeHex;
         ctx.strokeText(item.char, 128, 128);
 
-        // Middle fill on top (White middle on Black Ranger)
         ctx.fillStyle = fillHex;
         ctx.fillText(item.char, 128, 128);
-
         ctx.restore();
         item.tex.needsUpdate = true;
+
+        // 2. Draw Solid 3D Extruded Side Wall Volume
+        if (item.sideCtx && item.sideTex) {
+          const sCtx = item.sideCtx;
+          sCtx.clearRect(0, 0, 256, 256);
+          sCtx.save();
+          sCtx.textAlign = "center";
+          sCtx.textBaseline = "middle";
+          sCtx.lineJoin = "round";
+          sCtx.miterLimit = 2;
+          sCtx.font = 'bold 172px "Times New Roman", Georgia, serif';
+
+          const grad = sCtx.createLinearGradient(0, 28, 0, 228);
+          if (rangerKey === "black") {
+            grad.addColorStop(0, "#2C3226");
+            grad.addColorStop(0.5, "#11130E");
+            grad.addColorStop(1, "#080906");
+          } else {
+            grad.addColorStop(0, strokeHex);
+            grad.addColorStop(0.35, "#181B14");
+            grad.addColorStop(1, "#0B0D09");
+          }
+
+          sCtx.lineWidth = 16;
+          sCtx.strokeStyle = grad;
+          sCtx.strokeText(item.char, 128, 128);
+          sCtx.fillStyle = grad;
+          sCtx.fillText(item.char, 128, 128);
+          sCtx.restore();
+          item.sideTex.needsUpdate = true;
+        }
       });
     }
 
