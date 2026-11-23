@@ -1544,10 +1544,17 @@
         normalized: mouse.createEasedNormalized(0.025),
       };
 
+      const TextureCtor = (assets && assets.textures && assets.textures.head && assets.textures.head.diffuse)
+        ? assets.textures.head.diffuse.constructor
+        : null;
+      if (TextureCtor) {
+        window.THREE.Texture = TextureCtor;
+        window.THREE.CanvasTexture = TextureCtor;
+      }
+
       this.titleCanvas = document.createElement("canvas");
       this.titleCanvas.width = 2048;
       this.titleCanvas.height = 1024;
-      const TextureCtor = assets.textures.head.diffuse.constructor;
       this.titleTexture = new TextureCtor(this.titleCanvas);
       this.titleTexture.minFilter = THREE.LinearFilter;
       this.titleTexture.magFilter = THREE.LinearFilter;
@@ -1653,15 +1660,17 @@
           canvas.width = 256;
           canvas.height = 256;
           const ctx = canvas.getContext("2d");
-          const tex = new THREE.CanvasTexture(canvas);
+          const TextureCtor = (this.assets && this.assets.textures && this.assets.textures.head && this.assets.textures.head.diffuse)
+            ? this.assets.textures.head.diffuse.constructor
+            : (window.THREE.Texture || window.THREE.CanvasTexture);
+          const tex = new TextureCtor(canvas);
           tex.minFilter = THREE.LinearFilter;
           tex.magFilter = THREE.LinearFilter;
+          tex.needsUpdate = true;
 
-          const frontMat = new THREE.MeshStandardMaterial({
+          const frontMat = new THREE.MeshBasicMaterial({
             map: tex,
             transparent: true,
-            roughness: 0.25,
-            metalness: 0.35,
             side: THREE.DoubleSide,
           });
 
