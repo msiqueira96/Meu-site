@@ -41,6 +41,58 @@ html {
   scroll-behavior: smooth;
 }
 
+html.is-initial-loading {
+  scroll-behavior: auto !important;
+}
+
+/* Locked Fullscreen Character Mode: locks scroll and expands hero stage */
+html.hero-scroll-locked,
+body.hero-scroll-locked {
+  overflow: hidden !important;
+  height: 100vh !important;
+  max-height: 100vh !important;
+  touch-action: none !important;
+  overscroll-behavior: none !important;
+}
+
+body.hero-scroll-locked .hero-sticky-viewport {
+  padding: 0 !important;
+}
+
+body.hero-scroll-locked .hero-frame-card {
+  border-radius: 0 !important;
+  border-width: 0 !important;
+  border-color: transparent !important;
+  box-shadow: none !important;
+  transform: none !important;
+  filter: brightness(1) !important;
+  --char-lift-y: 0px !important;
+}
+
+body.hero-scroll-locked .gl-canvas,
+body.hero-scroll-locked .gl-wrap {
+  transform: none !important;
+}
+
+body.hero-scroll-locked .hero-scroll-cue {
+  opacity: 0 !important;
+  pointer-events: none !important;
+}
+
+body.hero-scroll-locked .parallax-sections-stack {
+  opacity: 0 !important;
+  pointer-events: none !important;
+}
+
+body.hero-scroll-locked .site-header {
+  opacity: 0.25 !important;
+  transition: opacity 0.3s ease;
+}
+
+body.hero-scroll-locked .site-header:hover {
+  opacity: 1 !important;
+}
+
 html,
 body {
   margin: 0;
@@ -768,6 +820,7 @@ canvas.gl {
   backdrop-filter: none !important;
   -webkit-backdrop-filter: none !important;
   pointer-events: none !important;
+  opacity: 1 !important;
 }
 
 .hero-overlay-layout.is-boxes-transparent .morphin-dock-top,
@@ -778,16 +831,20 @@ canvas.gl {
 }
 
 .hero-overlay-layout.is-boxes-transparent .morphin-ghost-btn {
-  opacity: 0.48 !important;
+  opacity: 0.72 !important;
   pointer-events: auto !important;
-  background: rgba(20, 23, 16, 0.82) !important;
+  background: rgba(20, 23, 16, 0.88) !important;
   color: #ffffff !important;
   border-color: rgba(255, 255, 255, 0.45) !important;
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.28) !important;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35) !important;
+  cursor: pointer !important;
+  transform: scale(1.04);
 }
 
 .hero-overlay-layout.is-boxes-transparent .morphin-ghost-btn:hover {
-  opacity: 0.88 !important;
+  opacity: 0.98 !important;
+  background: rgba(20, 23, 16, 0.98) !important;
+  transform: scale(1.08);
 }
 
 /* =========================================================================

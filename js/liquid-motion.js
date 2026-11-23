@@ -11,6 +11,35 @@
 (function () {
   "use strict";
 
+  // Force page to ALWAYS start at top (scrollY = 0) on open, reload (F5), unload or navigation
+  if ("scrollRestoration" in history) {
+    history.scrollRestoration = "manual";
+  }
+  document.documentElement.classList.add("is-initial-loading");
+  window.scrollTo(0, 0);
+  document.documentElement.scrollTop = 0;
+  if (document.body) document.body.scrollTop = 0;
+
+  if (window.location.hash) {
+    history.replaceState(null, "", window.location.pathname + window.location.search);
+  }
+
+  const forceScrollToTop = () => {
+    window.scrollTo(0, 0);
+    document.documentElement.scrollTop = 0;
+    if (document.body) document.body.scrollTop = 0;
+  };
+
+  window.addEventListener("beforeunload", forceScrollToTop);
+  window.addEventListener("pagehide", forceScrollToTop);
+  window.addEventListener("pageshow", forceScrollToTop);
+  window.addEventListener("load", () => {
+    forceScrollToTop();
+    setTimeout(() => {
+      document.documentElement.classList.remove("is-initial-loading");
+    }, 450);
+  });
+
   const GL_ROOT = "assets/gl";
 
   const ASSETS = {
@@ -2137,6 +2166,7 @@
     if (loaderEl) {
       setTimeout(() => {
         loaderEl.classList.add("is-loaded");
+        forceScrollToTop();
       }, 280);
     }
 
@@ -2446,16 +2476,59 @@
     );
     hintTyper.setProgress(0);
 
-    // Transparency Toggle Button inside #morphin-dock:
-    // Makes Hero boxes transparent while keeping the toggle button itself visible and semi-opaque
+    // Fullscreen Character Mode / Boxes Toggle Button inside #morphin-dock:
+    // Locks the scroll and keeps the character photo in clean full screen without framing borders or boxes
     const heroOverlayLayout = document.getElementById("hero-overlay-layout");
     const btnToggleBoxesVis = document.getElementById("btn-toggle-boxes-visibility");
+    let isHeroLocked = false;
+
     if (btnToggleBoxesVis && heroOverlayLayout) {
       btnToggleBoxesVis.addEventListener("click", () => {
-        const isTransparent = heroOverlayLayout.classList.toggle("is-boxes-transparent");
-        btnToggleBoxesVis.textContent = isTransparent ? "👁 Mostrar" : "👁 Boxes";
+        isHeroLocked = !isHeroLocked;
+        heroOverlayLayout.classList.toggle("is-boxes-transparent", isHeroLocked);
+        document.body.classList.toggle("hero-scroll-locked", isHeroLocked);
+        document.documentElement.classList.toggle("hero-scroll-locked", isHeroLocked);
+
+        if (isHeroLocked) {
+          window.scrollTo({ top: 0, behavior: "smooth" });
+          btnToggleBoxesVis.textContent = "👁 Mostrar Boxes";
+          btnToggleBoxesVis.title = "Restaurar boxes e liberar o scroll da página";
+        } else {
+          btnToggleBoxesVis.textContent = "👁 Boxes";
+          btnToggleBoxesVis.title = "Tela cheia: ocultar boxes e prender o scroll";
+        }
       });
     }
+
+    // Block wheel, touch and keyboard page scroll while hero-scroll-locked is active
+    window.addEventListener(
+      "wheel",
+      (e) => {
+        if (isHeroLocked) {
+          e.preventDefault();
+        }
+      },
+      { passive: false }
+    );
+
+    window.addEventListener(
+      "touchmove",
+      (e) => {
+        if (isHeroLocked) {
+          e.preventDefault();
+        }
+      },
+      { passive: false }
+    );
+
+    window.addEventListener("keydown", (e) => {
+      if (
+        isHeroLocked &&
+        ["Space", "ArrowDown", "ArrowUp", "PageDown", "PageUp", "Home", "End"].includes(e.code)
+      ) {
+        e.preventDefault();
+      }
+    });
 
     // Build Independent Scroll+Auto Typewriters for ALL Menu Sections (#habilidades, #exemplos, #processo, #contato):
     // Every menu section slides in from the right EMPTY, and its header + inner cards slide in from the right and write out on scroll!
@@ -2545,6 +2618,11 @@
     let lastTickTime = performance.now();
 
     function applyTimelineAt(rawScrollY, scrollY, now, dtSec) {
+      if (isHeroLocked) {
+        rawScrollY = 0;
+        scrollY = 0;
+      }
+
       const vh = window.innerHeight || 800;
       const vw = window.innerWidth || 1280;
       const isMobile = vw <= 768;
@@ -2552,7 +2630,7 @@
 
       // 0. Initial Scroll Cue: visible at scrollY = 0 when ONLY the character + name sign are on screen
       if (heroScrollCue) {
-        heroScrollCue.classList.toggle("is-cue-hidden", rawScrollY > 10);
+        heroScrollCue.classList.toggle("is-cue-hidden", rawScrollY > 10 || isHeroLocked);
       }
 
       // 1. Trigger sequence on First Scroll (rawScrollY >= 10px):
@@ -2615,53 +2693,72 @@
       }
 
       // 2. Main Character Stage (#hero-frame-card):
+      //    - In Fullscreen Mode (isHeroLocked): expands to 100% full screen with no border framing, no lift, no fade
       //    - On Mobile: on the 1st scroll, lifts the character canvas UP (--char-lift-y: -12vh) so the color switcher
       //      fits cleanly BELOW the character without covering his face!
       //    - Closes its ~2cm (76px desktop / 14px mobile) frame border at scrollY: 42vh -> 108vh
       //    - Recedes smoothly in parallax as Menu 1 (#habilidades) rises over it
       if (heroFrameCard && heroViewport) {
-        const pFrame = easeInOutCubic(rangeProgress(scrollY, vh * 0.42, vh * 1.08));
-        const pHeroCovered = easeInOutCubic(rangeProgress(scrollY, section2EnterScrollPx, vh * 2.10));
-        const maxFramePx = vw > 1100 ? 76 : vw > 680 ? 28 : 14;
-        const padPx = (pFrame * maxFramePx).toFixed(1);
-        const radius = Math.round(pFrame * (vw > 680 ? 26 : 20));
-        const borderW = (pFrame * 4).toFixed(1);
+        if (isHeroLocked) {
+          heroViewport.style.padding = "0px";
+          heroViewport.style.visibility = "visible";
+          heroFrameCard.style.borderRadius = "0px";
+          heroFrameCard.style.borderWidth = "0px";
+          heroFrameCard.style.transform = "none";
+          heroFrameCard.style.filter = "brightness(1)";
+          heroFrameCard.style.pointerEvents = "auto";
+          heroFrameCard.style.setProperty("--char-lift-y", "0px");
+        } else {
+          const pFrame = easeInOutCubic(rangeProgress(scrollY, vh * 0.42, vh * 1.08));
+          const pHeroCovered = easeInOutCubic(rangeProgress(scrollY, section2EnterScrollPx, vh * 2.10));
+          const maxFramePx = vw > 1100 ? 76 : vw > 680 ? 28 : 14;
+          const padPx = (pFrame * maxFramePx).toFixed(1);
+          const radius = Math.round(pFrame * (vw > 680 ? 26 : 20));
+          const borderW = (pFrame * 4).toFixed(1);
 
-        const mobileCharLiftPx = isMobile ? -pEnterR * (vh * 0.12) : 0;
-        heroFrameCard.style.setProperty("--char-lift-y", `${mobileCharLiftPx.toFixed(1)}px`);
+          const mobileCharLiftPx = isMobile ? -pEnterR * (vh * 0.12) : 0;
+          heroFrameCard.style.setProperty("--char-lift-y", `${mobileCharLiftPx.toFixed(1)}px`);
 
-        const parallaxLiftPx = -Math.max(0, scrollY - section2EnterScrollPx) * 0.42;
-        const heroScale = 1 - pHeroCovered * 0.065;
-        const heroBright = 1 - pHeroCovered * 0.48;
+          const parallaxLiftPx = -Math.max(0, scrollY - section2EnterScrollPx) * 0.42;
+          const heroScale = 1 - pHeroCovered * 0.065;
+          const heroBright = 1 - pHeroCovered * 0.48;
 
-        heroViewport.style.padding = `${padPx}px`;
-        heroViewport.style.visibility = scrollY > vh * 2.35 ? "hidden" : "visible";
-        heroFrameCard.style.borderRadius = `${radius}px`;
-        heroFrameCard.style.borderWidth = `${borderW}px`;
-        heroFrameCard.style.transform = `translate3d(0, ${parallaxLiftPx.toFixed(1)}px, 0) scale(${heroScale.toFixed(4)})`;
-        heroFrameCard.style.filter = `brightness(${heroBright.toFixed(3)})`;
-        heroFrameCard.style.pointerEvents = scrollY > vh * 1.55 ? "none" : "auto";
+          heroViewport.style.padding = `${padPx}px`;
+          heroViewport.style.visibility = scrollY > vh * 2.35 ? "hidden" : "visible";
+          heroFrameCard.style.borderRadius = `${radius}px`;
+          heroFrameCard.style.borderWidth = `${borderW}px`;
+          heroFrameCard.style.transform = `translate3d(0, ${parallaxLiftPx.toFixed(1)}px, 0) scale(${heroScale.toFixed(4)})`;
+          heroFrameCard.style.filter = `brightness(${heroBright.toFixed(3)})`;
+          heroFrameCard.style.pointerEvents = scrollY > vh * 1.55 ? "none" : "auto";
+        }
       }
 
       // 3. Right Box (#morphin-dock):
+      //    - In Fullscreen Mode (isHeroLocked): dock container stays visible so the ghost button can be clicked to exit
       //    - On Mobile: appears below the lifted character on 1st scroll, then rises/fades out at 46vh -> 78vh as Left Box enters
       //    - On Desktop: stays in place while the frame closes, then rises UP first at 110vh -> 172vh
       if (morphinDock) {
-        const exitStartR = isMobile ? vh * 0.46 : vh * 1.10;
-        const exitEndR = isMobile ? vh * 0.80 : vh * 1.72;
-        const fadeStartR = isMobile ? vh * 0.56 : vh * 1.56;
-        const pExitR = easeInOutCubic(rangeProgress(scrollY, exitStartR, exitEndR));
-        const enterOffsetPx = (1 - pEnterR) * 80;
-        const exitOffsetPx = -pExitR * (isMobile ? vh * 0.45 : vh * 1.05);
-        const totalRightY = enterOffsetPx + exitOffsetPx;
-        const rightOpacity = pEnterR * (1 - rangeProgress(scrollY, fadeStartR, exitEndR));
+        if (isHeroLocked) {
+          morphinDock.classList.remove("is-entrance-hidden");
+          morphinDock.style.setProperty("--scroll-y", "0px");
+          morphinDock.style.setProperty("--box-opacity", "1");
+        } else {
+          const exitStartR = isMobile ? vh * 0.46 : vh * 1.10;
+          const exitEndR = isMobile ? vh * 0.80 : vh * 1.72;
+          const fadeStartR = isMobile ? vh * 0.56 : vh * 1.56;
+          const pExitR = easeInOutCubic(rangeProgress(scrollY, exitStartR, exitEndR));
+          const enterOffsetPx = (1 - pEnterR) * 80;
+          const exitOffsetPx = -pExitR * (isMobile ? vh * 0.45 : vh * 1.05);
+          const totalRightY = enterOffsetPx + exitOffsetPx;
+          const rightOpacity = pEnterR * (1 - rangeProgress(scrollY, fadeStartR, exitEndR));
 
-        morphinDock.classList.toggle("is-entrance-hidden", rightOpacity < 0.02);
-        morphinDock.style.setProperty("--scroll-y", `${totalRightY.toFixed(1)}px`);
-        morphinDock.style.setProperty("--box-opacity", rightOpacity.toFixed(3));
+          morphinDock.classList.toggle("is-entrance-hidden", rightOpacity < 0.02);
+          morphinDock.style.setProperty("--scroll-y", `${totalRightY.toFixed(1)}px`);
+          morphinDock.style.setProperty("--box-opacity", rightOpacity.toFixed(3));
 
-        const scrollTypeR = rangeProgress(scrollY, 20, vh * 0.34);
-        rightBoxTyper.setProgress(rawScrollY < 8 ? 0 : Math.max(rightAutoType, scrollTypeR));
+          const scrollTypeR = rangeProgress(scrollY, 20, vh * 0.34);
+          rightBoxTyper.setProgress(rawScrollY < 8 ? 0 : Math.max(rightAutoType, scrollTypeR));
+        }
       }
 
       // 4. Left Box (#hero-intro-box):
