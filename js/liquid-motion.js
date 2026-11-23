@@ -573,13 +573,7 @@
 
       background = mix(background, cursorBackground, step(1.0 - hoverTransition, uHelmetHover));
 
-      // Giant "MARCOS SIQUEIRA" sign rendered directly behind the 2.5D character
-      vec4 titleSample = texture2D(tTitleText, vUv);
-      vec3 signBaseColor = mix(vec3(0.08, 0.09, 0.06), uRangerColor, 0.22);
-      vec3 signHoverColor = mix(uRangerColor, vec3(0.06, 0.07, 0.05), 0.15);
-      vec3 signColor = mix(signBaseColor, signHoverColor, cursorEffect);
-      background = mix(background, signColor, titleSample.a);
-
+      // Background remains pure reactive white base; 3D letters render in defaultScene
       vec3 base = mix(background, textureDefaultDiffuse.rgb, textureDefaultDiffuse.a);
       vec3 rangerLayer = mix(background, textureHelmet.rgb, textureHelmet.a);
       vec3 finalColor = mix(base, rangerLayer, cursorEffect);
@@ -1627,44 +1621,203 @@
       this.pointLight.position.set(-0.75, 0.2, 0.4);
       this.defaultScene.add(this.hemisphereLight, this.pointLight);
 
+      this.init3DLetters();
       this.applyResponsive();
       this.bindUIControls();
     }
 
+    init3DLetters() {
+      this.letterItems = [];
+      this.lettersGroup = new THREE.Group();
+      this.lettersGroup.position.set(0, 0, -0.18);
+      this.defaultScene.add(this.lettersGroup);
+
+      // Super Mario World 2 / Yoshi's Island 3D Pause Letters ("Times New Roman", serif)
+      const rows = [
+        { text: "MARCOS", y: 0.28, spacing: 0.26 },
+        { text: "SIQUEIRA", y: 0.04, spacing: 0.24 },
+      ];
+
+      rows.forEach((row) => {
+        const chars = row.text.split("");
+        const totalW = (chars.length - 1) * row.spacing;
+        const startX = -totalW * 0.5;
+
+        chars.forEach((char, i) => {
+          const posX = startX + i * row.spacing;
+          const posY = row.y;
+
+          // 3D block geometry with real tangible depth
+          const geo = new THREE.BoxGeometry(0.18, 0.22, 0.038);
+
+          const canvas = document.createElement("canvas");
+          canvas.width = 256;
+          canvas.height = 256;
+          const ctx = canvas.getContext("2d");
+          const tex = new THREE.CanvasTexture(canvas);
+          tex.minFilter = THREE.LinearFilter;
+          tex.magFilter = THREE.LinearFilter;
+
+          const frontMat = new THREE.MeshStandardMaterial({
+            map: tex,
+            transparent: true,
+            roughness: 0.25,
+            metalness: 0.35,
+          });
+          const backMat = frontMat.clone();
+          const edgeMat = new THREE.MeshStandardMaterial({
+            color: 0x181b14,
+            roughness: 0.45,
+            metalness: 0.55,
+          });
+
+          // Three.js Box faces: [right, left, top, bottom, front, back]
+          const mesh = new THREE.Mesh(geo, [edgeMat, edgeMat, edgeMat, edgeMat, frontMat, backMat]);
+          mesh.position.set(posX, posY, 0);
+          this.lettersGroup.add(mesh);
+
+          this.letterItems.push({
+            char,
+            canvas,
+            ctx,
+            tex,
+            mesh,
+            baseX: posX,
+            baseY: posY,
+            velX: (Math.random() - 0.5) * 0.02,
+            velY: (Math.random() - 0.5) * 0.04,
+          });
+        });
+      });
+
+      this.updateLetterTextures();
+      this.bindLetterInteraction();
+    }
+
+    updateLetterTextures(rangerKey = this.activeRangerKey) {
+      const profile = RANGER_PROFILES[rangerKey] || RANGER_PROFILES.black;
+      const accent = profile.accentHex || "#D2FF00";
+
+      this.letterItems.forEach((item) => {
+        const ctx = item.ctx;
+        ctx.clearRect(0, 0, 256, 256);
+        ctx.save();
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+
+        // Pure Times New Roman, bold, elegant
+        ctx.font = 'bold 172px "Times New Roman", Georgia, serif';
+
+        // Deep rich charcoal face
+        ctx.fillStyle = "#181B14";
+        ctx.fillText(item.char, 128, 128);
+
+        // Highlight stroke with the active Ranger's color
+        ctx.lineWidth = 6;
+        ctx.strokeStyle = accent;
+        ctx.strokeText(item.char, 128, 128);
+
+        ctx.restore();
+        item.tex.needsUpdate = true;
+      });
+    }
+
+    bindLetterInteraction() {
+      const canvasEl = this.renderer.domElement;
+      if (!canvasEl) return;
+
+      const raycaster = new THREE.Raycaster();
+      const pointer = new THREE.Vector2();
+      let isDragging = false;
+      let activeItem = null;
+      let lastX = 0;
+      let lastY = 0;
+
+      const getPointerPos = (e) => {
+        const rect = canvasEl.getBoundingClientRect();
+        const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+        const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+        return {
+          x: ((clientX - rect.left) / rect.width) * 2 - 1,
+          y: -((clientY - rect.top) / rect.height) * 2 + 1,
+          clientX,
+          clientY,
+        };
+      };
+
+      const onDown = (e) => {
+        const pos = getPointerPos(e);
+        pointer.x = pos.x;
+        pointer.y = pos.y;
+        lastX = pos.clientX;
+        lastY = pos.clientY;
+
+        raycaster.setFromCamera(pointer, this.camera);
+        const meshes = this.letterItems.map((it) => it.mesh);
+        const intersects = raycaster.intersectObjects(meshes);
+
+        if (intersects.length > 0) {
+          isDragging = true;
+          const hitMesh = intersects[0].object;
+          activeItem = this.letterItems.find((it) => it.mesh === hitMesh);
+          if (activeItem) {
+            activeItem.velY = 0;
+            activeItem.velX = 0;
+          }
+        }
+      };
+
+      const onMove = (e) => {
+        if (!isDragging) return;
+        const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+        const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+        const dx = clientX - lastX;
+        const dy = clientY - lastY;
+        lastX = clientX;
+        lastY = clientY;
+
+        if (activeItem) {
+          activeItem.velY = dx * 0.028;
+          activeItem.velX = dy * 0.028;
+
+          // Propagate a wave of 3D rotation to adjacent letters (Yoshi's Island wave!)
+          const activeIdx = this.letterItems.indexOf(activeItem);
+          this.letterItems.forEach((it, idx) => {
+            if (it !== activeItem) {
+              const dist = Math.abs(idx - activeIdx);
+              if (dist <= 3) {
+                const wavePower = 1 / (dist + 1);
+                it.velY += dx * 0.012 * wavePower;
+                it.velX += dy * 0.012 * wavePower;
+              }
+            }
+          });
+        }
+      };
+
+      const onUp = () => {
+        isDragging = false;
+        activeItem = null;
+      };
+
+      canvasEl.addEventListener("mousedown", onDown);
+      window.addEventListener("mousemove", onMove);
+      window.addEventListener("mouseup", onUp);
+
+      canvasEl.addEventListener("touchstart", onDown, { passive: true });
+      window.addEventListener("touchmove", onMove, { passive: true });
+      window.addEventListener("touchend", onUp);
+      window.addEventListener("touchcancel", onUp);
+    }
+
     drawTitleSign() {
-      const canvas = this.titleCanvas;
-      const ctx = canvas.getContext("2d");
-      if (!ctx) return;
-
-      const w = canvas.width;
-      const h = canvas.height;
-      ctx.clearRect(0, 0, w, h);
-
-      ctx.save();
-      ctx.textAlign = "center";
-      ctx.textBaseline = "middle";
-
-      // Giant "MARCOS SIQUEIRA" sign right behind the character's head & shoulders (below top navbar)
-      ctx.font = '400 290px "Bebas Neue", Impact, sans-serif';
-      ctx.lineWidth = 7;
-      ctx.strokeStyle = "rgba(20, 23, 16, 0.50)";
-      ctx.fillStyle = "rgba(20, 23, 16, 0.32)";
-
-      ctx.fillText("MARCOS SIQUEIRA", w * 0.5, h * 0.33);
-      ctx.strokeText("MARCOS SIQUEIRA", w * 0.5, h * 0.33);
-
-      // Second subtle outline band behind shoulders
-      ctx.font = '400 112px "Bebas Neue", Impact, sans-serif';
-      ctx.fillStyle = "rgba(20, 23, 16, 0.16)";
-      ctx.fillText("JS DEVELOPER   •   WEB DESIGN   •   PAID TRAFFIC", w * 0.5, h * 0.50);
-
-      ctx.restore();
-      this.titleTexture.needsUpdate = true;
+      // Replaced by 3D interactive Times New Roman letter blocks
     }
 
     setRanger(key, { pulseMorph = false } = {}) {
       const profile = RANGER_PROFILES[key] || RANGER_PROFILES.black;
       this.activeRangerKey = key;
+      this.updateLetterTextures(key);
 
       // Swap actual Movie Ranger character texture & alpha silhouette
       if (this.assets && this.assets.textures && this.assets.textures.rangerVariants) {
@@ -1822,9 +1975,15 @@
       if (this.sizes.width > 768) {
         this.camera.position.z = 3.32;
         this.head.instance.position.y = -0.04;
+        if (this.lettersGroup) {
+          this.lettersGroup.scale.set(1.0, 1.0, 1.0);
+        }
       } else {
         this.camera.position.z = 4.10;
         this.head.instance.position.y = -0.06;
+        if (this.lettersGroup) {
+          this.lettersGroup.scale.set(0.78, 0.78, 0.78);
+        }
       }
       this.helmet.instance.position.copy(this.head.instance.position);
 
@@ -1849,6 +2008,28 @@
 
       this.head.update(delta, this.helmetRevealValue, fluidTexture);
       this.easedMouse.normalized.update(delta);
+
+      // Super Mario World 2 / Yoshi's Island Pause 3D Letter Tumbling Physics:
+      if (this.letterItems) {
+        this.letterItems.forEach((item, idx) => {
+          // Apply angular momentum from drag interaction
+          item.mesh.rotation.y += item.velY;
+          item.mesh.rotation.x += item.velX;
+
+          // Momentum inertia damping
+          item.velY *= 0.94;
+          item.velX *= 0.94;
+
+          // Continuous organic 3D tumbling wave (Super Mario World 2 Pause style)
+          const idleWaveY = Math.sin(elapsed * 2.2 + idx * 0.45) * 0.016;
+          const idleWaveX = Math.cos(elapsed * 1.8 + idx * 0.35) * 0.012;
+          item.mesh.rotation.y += idleWaveY;
+          item.mesh.rotation.x += idleWaveX;
+
+          // Subtle float bounce
+          item.mesh.position.y = item.baseY + Math.sin(elapsed * 2.4 + idx * 0.5) * 0.006;
+        });
+      }
 
       // Subtle camera parallax
       this.camera.position.x = this.easedMouse.normalized.value.x * 0.02 * this.helmetRevealValue;
