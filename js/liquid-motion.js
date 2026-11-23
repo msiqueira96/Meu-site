@@ -2040,12 +2040,39 @@
     THREE.ColorManagement.enabled = true;
 
     let sizes = computeSizes();
-    const renderer = new THREE.WebGLRenderer({
-      canvas,
-      powerPreference: "high-performance",
-      alpha: true,
-      precision: "lowp",
-    });
+    let renderer = null;
+
+    try {
+      renderer = new THREE.WebGLRenderer({
+        canvas,
+        powerPreference: "high-performance",
+        alpha: true,
+        precision: "lowp",
+      });
+    } catch (e1) {
+      try {
+        renderer = new THREE.WebGLRenderer({
+          canvas,
+          alpha: true,
+          failIfMajorPerformanceCaveat: false,
+        });
+      } catch (e2) {
+        console.warn("WebGL indisponível:", e2);
+      }
+    }
+
+    if (!renderer || !renderer.getContext()) {
+      if (loaderEl) {
+        setLoaderProgress(100, "Pronto!");
+        setTimeout(() => loaderEl.classList.add("is-loaded"), 300);
+      }
+      const wrap = document.querySelector(".gl-wrap");
+      if (wrap) {
+        wrap.innerHTML = `<img src="${ASSETS.textures.head.diffuse}" alt="Marcos Siqueira" style="width:100%;height:100%;object-fit:cover;object-position:center top;display:block;" />`;
+      }
+      return;
+    }
+
     renderer.autoClear = false;
     renderer.setPixelRatio(sizes.pixelRatio);
     renderer.setSize(sizes.width, sizes.height);
@@ -2055,7 +2082,7 @@
       2 * Math.atan(sizes.height / 2 / 10) * (180 / Math.PI),
       sizes.width / sizes.height,
       0.1,
-      10
+      1000
     );
     mainCamera.position.z = 10;
 
@@ -2104,6 +2131,7 @@
 
       mainCamera.aspect = sizes.width / sizes.height;
       mainCamera.fov = 2 * Math.atan(sizes.height / 2 / 10) * (180 / Math.PI);
+      mainCamera.far = 1000;
       mainCamera.updateProjectionMatrix();
 
       renderer.setPixelRatio(sizes.pixelRatio);
