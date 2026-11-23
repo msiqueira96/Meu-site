@@ -93,7 +93,7 @@
   const LIQUID_CONFIG = {
     headScene: {
       COLOR_OUTLINE: "#CBCBB9",
-      COLOR_FOREGROUND: "#262B22",
+      COLOR_FOREGROUND: "#D2FF00",
       COLOR_BACKGROUND: "#F8F8F3",
       COLOR_CURSOR_FOREGROUND: "#CFD2C5",
       COLOR_CURSOR_BACKGROUND: "#E8E8DF",
@@ -599,13 +599,7 @@
 
       background = mix(background, cursorBackground, step(1.0 - hoverTransition, uHelmetHover));
 
-      // Giant "MARCOS SIQUEIRA" sign rendered directly behind the 2.5D character
-      vec4 titleSample = texture2D(tTitleText, vUv);
-      vec3 signBaseColor = mix(vec3(0.08, 0.09, 0.06), uRangerColor, 0.22);
-      vec3 signHoverColor = mix(uRangerColor, vec3(0.06, 0.07, 0.05), 0.15);
-      vec3 signColor = mix(signBaseColor, signHoverColor, cursorEffect);
-      background = mix(background, signColor, titleSample.a);
-
+      // Background remains pure reactive liquid white base
       vec3 base = mix(background, textureDefaultDiffuse.rgb, textureDefaultDiffuse.a);
       vec3 rangerLayer = mix(background, textureHelmet.rgb, textureHelmet.a);
       vec3 finalColor = mix(base, rangerLayer, cursorEffect);
@@ -1683,6 +1677,18 @@
 
       this.helmet = new RangerCharacter(renderer, sizes, assets);
 
+      // 3D Super Mario World 2 Title Sign Mesh placed in 2.5D space behind the character
+      this.titleMesh = new THREE.Mesh(
+        new THREE.PlaneGeometry(2.35, 1.18),
+        new THREE.MeshBasicMaterial({
+          map: this.titleTexture,
+          transparent: true,
+          depthWrite: false,
+        })
+      );
+      this.titleMesh.position.set(0, 0.12, -0.16);
+      this.defaultScene.add(this.titleMesh);
+
       this.hemisphereLight = new THREE.HemisphereLight(0xffffff, 0x000000, 2.5);
       this.pointLight = new THREE.PointLight(0xffffff, 2.5);
       this.pointLight.position.set(-0.75, 0.2, 0.4);
@@ -1706,22 +1712,22 @@
       ctx.textAlign = "center";
       ctx.textBaseline = "middle";
 
-      // Giant highlighted "MARCOS SIQUEIRA" sign right behind the character, colored by active Ranger
-      ctx.font = '400 305px "Bebas Neue", Impact, sans-serif';
-      ctx.lineWidth = 10;
-      ctx.shadowColor = profile.signStroke || "rgba(20, 23, 16, 0.45)";
-      ctx.shadowBlur = 18;
-      ctx.fillStyle = profile.signFill || "rgba(20, 23, 16, 0.72)";
-      ctx.strokeStyle = profile.signStroke || "rgba(10, 12, 8, 0.96)";
+      // Giant highlighted 3D "MARCOS SIQUEIRA" sign right behind the character, colored by active Ranger
+      ctx.font = '700 295px "Bebas Neue", Impact, sans-serif';
+      ctx.lineWidth = 14;
+      ctx.shadowColor = profile.accentHex || "#D2FF00";
+      ctx.shadowBlur = 24;
+      ctx.fillStyle = "#151811";
+      ctx.strokeStyle = profile.accentHex || "#D2FF00";
 
-      ctx.fillText("MARCOS SIQUEIRA", w * 0.5, h * 0.30);
+      ctx.fillText("MARCOS SIQUEIRA", w * 0.5, h * 0.36);
       ctx.shadowBlur = 0;
-      ctx.strokeText("MARCOS SIQUEIRA", w * 0.5, h * 0.30);
+      ctx.strokeText("MARCOS SIQUEIRA", w * 0.5, h * 0.36);
 
       // Second highlighted band behind shoulders
-      ctx.font = '400 116px "Bebas Neue", Impact, sans-serif';
-      ctx.fillStyle = profile.signSubFill || "rgba(20, 23, 16, 0.42)";
-      ctx.fillText("JS DEVELOPER   •   WEB DESIGN   •   PAID TRAFFIC", w * 0.5, h * 0.48);
+      ctx.font = '600 108px "Bebas Neue", Impact, sans-serif';
+      ctx.fillStyle = "rgba(22, 26, 18, 0.76)";
+      ctx.fillText("JS DEVELOPER   •   WEB DESIGN   •   PAID TRAFFIC", w * 0.5, h * 0.56);
 
       ctx.restore();
       this.titleTexture.needsUpdate = true;
@@ -1890,13 +1896,24 @@
 
     applyResponsive() {
       if (this.sizes.width > 768) {
-        this.camera.position.z = 3;
-        this.head.instance.position.y = 0;
+        this.camera.position.z = 3.65;
+        this.head.instance.position.y = -0.16;
+        this.head.instance.scale.set(0.90, 0.90, 0.90);
+        if (this.titleMesh) {
+          this.titleMesh.position.set(0, 0.12, -0.16);
+          this.titleMesh.scale.set(1.0, 1.0, 1.0);
+        }
       } else {
-        this.camera.position.z = 3.75;
-        this.head.instance.position.y = -0.05;
+        this.camera.position.z = 4.45;
+        this.head.instance.position.y = -0.20;
+        this.head.instance.scale.set(0.85, 0.85, 0.85);
+        if (this.titleMesh) {
+          this.titleMesh.position.set(0, 0.10, -0.16);
+          this.titleMesh.scale.set(0.85, 0.85, 0.85);
+        }
       }
       this.helmet.instance.position.copy(this.head.instance.position);
+      this.helmet.instance.scale.copy(this.head.instance.scale);
 
       this.compositionMesh.scale.set(this.sizes.width, this.sizes.height, 1);
       this.compositionMesh.material.uniforms.uAspect.value = this.sizes.width / this.sizes.height;
@@ -1926,6 +1943,27 @@
         this.camera.position.y = -this.easedMouse.normalized.value.y * 0.02 * this.helmetRevealValue;
       } else {
         this.camera.position.y = 0;
+      }
+
+      // Super Mario World 2 Mode-7 style 3D spinning title:
+      // At scrollY <= 10 (top of page), title is hidden in 3D distance.
+      // As you scroll (10px -> 0.48vh), it performs a 3D Mode-7 spin around Y, tilts on X, and lands directly behind Marcos!
+      if (this.titleMesh) {
+        const scrollY = window.scrollY || 0;
+        const vh = window.innerHeight || 800;
+        const pScroll = Math.min(Math.max((scrollY - 10) / (vh * 0.48), 0), 1);
+
+        const spinY = (1 - pScroll) * Math.PI * 4.0;
+        const tiltX = Math.sin((1 - pScroll) * Math.PI) * 0.55;
+        const tiltZ = Math.sin((1 - pScroll) * Math.PI) * 0.20;
+        const baseScale = this.sizes.width > 768 ? 1.0 : 0.85;
+        const scale = (0.2 + pScroll * 0.8) * baseScale;
+
+        this.titleMesh.rotation.y = spinY + this.easedMouse.normalized.value.x * 0.08;
+        this.titleMesh.rotation.x = tiltX - this.easedMouse.normalized.value.y * 0.06;
+        this.titleMesh.rotation.z = tiltZ;
+        this.titleMesh.scale.set(scale, scale, 1);
+        this.titleMesh.material.opacity = pScroll;
       }
 
       // Render 2.5D Black Ranger pass synced with user head
