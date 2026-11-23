@@ -1,0 +1,11 @@
+{
+  "auto-git-push": {
+    "Stop": [
+      {
+        "type": "command",
+        "command": "powershell -NoProfile -ExecutionPolicy Bypass -File \"c:\\Users\\positivo\\Documents\\landonorris.com\\scripts\\stop-hook-push.ps1\"",
+        "timeout": 25
+      }
+    ]
+  }
+}
