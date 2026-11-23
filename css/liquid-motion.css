@@ -32,8 +32,11 @@
   --bg-card-hover: #23291D;    /* 30% Estado hover de superfície */
   --bg-well: #0A0C08;          /* Fundo interno para simuladores/tabelas */
 
-  /* 10% Destaque & Acentos (Sincronizado via JS com cada Ranger) */
-  --accent: #D2FF00;
+  /* 10% Destaque & Acentos (Sincronizado via JS com cada Ranger)
+     Tema Padrão Ranger Black: Meio Branco (#FFFFFF) e Bordas Pretas (#11130E) */
+  --accent: #FFFFFF;
+  --frame-accent: #11130E;
+  --pill-fg: #FFFFFF;
   --accent-soft: color-mix(in srgb, var(--accent) 14%, transparent);
   --accent-border: color-mix(in srgb, var(--accent) 42%, transparent);
   --accent-glow: color-mix(in srgb, var(--accent) 32%, transparent);
@@ -137,6 +140,76 @@ body {
 .text-accent {
   color: var(--accent);
   transition: color 0.3s ease;
+}
+
+/* Esquema Exclusivo do Tema Ranger Black: Bordas Pretas (#11130E) e Meio Branco (#FFFFFF) */
+html[data-ranger-theme="black"] .site-header,
+html[data-ranger-theme="black"] .hero-intro-box,
+html[data-ranger-theme="black"] .morphin-dock,
+html[data-ranger-theme="black"] .hero-center-hint {
+  background: linear-gradient(
+    145deg,
+    rgba(255, 255, 255, 0.92) 0%,
+    rgba(255, 255, 255, 0.78) 100%
+  );
+  border: 2px solid #11130E;
+  color: #11130E;
+}
+
+html[data-ranger-theme="black"] .brand-logo .dot-accent {
+  color: #11130E;
+}
+
+html[data-ranger-theme="black"] .status-pill,
+html[data-ranger-theme="black"] .morphin-active-name,
+html[data-ranger-theme="black"] .hero-headline .text-accent {
+  background: #FFFFFF;
+  color: #11130E;
+  border: 2px solid #11130E;
+}
+
+html[data-ranger-theme="black"] .status-pulse {
+  background: #11130E;
+  box-shadow: 0 0 6px rgba(17, 19, 14, 0.45);
+}
+
+html[data-ranger-theme="black"] .cta-pill,
+html[data-ranger-theme="black"] .hero-actions .btn-primary,
+html[data-ranger-theme="black"] .hero-intro-box .btn-primary,
+html[data-ranger-theme="black"] .hero-intro-box .btn-outline,
+html[data-ranger-theme="black"] .morphin-lock-btn,
+html[data-ranger-theme="black"] .morphin-ghost-btn {
+  background: #FFFFFF;
+  color: #11130E;
+  border: 2px solid #11130E;
+}
+
+html[data-ranger-theme="black"] .cta-pill:hover,
+html[data-ranger-theme="black"] .hero-intro-box .btn-primary:hover,
+html[data-ranger-theme="black"] .hero-intro-box .btn-outline:hover,
+html[data-ranger-theme="black"] .morphin-lock-btn:hover,
+html[data-ranger-theme="black"] .morphin-lock-btn.is-active,
+html[data-ranger-theme="black"] .morphin-ghost-btn:hover {
+  background: #11130E;
+  color: #FFFFFF;
+  border-color: #11130E;
+}
+
+html[data-ranger-theme="black"] .nav-link.is-active,
+html[data-ranger-theme="black"] .nav-link:hover {
+  background: #FFFFFF;
+  color: #11130E;
+  border: 1.5px solid #11130E;
+}
+
+html[data-ranger-theme="black"] .hero-scroll-cue {
+  background: #FFFFFF;
+  color: #11130E;
+  border: 2px solid #11130E;
+}
+
+html[data-ranger-theme="black"] .scroll-cue-arrow {
+  color: #11130E;
 }
 
 /* Acessibilidade: Foco visível por teclado em elementos interativos */
@@ -281,13 +354,13 @@ textarea:focus-visible {
 }
 
 .brand-dot {
-  width: 11px;
-  height: 11px;
+  width: 12px;
+  height: 12px;
   border-radius: 50%;
   background: var(--accent);
-  border: 1.5px solid var(--ink-dark);
-  box-shadow: 0 0 10px var(--accent);
-  transition: background-color 0.3s ease, box-shadow 0.3s ease;
+  border: 2px solid var(--frame-accent, var(--ink-dark));
+  box-shadow: 0 0 10px var(--frame-accent, var(--accent));
+  transition: background-color 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
 }
 
 .brand-name {
@@ -412,7 +485,7 @@ textarea:focus-visible {
   transform-origin: center top;
   will-change: border-radius, border-width, box-shadow, transform, filter;
   box-shadow: 0 30px 90px rgba(0, 0, 0, 0.7);
-  border: 0px solid var(--accent);
+  border: 0px solid var(--frame-accent, var(--accent));
   transition:
     border-radius 0.8s cubic-bezier(0.16, 1, 0.3, 1),
     border-width 0.65s ease,

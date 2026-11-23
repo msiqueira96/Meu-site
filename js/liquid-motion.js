@@ -96,7 +96,7 @@
   const LIQUID_CONFIG = {
     headScene: {
       COLOR_OUTLINE: "#CBCBB9",
-      COLOR_FOREGROUND: "#D2FF00",
+      COLOR_FOREGROUND: "#22261E",
       COLOR_BACKGROUND: "#F8F8F3",
       COLOR_CURSOR_FOREGROUND: "#CFD2C5",
       COLOR_CURSOR_BACKGROUND: "#E8E8DF",
@@ -1505,14 +1505,22 @@
   const RANGER_PROFILES = {
     black: {
       name: "RANGER PRETO",
-      accentHex: "#D2FF00",
-      waveHex: "#D2FF00",
-      suitHex: "#D2FF00",
+      accentHex: "#FFFFFF",
+      frameHex: "#11130E",
+      pillFg: "#FFFFFF",
+      letterFill: "#FFFFFF",
+      letterStroke: "#11130E",
+      waveHex: "#22261E",
+      suitHex: "#1C2018",
       tintMix: 0.0,
     },
     red: {
       name: "RANGER VERMELHO",
       accentHex: "#FF2233",
+      frameHex: "#FF2233",
+      pillFg: "#FF2233",
+      letterFill: "#181B14",
+      letterStroke: "#FF2233",
       waveHex: "#FF2233",
       suitHex: "#FF1E27",
       tintMix: 0.94,
@@ -1520,6 +1528,10 @@
     blue: {
       name: "RANGER AZUL",
       accentHex: "#0088FF",
+      frameHex: "#0088FF",
+      pillFg: "#0088FF",
+      letterFill: "#181B14",
+      letterStroke: "#0088FF",
       waveHex: "#0088FF",
       suitHex: "#0077FF",
       tintMix: 0.94,
@@ -1527,6 +1539,10 @@
     green: {
       name: "RANGER VERDE",
       accentHex: "#00E676",
+      frameHex: "#00E676",
+      pillFg: "#00E676",
+      letterFill: "#181B14",
+      letterStroke: "#00E676",
       waveHex: "#00E676",
       suitHex: "#00D66C",
       tintMix: 0.94,
@@ -1534,6 +1550,10 @@
     yellow: {
       name: "RANGER AMARELO",
       accentHex: "#FFD000",
+      frameHex: "#FFD000",
+      pillFg: "#FFD000",
+      letterFill: "#181B14",
+      letterStroke: "#FFD000",
       waveHex: "#FFD000",
       suitHex: "#FFC400",
       tintMix: 0.94,
@@ -1541,6 +1561,10 @@
     pink: {
       name: "RANGER ROSA",
       accentHex: "#FF2A85",
+      frameHex: "#FF2A85",
+      pillFg: "#FF2A85",
+      letterFill: "#181B14",
+      letterStroke: "#FF2A85",
       waveHex: "#FF2A85",
       suitHex: "#FF207E",
       tintMix: 0.94,
@@ -1548,6 +1572,10 @@
     silver: {
       name: "RANGER PRATA",
       accentHex: "#D8E2EC",
+      frameHex: "#D8E2EC",
+      pillFg: "#D8E2EC",
+      letterFill: "#181B14",
+      letterStroke: "#D8E2EC",
       waveHex: "#C8D6E5",
       suitHex: "#C8D6E5",
       tintMix: 0.0,
@@ -1616,7 +1644,7 @@
             tBackgroundNoise: new THREE.Uniform(null),
             tNoise: new THREE.Uniform(assets.textures.noise.texture),
             tTitleText: new THREE.Uniform(this.titleTexture),
-            uRangerColor: new THREE.Uniform(toSRGBColor("#D2FF00")),
+            uRangerColor: new THREE.Uniform(toSRGBColor("#1C2018")),
             uRangerTintMix: new THREE.Uniform(0.0),
             OUTLINE: new THREE.Uniform(cfg.OUTLINE),
             SHOW_HELMET_PERMANENTLY: new THREE.Uniform(cfg.SHOW_HELMET_PERMANENTLY),
@@ -1736,7 +1764,8 @@
 
     updateLetterTextures(rangerKey = this.activeRangerKey) {
       const profile = RANGER_PROFILES[rangerKey] || RANGER_PROFILES.black;
-      const accent = profile.accentHex || "#D2FF00";
+      const fillHex = profile.letterFill || "#FFFFFF";
+      const strokeHex = profile.letterStroke || profile.frameHex || profile.accentHex || "#11130E";
 
       this.letterItems.forEach((item) => {
         const ctx = item.ctx;
@@ -1744,18 +1773,20 @@
         ctx.save();
         ctx.textAlign = "center";
         ctx.textBaseline = "middle";
+        ctx.lineJoin = "round";
+        ctx.miterLimit = 2;
 
         // Pure Times New Roman, bold, elegant
         ctx.font = 'bold 172px "Times New Roman", Georgia, serif';
 
-        // Deep rich charcoal face
-        ctx.fillStyle = "#181B14";
-        ctx.fillText(item.char, 128, 128);
-
-        // Highlight stroke with the active Ranger's color
-        ctx.lineWidth = 6;
-        ctx.strokeStyle = accent;
+        // Outer border stroke first (Black border on Black Ranger)
+        ctx.lineWidth = 14;
+        ctx.strokeStyle = strokeHex;
         ctx.strokeText(item.char, 128, 128);
+
+        // Middle fill on top (White middle on Black Ranger)
+        ctx.fillStyle = fillHex;
+        ctx.fillText(item.char, 128, 128);
 
         ctx.restore();
         item.tex.needsUpdate = true;
@@ -1870,8 +1901,11 @@
         this.helmet.setVariant(variant);
       }
 
-      // Update CSS accent color & UI indicators
+      // Update CSS accent color, frame border color & UI indicators
+      document.documentElement.setAttribute("data-ranger-theme", key);
       document.documentElement.style.setProperty("--accent", profile.accentHex);
+      document.documentElement.style.setProperty("--frame-accent", profile.frameHex || profile.accentHex);
+      document.documentElement.style.setProperty("--pill-fg", profile.pillFg || profile.accentHex);
 
       const activeNameEl = document.getElementById("morphin-active-name");
       if (activeNameEl) {
