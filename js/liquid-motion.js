@@ -11,35 +11,6 @@
 (function () {
   "use strict";
 
-  // Force page to ALWAYS start at top (scrollY = 0) on open, reload (F5), unload or navigation
-  if ("scrollRestoration" in history) {
-    history.scrollRestoration = "manual";
-  }
-  document.documentElement.classList.add("is-initial-loading");
-  window.scrollTo(0, 0);
-  document.documentElement.scrollTop = 0;
-  if (document.body) document.body.scrollTop = 0;
-
-  if (window.location.hash) {
-    history.replaceState(null, "", window.location.pathname + window.location.search);
-  }
-
-  const forceScrollToTop = () => {
-    window.scrollTo(0, 0);
-    document.documentElement.scrollTop = 0;
-    if (document.body) document.body.scrollTop = 0;
-  };
-
-  window.addEventListener("beforeunload", forceScrollToTop);
-  window.addEventListener("pagehide", forceScrollToTop);
-  window.addEventListener("pageshow", forceScrollToTop);
-  window.addEventListener("load", () => {
-    forceScrollToTop();
-    setTimeout(() => {
-      document.documentElement.classList.remove("is-initial-loading");
-    }, 450);
-  });
-
   const GL_ROOT = "assets/gl";
 
   const ASSETS = {
@@ -1254,7 +1225,7 @@
       );
       this.scene.add(this.output);
 
-      this.sourceTarget = new THREE.WebGLRenderTarget(this.sizes.width, this.sizes.height);
+      this.sourceTarget = new THREE.WebGLRenderTarget(this.sizes.width, this.sizes.height, { samples: 2 });
       this.clock = new THREE.Clock();
       this.delta = 0;
       this.interval = 1 / 60;
@@ -1318,7 +1289,7 @@
         })
       );
       this.scene.add(this.mesh);
-      this.renderTarget = new THREE.WebGLRenderTarget(this.sizes.width, this.sizes.height);
+      this.renderTarget = new THREE.WebGLRenderTarget(this.sizes.width, this.sizes.height, { samples: 1 });
     }
 
     resize() {
@@ -1355,15 +1326,11 @@
 
       this.geometry = new THREE.PlaneGeometry(1, 1, 128, 128);
       this.material = new THREE.MeshStandardMaterial({
-        map: assets.textures.head.diffuse,
         displacementMap: assets.textures.head.depth,
         displacementScale: 0.25,
         alphaMap: assets.textures.head.alpha,
         transparent: true,
-        side: THREE.DoubleSide,
         normalMap: assets.textures.head.normal,
-        roughness: 0.4,
-        metalness: 0.1,
       });
 
       this.uniforms = {
@@ -1479,7 +1446,8 @@
 
       this.renderTarget = new THREE.WebGLRenderTarget(
         this.sizes.width * this.sizes.pixelRatio,
-        this.sizes.height * this.sizes.pixelRatio
+        this.sizes.height * this.sizes.pixelRatio,
+        { samples: 2 }
       );
     }
 
@@ -1675,7 +1643,8 @@
       this.defaultScene = new THREE.Scene();
       this.defaultRenderTarget = new THREE.WebGLRenderTarget(
         this.sizes.width * this.sizes.pixelRatio,
-        this.sizes.height * this.sizes.pixelRatio
+        this.sizes.height * this.sizes.pixelRatio,
+        { samples: 1 }
       );
 
       this.cameraTransformGroup = new THREE.Group();
@@ -1993,36 +1962,20 @@
     const totalCount = urls.length;
 
     const loadTex = (url) =>
-      new Promise((resolve) => {
-        const onDone = (tex) => {
-          loadedCount++;
-          if (typeof onProgress === "function") {
-            onProgress(loadedCount, totalCount, url);
-          }
-          resolve(tex);
-        };
-
+      new Promise((resolve, reject) =>
         textureLoader.load(
           url,
-          (tex) => onDone(tex),
+          (tex) => {
+            loadedCount++;
+            if (typeof onProgress === "function") {
+              onProgress(loadedCount, totalCount);
+            }
+            resolve(tex);
+          },
           undefined,
-          (err) => {
-            console.warn(`[RETRY] Recarregando: ${url}`, err);
-            textureLoader.load(
-              url,
-              (tex) => onDone(tex),
-              undefined,
-              (err2) => {
-                console.error(`[FALHA] Não foi possível carregar ${url}:`, err2);
-                const c = document.createElement("canvas");
-                c.width = 2;
-                c.height = 2;
-                onDone(new THREE.CanvasTexture(c));
-              }
-            );
-          }
-        );
-      });
+          reject
+        )
+      );
 
     return Promise.all(urls.map(loadTex)).then(
       ([
@@ -2125,87 +2078,40 @@
       if (statusMsg && statusEl) statusEl.textContent = statusMsg;
     };
 
-    setLoaderProgress(6, "Inicializando motor WebGL...");
+    setLoaderProgress(8, "Inicializando motor WebGL...");
 
-    canvas.addEventListener(
-      "webglcontextlost",
-      (event) => {
-        event.preventDefault();
-        console.warn("WebGL context lost. Waiting for restore...");
-      },
-      false
-    );
+    THREE.ShaderChunk.simplex = SIMPLEX_NOISE_GLSL;
+    THREE.ColorManagement.enabled = true;
 
-    let sizes, renderer, mainScene, mainCamera;
-    try {
-      THREE.ShaderChunk.simplex = SIMPLEX_NOISE_GLSL;
-      THREE.ColorManagement.enabled = true;
-
-      sizes = computeSizes();
-
-      const configs = [
-        { canvas, alpha: true, powerPreference: "high-performance", precision: "lowp" },
-        { canvas, alpha: true, powerPreference: "default" },
-        { canvas, alpha: true, antialias: false },
-        { canvas, alpha: true }
-      ];
-
-      for (const cfg of configs) {
-        try {
-          renderer = new THREE.WebGLRenderer(cfg);
-          if (renderer && renderer.getContext()) break;
-        } catch (e) {
-          console.warn("Retrying WebGLRenderer with fallback:", e);
-        }
-      }
-
-      if (!renderer || !renderer.getContext()) {
-        throw new Error("Muitas abas abertas no navegador. Feche as outras abas do site e recarregue.");
-      }
-
-      renderer.autoClear = false;
-      renderer.setPixelRatio(sizes.pixelRatio);
-      renderer.setSize(sizes.width, sizes.height);
-
-      mainScene = new THREE.Scene();
-      mainCamera = new THREE.PerspectiveCamera(
-        2 * Math.atan(sizes.height / 2 / 10) * (180 / Math.PI),
-        sizes.width / sizes.height,
-        0.1,
-        1000
-      );
-      mainCamera.position.z = 10;
-    } catch (glErr) {
-      console.error("WebGL error:", glErr);
-      if (statusEl) statusEl.textContent = `Aviso WebGL: ${glErr.message || glErr}`;
-      if (loaderEl) {
-        setTimeout(() => loaderEl.classList.add("is-loaded"), 2500);
-      }
-      return;
-    }
-
-    window.addEventListener("beforeunload", () => {
-      try {
-        if (renderer) renderer.dispose();
-      } catch (e) {}
+    let sizes = computeSizes();
+    const renderer = new THREE.WebGLRenderer({
+      canvas,
+      powerPreference: "high-performance",
+      alpha: true,
+      precision: "lowp",
     });
+    renderer.autoClear = false;
+    renderer.setPixelRatio(sizes.pixelRatio);
+    renderer.setSize(sizes.width, sizes.height);
 
-    setLoaderProgress(10, "Carregando texturas 2.5D & Shaders [00/22]...");
+    const mainScene = new THREE.Scene();
+    const mainCamera = new THREE.PerspectiveCamera(
+      2 * Math.atan(sizes.height / 2 / 10) * (180 / Math.PI),
+      sizes.width / sizes.height,
+      0.1,
+      10
+    );
+    mainCamera.position.z = 10;
 
     let assets;
     try {
       assets = await loadLiquidAssets((loaded, total) => {
-        const pct = Math.min(95, Math.round(10 + (loaded / total) * 85));
-        const padLoaded = String(loaded).padStart(2, "0");
-        const padTotal = String(total).padStart(2, "0");
-        setLoaderProgress(pct, `Carregando texturas 2.5D & Shaders [${padLoaded}/${padTotal}]...`);
+        const pct = 10 + (loaded / total) * 82;
+        setLoaderProgress(pct, `Carregando texturas 2.5D & Shaders (${loaded}/${total})...`);
       });
     } catch (err) {
       console.error("Failed to load Liquid Motion assets:", err);
-      if (statusEl) statusEl.textContent = "Erro ao carregar assets: " + (err.message || err);
-      if (loaderEl) {
-        setTimeout(() => loaderEl.classList.add("is-loaded"), 1500);
-      }
+      if (statusEl) statusEl.textContent = "Erro ao carregar assets (abra via http://localhost:8080)";
       return;
     }
 
@@ -2231,7 +2137,6 @@
     if (loaderEl) {
       setTimeout(() => {
         loaderEl.classList.add("is-loaded");
-        forceScrollToTop();
       }, 280);
     }
 
@@ -2243,7 +2148,6 @@
 
       mainCamera.aspect = sizes.width / sizes.height;
       mainCamera.fov = 2 * Math.atan(sizes.height / 2 / 10) * (180 / Math.PI);
-      mainCamera.far = 1000;
       mainCamera.updateProjectionMatrix();
 
       renderer.setPixelRatio(sizes.pixelRatio);
@@ -2497,7 +2401,7 @@
       }
     }
     const rightBoxTyper = createSequenceTypewriter(rightBoxSteps);
-    rightBoxTyper.setProgress(1);
+    rightBoxTyper.setProgress(0);
 
     // Build Typewriter for Left Box (#hero-intro-box)
     const leftBoxSteps = [];
@@ -2534,67 +2438,24 @@
       });
     }
     const leftBoxTyper = createSequenceTypewriter(leftBoxSteps);
-    leftBoxTyper.setProgress(1);
+    leftBoxTyper.setProgress(0);
 
     // Build Typewriter for Center Hint (#hero-center-hint)
     const hintTyper = createSequenceTypewriter(
       heroCenterHint ? [{ type: "richText", el: heroCenterHint }] : []
     );
-    hintTyper.setProgress(1);
+    hintTyper.setProgress(0);
 
-    // Fullscreen Character Mode / Boxes Toggle Button inside #morphin-dock:
-    // Locks the scroll and keeps the character photo in clean full screen without framing borders or boxes
+    // Transparency Toggle Button inside #morphin-dock:
+    // Makes Hero boxes transparent while keeping the toggle button itself visible and semi-opaque
     const heroOverlayLayout = document.getElementById("hero-overlay-layout");
     const btnToggleBoxesVis = document.getElementById("btn-toggle-boxes-visibility");
-    let isHeroLocked = false;
-
     if (btnToggleBoxesVis && heroOverlayLayout) {
       btnToggleBoxesVis.addEventListener("click", () => {
-        isHeroLocked = !isHeroLocked;
-        heroOverlayLayout.classList.toggle("is-boxes-transparent", isHeroLocked);
-        document.body.classList.toggle("hero-scroll-locked", isHeroLocked);
-        document.documentElement.classList.toggle("hero-scroll-locked", isHeroLocked);
-
-        if (isHeroLocked) {
-          window.scrollTo({ top: 0, behavior: "smooth" });
-          btnToggleBoxesVis.textContent = "👁 Mostrar Boxes";
-          btnToggleBoxesVis.title = "Restaurar boxes e liberar o scroll da página";
-        } else {
-          btnToggleBoxesVis.textContent = "👁 Boxes";
-          btnToggleBoxesVis.title = "Tela cheia: ocultar boxes e prender o scroll";
-        }
+        const isTransparent = heroOverlayLayout.classList.toggle("is-boxes-transparent");
+        btnToggleBoxesVis.textContent = isTransparent ? "👁 Mostrar" : "👁 Boxes";
       });
     }
-
-    // Block wheel, touch and keyboard page scroll while hero-scroll-locked is active
-    window.addEventListener(
-      "wheel",
-      (e) => {
-        if (isHeroLocked) {
-          e.preventDefault();
-        }
-      },
-      { passive: false }
-    );
-
-    window.addEventListener(
-      "touchmove",
-      (e) => {
-        if (isHeroLocked) {
-          e.preventDefault();
-        }
-      },
-      { passive: false }
-    );
-
-    window.addEventListener("keydown", (e) => {
-      if (
-        isHeroLocked &&
-        ["Space", "ArrowDown", "ArrowUp", "PageDown", "PageUp", "Home", "End"].includes(e.code)
-      ) {
-        e.preventDefault();
-      }
-    });
 
     // Build Independent Scroll+Auto Typewriters for ALL Menu Sections (#habilidades, #exemplos, #processo, #contato):
     // Every menu section slides in from the right EMPTY, and its header + inner cards slide in from the right and write out on scroll!
@@ -2670,112 +2531,137 @@
 
     // Live state for Slower, Smoother First-Scroll Box Entrance & Damped Scroll Inertia
     const menuCards = Array.from(document.querySelectorAll(".parallax-menu-card"));
-    let rightBoxTriggered = true;
-    let leftBoxTriggered = true;
+    let rightBoxTriggered = false;
+    let leftBoxTriggered = false;
     let firstScrollTimestamp = 0;
-    let rightEnterProgress = 1;
-    let leftEnterProgress = 1;
-    let hintEnterProgress = 1;
-    let rightAutoType = 1;
-    let leftAutoType = 1;
-    let hintAutoType = 1;
+    let rightEnterProgress = 0;
+    let leftEnterProgress = 0;
+    let hintEnterProgress = 0;
+    let rightAutoType = 0;
+    let leftAutoType = 0;
+    let hintAutoType = 0;
     let smoothScrollY = window.scrollY || 0;
     let lastActiveSectionId = "hero";
     let lastTickTime = performance.now();
 
     function applyTimelineAt(rawScrollY, scrollY, now, dtSec) {
-      if (isHeroLocked) {
-        rawScrollY = 0;
-        scrollY = 0;
-      }
-
       const vh = window.innerHeight || 800;
       const vw = window.innerWidth || 1280;
       const isMobile = vw <= 768;
       const section2EnterScrollPx = vh * 1.15;
 
-      // 0. Initial Scroll Cue: visible at scrollY = 0
+      // 0. Initial Scroll Cue: visible at scrollY = 0 when ONLY the character + name sign are on screen
       if (heroScrollCue) {
-        heroScrollCue.classList.toggle("is-cue-hidden", rawScrollY > 10 || isHeroLocked);
+        heroScrollCue.classList.toggle("is-cue-hidden", rawScrollY > 10);
       }
 
-      const pEnterR = 1;
-      const pEnterL = 1;
-      const pEnterH = 1;
+      // 1. Trigger sequence on First Scroll (rawScrollY >= 10px):
+      //    - On Mobile (isMobile): 1st scroll lifts the character UP (-12vh) and shows ONLY #morphin-dock below him!
+      //      Then scrolling further (scrollY >= 52vh) swaps #morphin-dock out and brings #hero-intro-box into the bottom dock!
+      //    - On Desktop (!isMobile): 1st scroll brings #morphin-dock on the right, and after 1.15s (or scrollY >= 24vh)
+      //      brings #hero-intro-box on the left.
+      if (rawScrollY < 8) {
+        rightBoxTriggered = false;
+        leftBoxTriggered = false;
+        firstScrollTimestamp = 0;
+        rightEnterProgress = Math.max(0, rightEnterProgress - dtSec * 1.8);
+        leftEnterProgress = Math.max(0, leftEnterProgress - dtSec * 1.8);
+        hintEnterProgress = Math.max(0, hintEnterProgress - dtSec * 1.8);
+        rightAutoType = 0;
+        leftAutoType = 0;
+        hintAutoType = 0;
+      } else {
+        if (!rightBoxTriggered) {
+          rightBoxTriggered = true;
+          firstScrollTimestamp = now;
+        }
+        if (isMobile) {
+          leftBoxTriggered = scrollY >= vh * 0.48;
+          if (!leftBoxTriggered) {
+            leftEnterProgress = Math.max(0, leftEnterProgress - dtSec * 2.2);
+            leftAutoType = 0;
+          }
+        } else if (!leftBoxTriggered && (now - firstScrollTimestamp >= 1150 || scrollY >= vh * 0.24)) {
+          leftBoxTriggered = true;
+        }
+      }
 
-      // Header is visible, fades gracefully on deeper scroll
+      if (rightBoxTriggered) {
+        rightEnterProgress = Math.min(1, rightEnterProgress + dtSec * 1.2);
+        if (rightEnterProgress > 0.38) {
+          rightAutoType = Math.min(1, rightAutoType + dtSec * 0.72);
+        }
+      }
+      if (leftBoxTriggered) {
+        leftEnterProgress = Math.min(1, leftEnterProgress + dtSec * 1.15);
+        hintEnterProgress = Math.min(1, hintEnterProgress + dtSec * 1.05);
+        if (leftEnterProgress > 0.38) {
+          leftAutoType = Math.min(1, leftAutoType + dtSec * 0.56);
+          hintAutoType = Math.min(1, hintAutoType + dtSec * 0.85);
+        }
+      }
+
+      const pEnterR = Math.max(easeOutCubic(rightEnterProgress), easeOutCubic(rangeProgress(scrollY, 15, vh * 0.28)));
+      const pEnterL = isMobile
+        ? Math.max(easeOutCubic(leftEnterProgress), easeOutCubic(rangeProgress(scrollY, vh * 0.48, vh * 0.76)))
+        : Math.max(easeOutCubic(leftEnterProgress), easeOutCubic(rangeProgress(scrollY, vh * 0.20, vh * 0.46)));
+      const pEnterH = Math.max(easeOutCubic(hintEnterProgress), easeOutCubic(rangeProgress(scrollY, vh * 0.25, vh * 0.50)));
+
+      // Header follows Right Box entrance on first scroll
       if (siteHeader) {
-        siteHeader.classList.remove("is-entrance-hidden");
-        const headerOpacity = Math.max(0, 1 - rangeProgress(scrollY, vh * 0.85, vh * 1.30));
-        siteHeader.style.setProperty("--header-y", "0px");
-        siteHeader.style.setProperty("--header-opacity", headerOpacity.toFixed(3));
+        siteHeader.classList.toggle("is-entrance-hidden", pEnterR < 0.02);
+        siteHeader.style.setProperty("--header-y", `${((1 - pEnterR) * -36).toFixed(1)}px`);
+        siteHeader.style.setProperty("--header-opacity", pEnterR.toFixed(3));
       }
 
       // 2. Main Character Stage (#hero-frame-card):
-      //    - In Fullscreen Mode (isHeroLocked): expands to 100% full screen with no border framing, no lift, no fade
       //    - On Mobile: on the 1st scroll, lifts the character canvas UP (--char-lift-y: -12vh) so the color switcher
       //      fits cleanly BELOW the character without covering his face!
       //    - Closes its ~2cm (76px desktop / 14px mobile) frame border at scrollY: 42vh -> 108vh
       //    - Recedes smoothly in parallax as Menu 1 (#habilidades) rises over it
       if (heroFrameCard && heroViewport) {
-        if (isHeroLocked) {
-          heroViewport.style.padding = "0px";
-          heroViewport.style.visibility = "visible";
-          heroFrameCard.style.borderRadius = "0px";
-          heroFrameCard.style.borderWidth = "0px";
-          heroFrameCard.style.transform = "none";
-          heroFrameCard.style.filter = "brightness(1)";
-          heroFrameCard.style.pointerEvents = "auto";
-          heroFrameCard.style.setProperty("--char-lift-y", "0px");
-        } else {
-          const pFrame = easeInOutCubic(rangeProgress(scrollY, vh * 0.42, vh * 1.08));
-          const pHeroCovered = easeInOutCubic(rangeProgress(scrollY, section2EnterScrollPx, vh * 2.10));
-          const maxFramePx = vw > 1100 ? 76 : vw > 680 ? 28 : 14;
-          const padPx = (pFrame * maxFramePx).toFixed(1);
-          const radius = Math.round(pFrame * (vw > 680 ? 26 : 20));
-          const borderW = (pFrame * 4).toFixed(1);
+        const pFrame = easeInOutCubic(rangeProgress(scrollY, vh * 0.42, vh * 1.08));
+        const pHeroCovered = easeInOutCubic(rangeProgress(scrollY, section2EnterScrollPx, vh * 2.10));
+        const maxFramePx = vw > 1100 ? 76 : vw > 680 ? 28 : 14;
+        const padPx = (pFrame * maxFramePx).toFixed(1);
+        const radius = Math.round(pFrame * (vw > 680 ? 26 : 20));
+        const borderW = (pFrame * 4).toFixed(1);
 
-          const mobileCharLiftPx = isMobile ? -pEnterR * (vh * 0.12) : 0;
-          heroFrameCard.style.setProperty("--char-lift-y", `${mobileCharLiftPx.toFixed(1)}px`);
+        const mobileCharLiftPx = isMobile ? -pEnterR * (vh * 0.12) : 0;
+        heroFrameCard.style.setProperty("--char-lift-y", `${mobileCharLiftPx.toFixed(1)}px`);
 
-          const parallaxLiftPx = -Math.max(0, scrollY - section2EnterScrollPx) * 0.42;
-          const heroScale = 1 - pHeroCovered * 0.065;
-          const heroBright = 1 - pHeroCovered * 0.48;
+        const parallaxLiftPx = -Math.max(0, scrollY - section2EnterScrollPx) * 0.42;
+        const heroScale = 1 - pHeroCovered * 0.065;
+        const heroBright = 1 - pHeroCovered * 0.48;
 
-          heroViewport.style.padding = `${padPx}px`;
-          heroViewport.style.visibility = scrollY > vh * 2.35 ? "hidden" : "visible";
-          heroFrameCard.style.borderRadius = `${radius}px`;
-          heroFrameCard.style.borderWidth = `${borderW}px`;
-          heroFrameCard.style.transform = `translate3d(0, ${parallaxLiftPx.toFixed(1)}px, 0) scale(${heroScale.toFixed(4)})`;
-          heroFrameCard.style.filter = `brightness(${heroBright.toFixed(3)})`;
-          heroFrameCard.style.pointerEvents = scrollY > vh * 1.55 ? "none" : "auto";
-        }
+        heroViewport.style.padding = `${padPx}px`;
+        heroViewport.style.visibility = scrollY > vh * 2.35 ? "hidden" : "visible";
+        heroFrameCard.style.borderRadius = `${radius}px`;
+        heroFrameCard.style.borderWidth = `${borderW}px`;
+        heroFrameCard.style.transform = `translate3d(0, ${parallaxLiftPx.toFixed(1)}px, 0) scale(${heroScale.toFixed(4)})`;
+        heroFrameCard.style.filter = `brightness(${heroBright.toFixed(3)})`;
+        heroFrameCard.style.pointerEvents = scrollY > vh * 1.55 ? "none" : "auto";
       }
 
       // 3. Right Box (#morphin-dock):
-      //    - In Fullscreen Mode (isHeroLocked): dock container stays visible so the ghost button can be clicked to exit
       //    - On Mobile: appears below the lifted character on 1st scroll, then rises/fades out at 46vh -> 78vh as Left Box enters
       //    - On Desktop: stays in place while the frame closes, then rises UP first at 110vh -> 172vh
       if (morphinDock) {
-        if (isHeroLocked) {
-          morphinDock.classList.remove("is-entrance-hidden");
-          morphinDock.style.setProperty("--scroll-y", "0px");
-          morphinDock.style.setProperty("--box-opacity", "1");
-        } else {
-          const exitStartR = isMobile ? vh * 0.46 : vh * 1.10;
-          const exitEndR = isMobile ? vh * 0.80 : vh * 1.72;
-          const fadeStartR = isMobile ? vh * 0.56 : vh * 1.56;
-          const pExitR = easeInOutCubic(rangeProgress(scrollY, exitStartR, exitEndR));
-          const enterOffsetPx = (1 - pEnterR) * 80;
-          const exitOffsetPx = -pExitR * (isMobile ? vh * 0.45 : vh * 1.05);
-          const totalRightY = enterOffsetPx + exitOffsetPx;
-          const rightOpacity = pEnterR * (1 - rangeProgress(scrollY, fadeStartR, exitEndR));
+        const exitStartR = isMobile ? vh * 0.46 : vh * 1.10;
+        const exitEndR = isMobile ? vh * 0.80 : vh * 1.72;
+        const fadeStartR = isMobile ? vh * 0.56 : vh * 1.56;
+        const pExitR = easeInOutCubic(rangeProgress(scrollY, exitStartR, exitEndR));
+        const enterOffsetPx = (1 - pEnterR) * 80;
+        const exitOffsetPx = -pExitR * (isMobile ? vh * 0.45 : vh * 1.05);
+        const totalRightY = enterOffsetPx + exitOffsetPx;
+        const rightOpacity = pEnterR * (1 - rangeProgress(scrollY, fadeStartR, exitEndR));
 
-          morphinDock.classList.toggle("is-entrance-hidden", rightOpacity < 0.02);
-          morphinDock.style.setProperty("--scroll-y", `${totalRightY.toFixed(1)}px`);
-          morphinDock.style.setProperty("--box-opacity", rightOpacity.toFixed(3));
-          rightBoxTyper.setProgress(1);
-        }
+        morphinDock.classList.toggle("is-entrance-hidden", rightOpacity < 0.02);
+        morphinDock.style.setProperty("--scroll-y", `${totalRightY.toFixed(1)}px`);
+        morphinDock.style.setProperty("--box-opacity", rightOpacity.toFixed(3));
+
+        const scrollTypeR = rangeProgress(scrollY, 20, vh * 0.34);
+        rightBoxTyper.setProgress(rawScrollY < 8 ? 0 : Math.max(rightAutoType, scrollTypeR));
       }
 
       // 4. Left Box (#hero-intro-box):
@@ -2794,7 +2680,11 @@
         heroIntroBox.classList.toggle("is-entrance-hidden", leftOpacity < 0.02);
         heroIntroBox.style.setProperty("--scroll-y", `${totalLeftY.toFixed(1)}px`);
         heroIntroBox.style.setProperty("--box-opacity", leftOpacity.toFixed(3));
-        leftBoxTyper.setProgress(1);
+
+        const typeStartL = isMobile ? vh * 0.50 : vh * 0.22;
+        const typeEndL = isMobile ? vh * 0.88 : vh * 0.54;
+        const scrollTypeL = rangeProgress(scrollY, typeStartL, typeEndL);
+        leftBoxTyper.setProgress(rawScrollY < 8 ? 0 : Math.max(leftAutoType, scrollTypeL));
       }
 
       // 5. Center Hint (#hero-center-hint):
@@ -2806,7 +2696,9 @@
         heroCenterHint.classList.toggle("is-entrance-hidden", hintOpacity < 0.02);
         heroCenterHint.style.setProperty("--scroll-y", `${hintY.toFixed(1)}px`);
         heroCenterHint.style.setProperty("--box-opacity", hintOpacity.toFixed(3));
-        hintTyper.setProgress(1);
+
+        const scrollTypeH = rangeProgress(scrollY, vh * 0.24, vh * 0.50);
+        hintTyper.setProgress(rawScrollY < 8 ? 0 : Math.max(hintAutoType, scrollTypeH));
       }
 
       // 6. Stacked Menu Sections Parallax (#habilidades -> #exemplos -> #processo -> #contato):
