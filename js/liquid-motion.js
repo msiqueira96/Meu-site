@@ -1572,10 +1572,10 @@
     silver: {
       name: "RANGER PRATA",
       accentHex: "#D8E2EC",
-      frameHex: "#D8E2EC",
+      frameHex: "#94A3B8",
       pillFg: "#D8E2EC",
-      letterFill: "#181B14",
-      letterStroke: "#D8E2EC",
+      letterFill: "#E2E8F0",
+      letterStroke: "#475569",
       waveHex: "#C8D6E5",
       suitHex: "#C8D6E5",
       tintMix: 0.0,
@@ -1692,15 +1692,24 @@
 
     init3DLetters() {
       this.letterItems = [];
+      this.lettersPauseUntil = 0;
       this.lettersGroup = new THREE.Group();
       this.lettersGroup.position.set(0, 0, -0.18);
       this.defaultScene.add(this.lettersGroup);
 
       // Super Mario World 2 / Yoshi's Island 3D Pause Letters ("Times New Roman", serif)
+      // Tighter spacing (~20px closer per letter) with optical kerning per glyph
       const rows = [
-        { text: "MARCOS", y: 0.28, spacing: 0.26 },
-        { text: "SIQUEIRA", y: 0.04, spacing: 0.24 },
+        { text: "MARCOS", y: 0.27, spacing: 0.195 },
+        { text: "SIQUEIRA", y: 0.04, spacing: 0.178 },
       ];
+
+      const getGlyphAdvanceFactor = (ch) => {
+        if (ch === "I") return 0.72;
+        if (ch === "M") return 1.14;
+        if (ch === "Q" || ch === "U" || ch === "R" || ch === "A") return 1.02;
+        return 0.96;
+      };
 
       const planeGeo = new THREE.PlaneGeometry(0.19, 0.23);
       const totalDepth = 0.068;
@@ -1708,11 +1717,18 @@
 
       rows.forEach((row) => {
         const chars = row.text.split("");
-        const totalW = (chars.length - 1) * row.spacing;
-        const startX = -totalW * 0.5;
+        const advances = chars.map((ch) => row.spacing * getGlyphAdvanceFactor(ch));
+        let totalW = 0;
+        for (let i = 0; i < chars.length - 1; i++) {
+          totalW += (advances[i] + advances[i + 1]) * 0.5;
+        }
+        let cursorX = -totalW * 0.5;
 
         chars.forEach((char, i) => {
-          const posX = startX + i * row.spacing;
+          if (i > 0) {
+            cursorX += (advances[i - 1] + advances[i]) * 0.5;
+          }
+          const posX = cursorX;
           const posY = row.y;
 
           const TextureCtor = (this.assets && this.assets.textures && this.assets.textures.head && this.assets.textures.head.diffuse)
@@ -1784,8 +1800,16 @@
             mesh: letterMesh,
             baseX: posX,
             baseY: posY,
-            velX: (Math.random() - 0.5) * 0.02,
-            velY: (Math.random() - 0.5) * 0.04,
+            offsetX: 0,
+            offsetY: 0,
+            targetOffsetX: 0,
+            targetOffsetY: 0,
+            rotX: 0,
+            rotY: 0,
+            targetRotX: 0,
+            targetRotY: 0,
+            velX: 0,
+            velY: 0,
           });
         });
       });
@@ -1856,92 +1880,96 @@
       const canvasEl = this.renderer.domElement;
       if (!canvasEl) return;
 
-      let isDragging = false;
-      let activeItem = null;
-      let lastX = 0;
-      let lastY = 0;
+      let lastX = null;
+      let lastY = null;
 
       const getNormalizedPos = (clientX, clientY) => {
         const rect = canvasEl.getBoundingClientRect();
         return {
-          normX: ((clientX - rect.left) / rect.width) * 2 - 1,
-          normY: -(((clientY - rect.top) / rect.height) * 2 - 1),
+          normX: ((clientX - rect.left) / Math.max(rect.width, 1)) * 2 - 1,
+          normY: -(((clientY - rect.top) / Math.max(rect.height, 1)) * 2 - 1),
         };
       };
 
-      const onDown = (e) => {
-        const clientX = e.touches ? e.touches[0].clientX : e.clientX;
-        const clientY = e.touches ? e.touches[0].clientY : e.clientY;
-        lastX = clientX;
-        lastY = clientY;
-
-        const { normX, normY } = getNormalizedPos(clientX, clientY);
-
-        let closest = null;
-        let minDist = 1e9;
-        this.letterItems.forEach((item) => {
-          const screenX = item.mesh.position.x * 0.72;
-          const screenY = item.mesh.position.y * 1.45;
-          const dist = Math.hypot(normX - screenX, normY - screenY);
-          if (dist < minDist) {
-            minDist = dist;
-            closest = item;
-          }
-        });
-
-        isDragging = true;
-        activeItem = minDist < 0.45 ? closest : null;
-        if (activeItem) {
-          activeItem.velY = 0;
-          activeItem.velX = 0;
-        }
+      const projectLetterToNDC = (item) => {
+        const scale = this.lettersGroup ? this.lettersGroup.scale.x : 1;
+        const groupZ = this.lettersGroup ? this.lettersGroup.position.z : -0.18;
+        const wx = item.baseX * scale;
+        const wy = item.baseY * scale;
+        const dz = Math.max(0.5, this.camera.position.z - groupZ);
+        const halfH = dz * Math.tan((this.camera.fov * Math.PI) / 360);
+        const halfW = halfH * (this.camera.aspect || 1.6);
+        return {
+          screenX: (wx - this.camera.position.x) / halfW,
+          screenY: (wy - this.camera.position.y) / halfH,
+          radX: (0.115 * scale) / halfW,
+          radY: (0.145 * scale) / halfH,
+        };
       };
 
-      const onMove = (e) => {
-        if (!isDragging) return;
+      // Hover interaction: when mouse passes over a letter, ONLY that letter moves smoothly in the direction passed
+      const onPointerMove = (e) => {
+        const now = performance.now();
         const clientX = e.touches ? e.touches[0].clientX : e.clientX;
         const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+
+        if (lastX === null || lastY === null) {
+          lastX = clientX;
+          lastY = clientY;
+        }
+
         const dx = clientX - lastX;
         const dy = clientY - lastY;
         lastX = clientX;
         lastY = clientY;
 
-        if (activeItem) {
-          activeItem.velY += dx * 0.024;
-          activeItem.velX += dy * 0.024;
+        // While paused for 0.8s after a click, ignore hover movement
+        if (now < this.lettersPauseUntil) return;
 
-          const activeIdx = this.letterItems.indexOf(activeItem);
-          this.letterItems.forEach((it, idx) => {
-            if (it !== activeItem) {
-              const dist = Math.abs(idx - activeIdx);
-              if (dist <= 3) {
-                const wavePower = 1 / (dist + 1);
-                it.velY += dx * 0.012 * wavePower;
-                it.velX += dy * 0.012 * wavePower;
-              }
-            }
-          });
-        } else {
-          this.letterItems.forEach((it) => {
-            it.velY += dx * 0.012;
-            it.velX += dy * 0.012;
-          });
-        }
+        const { normX, normY } = getNormalizedPos(clientX, clientY);
+        const clamp = (v, min, max) => Math.min(Math.max(v, min), max);
+
+        this.letterItems.forEach((item) => {
+          const { screenX, screenY, radX, radY } = projectLetterToNDC(item);
+          const nx = (normX - screenX) / Math.max(radX, 0.001);
+          const ny = (normY - screenY) / Math.max(radY, 0.001);
+          const dist = Math.hypot(nx, ny);
+
+          if (dist < 1.05) {
+            const influence = 1 - dist / 1.05;
+            // Move smoothly toward the direction the mouse passed
+            const moveStepX = (dx * 0.0014 + (normX - screenX) * 0.14) * influence;
+            const moveStepY = (-dy * 0.0014 + (normY - screenY) * 0.14) * influence;
+
+            item.targetOffsetX = clamp(item.targetOffsetX + moveStepX, -0.042, 0.042);
+            item.targetOffsetY = clamp(item.targetOffsetY + moveStepY, -0.042, 0.042);
+
+            // Tilt and rotate in 3D toward the mouse pass direction
+            item.targetRotY = clamp(item.targetRotY + (dx * 0.018 + nx * 0.22) * influence, -0.82, 0.82);
+            item.targetRotX = clamp(item.targetRotX + (dy * 0.018 - ny * 0.22) * influence, -0.68, 0.68);
+            item.velY = clamp(item.velY + dx * 0.0045 * influence, -0.14, 0.14);
+            item.velX = clamp(item.velX + dy * 0.0045 * influence, -0.14, 0.14);
+          }
+        });
       };
 
-      const onUp = () => {
-        isDragging = false;
-        activeItem = null;
+      // Click anywhere -> return all letters to original position and stay still for 0.8 seconds (800ms)
+      const onGlobalClickReset = () => {
+        this.lettersPauseUntil = performance.now() + 800;
+        this.letterItems.forEach((item) => {
+          item.velX = 0;
+          item.velY = 0;
+          item.targetOffsetX = 0;
+          item.targetOffsetY = 0;
+          item.targetRotX = 0;
+          item.targetRotY = 0;
+        });
       };
 
-      canvasEl.addEventListener("mousedown", onDown);
-      window.addEventListener("mousemove", onMove);
-      window.addEventListener("mouseup", onUp);
-
-      canvasEl.addEventListener("touchstart", onDown, { passive: true });
-      window.addEventListener("touchmove", onMove, { passive: true });
-      window.addEventListener("touchend", onUp);
-      window.addEventListener("touchcancel", onUp);
+      window.addEventListener("mousemove", onPointerMove, { passive: true });
+      window.addEventListener("touchmove", onPointerMove, { passive: true });
+      window.addEventListener("mousedown", onGlobalClickReset, { passive: true });
+      window.addEventListener("touchstart", onGlobalClickReset, { passive: true });
     }
 
     drawTitleSign() {
@@ -2146,25 +2174,68 @@
       this.head.update(delta, this.helmetRevealValue, fluidTexture);
       this.easedMouse.normalized.update(delta);
 
-      // Super Mario World 2 / Yoshi's Island Pause 3D Letter Tumbling Physics:
+      // 3D Interactive Letters Physics (Independent hover motion + 0.8s click reset pause):
       if (this.letterItems) {
+        const now = performance.now();
+        const isPaused = now < (this.lettersPauseUntil || 0);
+        const resumeRamp = isPaused
+          ? 0
+          : Math.min(1, (now - (this.lettersPauseUntil || 0)) / 320);
+
         this.letterItems.forEach((item, idx) => {
-          // Apply angular momentum from drag interaction
-          item.mesh.rotation.y += item.velY;
-          item.mesh.rotation.x += item.velX;
+          if (isPaused) {
+            // Smoothly & rapidly snap back to exact original position and stay still for 0.8s
+            item.velX = 0;
+            item.velY = 0;
+            item.targetOffsetX = 0;
+            item.targetOffsetY = 0;
+            item.targetRotX = 0;
+            item.targetRotY = 0;
 
-          // Momentum inertia damping
-          item.velY *= 0.94;
-          item.velX *= 0.94;
+            item.offsetX += (0 - item.offsetX) * 0.35;
+            item.offsetY += (0 - item.offsetY) * 0.35;
+            item.rotX += (0 - item.rotX) * 0.35;
+            item.rotY += (0 - item.rotY) * 0.35;
 
-          // Continuous organic 3D tumbling wave (Super Mario World 2 Pause style)
-          const idleWaveY = Math.sin(elapsed * 2.2 + idx * 0.45) * 0.016;
-          const idleWaveX = Math.cos(elapsed * 1.8 + idx * 0.35) * 0.012;
-          item.mesh.rotation.y += idleWaveY;
-          item.mesh.rotation.x += idleWaveX;
+            if (Math.abs(item.offsetX) < 0.0003) item.offsetX = 0;
+            if (Math.abs(item.offsetY) < 0.0003) item.offsetY = 0;
+            if (Math.abs(item.rotX) < 0.0005) item.rotX = 0;
+            if (Math.abs(item.rotY) < 0.0005) item.rotY = 0;
 
-          // Subtle float bounce
-          item.mesh.position.y = item.baseY + Math.sin(elapsed * 2.4 + idx * 0.5) * 0.006;
+            item.mesh.position.x = item.baseX + item.offsetX;
+            item.mesh.position.y = item.baseY + item.offsetY;
+            item.mesh.rotation.x = item.rotX;
+            item.mesh.rotation.y = item.rotY;
+            item.mesh.rotation.z = 0;
+            return;
+          }
+
+          // Apply independent angular velocity & smooth spring back
+          item.targetRotY += item.velY;
+          item.targetRotX += item.velX;
+          item.velY *= 0.90;
+          item.velX *= 0.90;
+
+          // Gently decay hover targets back toward rest
+          item.targetOffsetX *= 0.95;
+          item.targetOffsetY *= 0.95;
+          item.targetRotX *= 0.94;
+          item.targetRotY *= 0.94;
+
+          // Subtle organic 3D idle motion + independent hover target
+          const idleRotY = Math.sin(elapsed * 2.0 + idx * 0.45) * 0.14 * resumeRamp;
+          const idleRotX = Math.cos(elapsed * 1.6 + idx * 0.35) * 0.09 * resumeRamp;
+          const idleFloatY = Math.sin(elapsed * 2.2 + idx * 0.5) * 0.0045 * resumeRamp;
+
+          item.offsetX += (item.targetOffsetX - item.offsetX) * 0.16;
+          item.offsetY += (item.targetOffsetY - item.offsetY) * 0.16;
+          item.rotX += (idleRotX + item.targetRotX - item.rotX) * 0.16;
+          item.rotY += (idleRotY + item.targetRotY - item.rotY) * 0.16;
+
+          item.mesh.position.x = item.baseX + item.offsetX;
+          item.mesh.position.y = item.baseY + item.offsetY + idleFloatY;
+          item.mesh.rotation.x = item.rotX;
+          item.mesh.rotation.y = item.rotY;
         });
       }
 
