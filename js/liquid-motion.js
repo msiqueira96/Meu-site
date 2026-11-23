@@ -1680,12 +1680,10 @@
 
       this.helmet = new RangerCharacter(renderer, sizes, assets);
 
-      this.hemisphereLight = new THREE.HemisphereLight(0xffffff, 0x2a2e24, 2.65);
-      this.pointLight = new THREE.PointLight(0xffffff, 2.8);
-      this.pointLight.position.set(-0.75, 0.25, 0.55);
-      this.letterKeyLight = new THREE.PointLight(0xfffdf7, 3.4);
-      this.letterKeyLight.position.set(0.55, 0.5, 0.75);
-      this.defaultScene.add(this.hemisphereLight, this.pointLight, this.letterKeyLight);
+      this.hemisphereLight = new THREE.HemisphereLight(0xffffff, 0x000000, 2.5);
+      this.pointLight = new THREE.PointLight(0xffffff, 2.5);
+      this.pointLight.position.set(-0.75, 0.2, 0.4);
+      this.defaultScene.add(this.hemisphereLight, this.pointLight);
 
       this.init3DLetters();
       this.applyResponsive();
@@ -1757,29 +1755,25 @@
           sideTex.magFilter = THREE.LinearFilter;
           sideTex.needsUpdate = true;
 
-          const faceMat = new THREE.MeshStandardMaterial({
+          const faceMat = new THREE.MeshBasicMaterial({
             map: tex,
             transparent: true,
             alphaTest: 0.35,
             depthWrite: true,
             depthTest: true,
-            roughness: 0.26,
-            metalness: 0.08,
             side: THREE.DoubleSide,
           });
 
-          const sideMat = new THREE.MeshStandardMaterial({
+          const sideMat = new THREE.MeshBasicMaterial({
             map: sideTex,
             transparent: true,
             alphaTest: 0.35,
             depthWrite: true,
             depthTest: true,
-            roughness: 0.42,
-            metalness: 0.16,
             side: THREE.DoubleSide,
           });
 
-          // True Solid 3D Extruded Letter Block with Natural Lighting & Depth Occlusion:
+          // True Solid 3D Extruded Letter Block with Isolated Natural Lighting & Depth Occlusion:
           const letterMesh = new THREE.Group();
           for (let s = 0; s < sliceCount; s++) {
             const t = s / (sliceCount - 1); // 0 (back) -> 1 (front)
@@ -1801,6 +1795,8 @@
             sideCanvas,
             sideCtx,
             sideTex,
+            faceMat,
+            sideMat,
             mesh: letterMesh,
             baseX: posX,
             baseY: posY,
@@ -2174,24 +2170,29 @@
     }
 
     applyResponsive() {
+      const aspect = this.sizes.width / Math.max(this.sizes.height, 1);
       if (this.sizes.width > 768) {
         this.camera.position.z = 3.32;
         this.head.instance.position.y = -0.04;
         if (this.lettersGroup) {
           this.lettersGroup.scale.set(1.0, 1.0, 1.0);
+          this.lettersGroup.position.set(0, 0, -0.18);
         }
       } else {
-        this.camera.position.z = 4.10;
+        // Fit character and 3D letters cleanly inside narrow portrait mobile screens
+        this.camera.position.z = Math.min(4.85, Math.max(4.15, 2.15 / Math.max(aspect, 0.42)));
         this.head.instance.position.y = -0.06;
         if (this.lettersGroup) {
-          this.lettersGroup.scale.set(0.78, 0.78, 0.78);
+          const mobileLetterScale = Math.min(0.72, Math.max(0.42, aspect * 0.96));
+          this.lettersGroup.scale.set(mobileLetterScale, mobileLetterScale, mobileLetterScale);
+          this.lettersGroup.position.set(0, 0.08, -0.18);
         }
       }
       this.helmet.instance.position.copy(this.head.instance.position);
 
       this.compositionMesh.scale.set(this.sizes.width, this.sizes.height, 1);
-      this.compositionMesh.material.uniforms.uAspect.value = this.sizes.width / this.sizes.height;
-      this.camera.aspect = this.sizes.width / this.sizes.height;
+      this.compositionMesh.material.uniforms.uAspect.value = aspect;
+      this.camera.aspect = aspect;
       this.camera.updateProjectionMatrix();
     }
 
@@ -2273,19 +2274,40 @@
           item.mesh.position.y = item.baseY + item.offsetY + idleFloatY;
           item.mesh.rotation.x = item.rotX;
           item.mesh.rotation.y = item.rotY;
+
+          // Isolated Natural 3D Lighting exclusively on the letters (never touches the character!):
+          // Calculates surface normal N from the letter's 3D tilt and dot product with a virtual studio key light.
+          if (item.faceMat && item.sideMat) {
+            const lightX = -0.35 + this.easedMouse.normalized.value.x * 0.55;
+            const lightY = 0.48 - this.easedMouse.normalized.value.y * 0.35;
+            const lightZ = 0.92;
+
+            const lx = lightX - item.mesh.position.x;
+            const ly = lightY - item.mesh.position.y;
+            const lz = lightZ;
+            const lLen = Math.hypot(lx, ly, lz) || 1;
+
+            const nx = Math.sin(item.rotY);
+            const ny = -Math.sin(item.rotX) * Math.cos(item.rotY);
+            const nz = Math.cos(item.rotX) * Math.cos(item.rotY);
+
+            const ndotl = Math.max(0, (nx * lx + ny * ly + nz * lz) / lLen);
+            const spec = Math.pow(ndotl, 8) * 0.14;
+            const faceLight = Math.min(1.06, 0.86 + ndotl * 0.16 + spec);
+            const sideLight = Math.min(1.05, 0.68 + (1 - Math.abs(nz)) * 0.32 + ndotl * 0.15);
+
+            item.faceMat.color.setRGB(faceLight, faceLight, faceLight * 0.99);
+            item.sideMat.color.setRGB(sideLight, sideLight, sideLight);
+          }
         });
       }
 
-      // Subtle camera parallax & dynamic natural key light tracking
+      // Subtle camera parallax
       this.camera.position.x = this.easedMouse.normalized.value.x * 0.02 * this.helmetRevealValue;
       if (this.sizes.width > 768) {
         this.camera.position.y = -this.easedMouse.normalized.value.y * 0.02 * this.helmetRevealValue;
       } else {
         this.camera.position.y = 0;
-      }
-      if (this.letterKeyLight) {
-        this.letterKeyLight.position.x = 0.45 + this.easedMouse.normalized.value.x * 0.65;
-        this.letterKeyLight.position.y = 0.45 - this.easedMouse.normalized.value.y * 0.45;
       }
 
       // Render 2.5D Black Ranger pass synced with user head
@@ -2977,9 +2999,9 @@
           firstScrollTimestamp = now;
         }
         if (isMobile) {
-          leftBoxTriggered = scrollY >= vh * 0.48;
+          leftBoxTriggered = scrollY >= vh * 0.54;
           if (!leftBoxTriggered) {
-            leftEnterProgress = Math.max(0, leftEnterProgress - dtSec * 2.2);
+            leftEnterProgress = Math.max(0, leftEnterProgress - dtSec * 2.4);
             leftAutoType = 0;
           }
         } else if (!leftBoxTriggered && (now - firstScrollTimestamp >= 1250 || scrollY >= vh * 0.24)) {
@@ -3004,7 +3026,7 @@
 
       const pEnterR = Math.max(easeOutCubic(rightEnterProgress), easeOutCubic(rangeProgress(scrollY, 15, vh * 0.30)));
       const pEnterL = isMobile
-        ? Math.max(easeOutCubic(leftEnterProgress), easeOutCubic(rangeProgress(scrollY, vh * 0.48, vh * 0.76)))
+        ? Math.max(easeOutCubic(leftEnterProgress), easeOutCubic(rangeProgress(scrollY, vh * 0.54, vh * 0.78)))
         : Math.max(easeOutCubic(leftEnterProgress), easeOutCubic(rangeProgress(scrollY, vh * 0.20, vh * 0.48)));
       const pEnterH = Math.max(easeOutCubic(hintEnterProgress), easeOutCubic(rangeProgress(scrollY, vh * 0.25, vh * 0.52)));
 
@@ -3058,7 +3080,7 @@
 
       // 3. Right Box (#morphin-dock):
       //    - In Fullscreen Mode (isHeroLocked): dock container stays visible so the ghost button can be clicked to exit
-      //    - On Mobile: appears below the lifted character on 1st scroll, then rises/fades out at 46vh -> 78vh as Left Box enters
+      //    - On Mobile: appears below the lifted character on 1st scroll, then exits cleanly by 54vh BEFORE Left Box enters
       //    - On Desktop: stays in place while the frame closes, then rises UP at 112vh -> 178vh
       if (morphinDock) {
         if (isHeroLocked) {
@@ -3066,12 +3088,12 @@
           morphinDock.style.setProperty("--scroll-y", "0px");
           morphinDock.style.setProperty("--box-opacity", "1");
         } else {
-          const exitStartR = isMobile ? vh * 0.46 : vh * 1.12;
-          const exitEndR = isMobile ? vh * 0.80 : vh * 1.78;
-          const fadeStartR = isMobile ? vh * 0.56 : vh * 1.62;
+          const exitStartR = isMobile ? vh * 0.36 : vh * 1.12;
+          const exitEndR = isMobile ? vh * 0.54 : vh * 1.78;
+          const fadeStartR = isMobile ? vh * 0.40 : vh * 1.62;
           const pExitR = easeInOutCubic(rangeProgress(scrollY, exitStartR, exitEndR));
           const enterOffsetPx = (1 - pEnterR) * 80;
-          const exitOffsetPx = -pExitR * (isMobile ? vh * 0.45 : vh * 1.05);
+          const exitOffsetPx = -pExitR * (isMobile ? vh * 0.35 : vh * 1.05);
           const totalRightY = enterOffsetPx + exitOffsetPx;
           const rightOpacity = pEnterR * (1 - rangeProgress(scrollY, fadeStartR, exitEndR));
 
@@ -3079,32 +3101,37 @@
           morphinDock.style.setProperty("--scroll-y", `${totalRightY.toFixed(1)}px`);
           morphinDock.style.setProperty("--box-opacity", rightOpacity.toFixed(3));
 
-          const scrollTypeR = rangeProgress(scrollY, 25, vh * 0.38);
+          const scrollTypeR = rangeProgress(scrollY, 25, vh * 0.35);
           rightBoxTyper.setProgress(rawScrollY < 8 ? 0 : Math.max(rightAutoType, scrollTypeR));
         }
       }
 
       // 4. Left Box (#hero-intro-box):
       if (heroIntroBox) {
-        const exitStartL = isMobile ? vh * 0.86 : vh * 1.48;
-        const exitEndL = isMobile ? vh * 1.25 : vh * 2.15;
-        const fadeStartL = isMobile ? vh * 0.98 : vh * 1.98;
-        const pExitL = easeInOutCubic(rangeProgress(scrollY, exitStartL, exitEndL));
-        const enterOffsetPx = (1 - pEnterL) * 80;
-        const exitOffsetPx = -pExitL * (isMobile ? vh * 0.45 : vh * 1.05);
-        const totalLeftY = enterOffsetPx + exitOffsetPx;
-        const leftOpacity = pEnterL * (1 - rangeProgress(scrollY, fadeStartL, exitEndL));
+        if (isHeroLocked) {
+          heroIntroBox.classList.add("is-entrance-hidden");
+          heroIntroBox.style.setProperty("--box-opacity", "0");
+        } else {
+          const exitStartL = isMobile ? vh * 0.88 : vh * 1.48;
+          const exitEndL = isMobile ? vh * 1.22 : vh * 2.15;
+          const fadeStartL = isMobile ? vh * 0.98 : vh * 1.98;
+          const pExitL = easeInOutCubic(rangeProgress(scrollY, exitStartL, exitEndL));
+          const enterOffsetPx = (1 - pEnterL) * 80;
+          const exitOffsetPx = -pExitL * (isMobile ? vh * 0.40 : vh * 1.05);
+          const totalLeftY = enterOffsetPx + exitOffsetPx;
+          const leftOpacity = pEnterL * (1 - rangeProgress(scrollY, fadeStartL, exitEndL));
 
-        heroIntroBox.classList.toggle("is-entrance-hidden", leftOpacity < 0.02);
-        heroIntroBox.style.setProperty("--scroll-y", `${totalLeftY.toFixed(1)}px`);
-        heroIntroBox.style.setProperty("--box-opacity", leftOpacity.toFixed(3));
+          heroIntroBox.classList.toggle("is-entrance-hidden", leftOpacity < 0.02);
+          heroIntroBox.style.setProperty("--scroll-y", `${totalLeftY.toFixed(1)}px`);
+          heroIntroBox.style.setProperty("--box-opacity", leftOpacity.toFixed(3));
 
-        const scrollTypeL = rangeProgress(
-          scrollY,
-          isMobile ? vh * 0.48 : vh * 0.22,
-          isMobile ? vh * 0.74 : vh * 0.56
-        );
-        leftBoxTyper.setProgress(rawScrollY < 8 ? 0 : Math.max(leftAutoType, scrollTypeL));
+          const scrollTypeL = rangeProgress(
+            scrollY,
+            isMobile ? vh * 0.54 : vh * 0.22,
+            isMobile ? vh * 0.78 : vh * 0.56
+          );
+          leftBoxTyper.setProgress(rawScrollY < 8 ? 0 : Math.max(leftAutoType, scrollTypeL));
+        }
       }
 
       // 5. Center Hint (#hero-center-hint):
@@ -3134,9 +3161,10 @@
         const uTop = untransformedTops[idx];
         const nextUTop = idx + 1 < untransformedTops.length ? untransformedTops[idx + 1] : null;
 
-        // Slide in from the right (+48vw -> 0px) as the card enters from the bottom
-        const pSlideIn = easeOutCubic(rangeProgress(vh - uTop, vh * 0.02, vh * 0.62));
-        const slideXPx = (1 - pSlideIn) * (vw * 0.48);
+        // Slide in from the right (+48vw desktop / +12vw mobile -> 0px) as the card enters from the bottom
+        const slideEndVh = isMobile ? vh * 0.38 : vh * 0.62;
+        const pSlideIn = easeOutCubic(rangeProgress(vh - uTop, vh * 0.02, slideEndVh));
+        const slideXPx = (1 - pSlideIn) * (vw * (isMobile ? 0.12 : 0.48));
 
         const enterP = easeOutCubic(rangeProgress(vh - uTop, 0, vh * 0.82));
         const innerY = (1 - enterP) * 24;
