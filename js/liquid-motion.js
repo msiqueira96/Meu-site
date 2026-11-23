@@ -1254,7 +1254,7 @@
       );
       this.scene.add(this.output);
 
-      this.sourceTarget = new THREE.WebGLRenderTarget(this.sizes.width, this.sizes.height, { samples: 2 });
+      this.sourceTarget = new THREE.WebGLRenderTarget(this.sizes.width, this.sizes.height);
       this.clock = new THREE.Clock();
       this.delta = 0;
       this.interval = 1 / 60;
@@ -1318,7 +1318,7 @@
         })
       );
       this.scene.add(this.mesh);
-      this.renderTarget = new THREE.WebGLRenderTarget(this.sizes.width, this.sizes.height, { samples: 1 });
+      this.renderTarget = new THREE.WebGLRenderTarget(this.sizes.width, this.sizes.height);
     }
 
     resize() {
@@ -1355,11 +1355,15 @@
 
       this.geometry = new THREE.PlaneGeometry(1, 1, 128, 128);
       this.material = new THREE.MeshStandardMaterial({
+        map: assets.textures.head.diffuse,
         displacementMap: assets.textures.head.depth,
         displacementScale: 0.25,
         alphaMap: assets.textures.head.alpha,
         transparent: true,
+        side: THREE.DoubleSide,
         normalMap: assets.textures.head.normal,
+        roughness: 0.4,
+        metalness: 0.1,
       });
 
       this.uniforms = {
@@ -1475,8 +1479,7 @@
 
       this.renderTarget = new THREE.WebGLRenderTarget(
         this.sizes.width * this.sizes.pixelRatio,
-        this.sizes.height * this.sizes.pixelRatio,
-        { samples: 2 }
+        this.sizes.height * this.sizes.pixelRatio
       );
     }
 
@@ -1672,8 +1675,7 @@
       this.defaultScene = new THREE.Scene();
       this.defaultRenderTarget = new THREE.WebGLRenderTarget(
         this.sizes.width * this.sizes.pixelRatio,
-        this.sizes.height * this.sizes.pixelRatio,
-        { samples: 1 }
+        this.sizes.height * this.sizes.pixelRatio
       );
 
       this.cameraTransformGroup = new THREE.Group();
@@ -2142,9 +2144,9 @@
       sizes = computeSizes();
 
       const configs = [
-        { canvas, alpha: true, antialias: false, powerPreference: "default" },
-        { canvas, alpha: true, antialias: false, failIfMajorPerformanceCaveat: false },
-        { canvas, alpha: true, antialias: false, powerPreference: "high-performance" },
+        { canvas, alpha: true, powerPreference: "high-performance", precision: "lowp" },
+        { canvas, alpha: true, powerPreference: "default" },
+        { canvas, alpha: true, antialias: false },
         { canvas, alpha: true }
       ];
 
@@ -2170,7 +2172,7 @@
         2 * Math.atan(sizes.height / 2 / 10) * (180 / Math.PI),
         sizes.width / sizes.height,
         0.1,
-        10
+        1000
       );
       mainCamera.position.z = 10;
     } catch (glErr) {
@@ -2241,6 +2243,7 @@
 
       mainCamera.aspect = sizes.width / sizes.height;
       mainCamera.fov = 2 * Math.atan(sizes.height / 2 / 10) * (180 / Math.PI);
+      mainCamera.far = 1000;
       mainCamera.updateProjectionMatrix();
 
       renderer.setPixelRatio(sizes.pixelRatio);
@@ -2494,7 +2497,7 @@
       }
     }
     const rightBoxTyper = createSequenceTypewriter(rightBoxSteps);
-    rightBoxTyper.setProgress(0);
+    rightBoxTyper.setProgress(1);
 
     // Build Typewriter for Left Box (#hero-intro-box)
     const leftBoxSteps = [];
@@ -2531,13 +2534,13 @@
       });
     }
     const leftBoxTyper = createSequenceTypewriter(leftBoxSteps);
-    leftBoxTyper.setProgress(0);
+    leftBoxTyper.setProgress(1);
 
     // Build Typewriter for Center Hint (#hero-center-hint)
     const hintTyper = createSequenceTypewriter(
       heroCenterHint ? [{ type: "richText", el: heroCenterHint }] : []
     );
-    hintTyper.setProgress(0);
+    hintTyper.setProgress(1);
 
     // Fullscreen Character Mode / Boxes Toggle Button inside #morphin-dock:
     // Locks the scroll and keeps the character photo in clean full screen without framing borders or boxes
@@ -2667,15 +2670,15 @@
 
     // Live state for Slower, Smoother First-Scroll Box Entrance & Damped Scroll Inertia
     const menuCards = Array.from(document.querySelectorAll(".parallax-menu-card"));
-    let rightBoxTriggered = false;
-    let leftBoxTriggered = false;
+    let rightBoxTriggered = true;
+    let leftBoxTriggered = true;
     let firstScrollTimestamp = 0;
-    let rightEnterProgress = 0;
-    let leftEnterProgress = 0;
-    let hintEnterProgress = 0;
-    let rightAutoType = 0;
-    let leftAutoType = 0;
-    let hintAutoType = 0;
+    let rightEnterProgress = 1;
+    let leftEnterProgress = 1;
+    let hintEnterProgress = 1;
+    let rightAutoType = 1;
+    let leftAutoType = 1;
+    let hintAutoType = 1;
     let smoothScrollY = window.scrollY || 0;
     let lastActiveSectionId = "hero";
     let lastTickTime = performance.now();
@@ -2691,68 +2694,21 @@
       const isMobile = vw <= 768;
       const section2EnterScrollPx = vh * 1.15;
 
-      // 0. Initial Scroll Cue: visible at scrollY = 0 when ONLY the character + name sign are on screen
+      // 0. Initial Scroll Cue: visible at scrollY = 0
       if (heroScrollCue) {
         heroScrollCue.classList.toggle("is-cue-hidden", rawScrollY > 10 || isHeroLocked);
       }
 
-      // 1. Trigger sequence on First Scroll (rawScrollY >= 10px):
-      //    - On Mobile (isMobile): 1st scroll lifts the character UP (-12vh) and shows ONLY #morphin-dock below him!
-      //      Then scrolling further (scrollY >= 52vh) swaps #morphin-dock out and brings #hero-intro-box into the bottom dock!
-      //    - On Desktop (!isMobile): 1st scroll brings #morphin-dock on the right, and after 1.15s (or scrollY >= 24vh)
-      //      brings #hero-intro-box on the left.
-      if (rawScrollY < 8) {
-        rightBoxTriggered = false;
-        leftBoxTriggered = false;
-        firstScrollTimestamp = 0;
-        rightEnterProgress = Math.max(0, rightEnterProgress - dtSec * 1.8);
-        leftEnterProgress = Math.max(0, leftEnterProgress - dtSec * 1.8);
-        hintEnterProgress = Math.max(0, hintEnterProgress - dtSec * 1.8);
-        rightAutoType = 0;
-        leftAutoType = 0;
-        hintAutoType = 0;
-      } else {
-        if (!rightBoxTriggered) {
-          rightBoxTriggered = true;
-          firstScrollTimestamp = now;
-        }
-        if (isMobile) {
-          leftBoxTriggered = scrollY >= vh * 0.48;
-          if (!leftBoxTriggered) {
-            leftEnterProgress = Math.max(0, leftEnterProgress - dtSec * 2.2);
-            leftAutoType = 0;
-          }
-        } else if (!leftBoxTriggered && (now - firstScrollTimestamp >= 1150 || scrollY >= vh * 0.24)) {
-          leftBoxTriggered = true;
-        }
-      }
+      const pEnterR = 1;
+      const pEnterL = 1;
+      const pEnterH = 1;
 
-      if (rightBoxTriggered) {
-        rightEnterProgress = Math.min(1, rightEnterProgress + dtSec * 1.2);
-        if (rightEnterProgress > 0.38) {
-          rightAutoType = Math.min(1, rightAutoType + dtSec * 0.72);
-        }
-      }
-      if (leftBoxTriggered) {
-        leftEnterProgress = Math.min(1, leftEnterProgress + dtSec * 1.15);
-        hintEnterProgress = Math.min(1, hintEnterProgress + dtSec * 1.05);
-        if (leftEnterProgress > 0.38) {
-          leftAutoType = Math.min(1, leftAutoType + dtSec * 0.56);
-          hintAutoType = Math.min(1, hintAutoType + dtSec * 0.85);
-        }
-      }
-
-      const pEnterR = Math.max(easeOutCubic(rightEnterProgress), easeOutCubic(rangeProgress(scrollY, 15, vh * 0.28)));
-      const pEnterL = isMobile
-        ? Math.max(easeOutCubic(leftEnterProgress), easeOutCubic(rangeProgress(scrollY, vh * 0.48, vh * 0.76)))
-        : Math.max(easeOutCubic(leftEnterProgress), easeOutCubic(rangeProgress(scrollY, vh * 0.20, vh * 0.46)));
-      const pEnterH = Math.max(easeOutCubic(hintEnterProgress), easeOutCubic(rangeProgress(scrollY, vh * 0.25, vh * 0.50)));
-
-      // Header follows Right Box entrance on first scroll
+      // Header is visible, fades gracefully on deeper scroll
       if (siteHeader) {
-        siteHeader.classList.toggle("is-entrance-hidden", pEnterR < 0.02);
-        siteHeader.style.setProperty("--header-y", `${((1 - pEnterR) * -36).toFixed(1)}px`);
-        siteHeader.style.setProperty("--header-opacity", pEnterR.toFixed(3));
+        siteHeader.classList.remove("is-entrance-hidden");
+        const headerOpacity = Math.max(0, 1 - rangeProgress(scrollY, vh * 0.85, vh * 1.30));
+        siteHeader.style.setProperty("--header-y", "0px");
+        siteHeader.style.setProperty("--header-opacity", headerOpacity.toFixed(3));
       }
 
       // 2. Main Character Stage (#hero-frame-card):
@@ -2818,9 +2774,7 @@
           morphinDock.classList.toggle("is-entrance-hidden", rightOpacity < 0.02);
           morphinDock.style.setProperty("--scroll-y", `${totalRightY.toFixed(1)}px`);
           morphinDock.style.setProperty("--box-opacity", rightOpacity.toFixed(3));
-
-          const scrollTypeR = rangeProgress(scrollY, 20, vh * 0.34);
-          rightBoxTyper.setProgress(rawScrollY < 8 ? 0 : Math.max(rightAutoType, scrollTypeR));
+          rightBoxTyper.setProgress(1);
         }
       }
 
@@ -2840,11 +2794,7 @@
         heroIntroBox.classList.toggle("is-entrance-hidden", leftOpacity < 0.02);
         heroIntroBox.style.setProperty("--scroll-y", `${totalLeftY.toFixed(1)}px`);
         heroIntroBox.style.setProperty("--box-opacity", leftOpacity.toFixed(3));
-
-        const typeStartL = isMobile ? vh * 0.50 : vh * 0.22;
-        const typeEndL = isMobile ? vh * 0.88 : vh * 0.54;
-        const scrollTypeL = rangeProgress(scrollY, typeStartL, typeEndL);
-        leftBoxTyper.setProgress(rawScrollY < 8 ? 0 : Math.max(leftAutoType, scrollTypeL));
+        leftBoxTyper.setProgress(1);
       }
 
       // 5. Center Hint (#hero-center-hint):
@@ -2856,9 +2806,7 @@
         heroCenterHint.classList.toggle("is-entrance-hidden", hintOpacity < 0.02);
         heroCenterHint.style.setProperty("--scroll-y", `${hintY.toFixed(1)}px`);
         heroCenterHint.style.setProperty("--box-opacity", hintOpacity.toFixed(3));
-
-        const scrollTypeH = rangeProgress(scrollY, vh * 0.24, vh * 0.50);
-        hintTyper.setProgress(rawScrollY < 8 ? 0 : Math.max(hintAutoType, scrollTypeH));
+        hintTyper.setProgress(1);
       }
 
       // 6. Stacked Menu Sections Parallax (#habilidades -> #exemplos -> #processo -> #contato):
