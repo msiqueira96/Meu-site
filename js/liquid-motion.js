@@ -1961,21 +1961,6 @@
     tex.wrapT = THREE.ClampToEdgeWrapping;
   }
 
-  function createDummyTexture(w = 1, h = 1, color = "rgba(0,0,0,0)") {
-    const canvas = document.createElement("canvas");
-    canvas.width = w;
-    canvas.height = h;
-    const ctx = canvas.getContext("2d");
-    if (ctx) {
-      ctx.fillStyle = color;
-      ctx.fillRect(0, 0, w, h);
-    }
-    const tex = new THREE.CanvasTexture(canvas);
-    tex.wrapS = THREE.ClampToEdgeWrapping;
-    tex.wrapT = THREE.ClampToEdgeWrapping;
-    return tex;
-  }
-
   function loadLiquidAssets(onProgress) {
     const textureLoader = new THREE.TextureLoader();
     const urls = [
@@ -2006,48 +1991,20 @@
     const totalCount = urls.length;
 
     const loadTex = (url) =>
-      new Promise((resolve) => {
-        let finished = false;
-        const fallbackTimer = setTimeout(() => {
-          if (!finished) {
-            finished = true;
-            console.warn(`Timeout loading texture ${url}, using fallback.`);
+      new Promise((resolve, reject) =>
+        textureLoader.load(
+          url,
+          (tex) => {
             loadedCount++;
             if (typeof onProgress === "function") {
               onProgress(loadedCount, totalCount);
             }
-            resolve(createDummyTexture());
-          }
-        }, 5000);
-
-        textureLoader.load(
-          url,
-          (tex) => {
-            if (!finished) {
-              finished = true;
-              clearTimeout(fallbackTimer);
-              loadedCount++;
-              if (typeof onProgress === "function") {
-                onProgress(loadedCount, totalCount);
-              }
-              resolve(tex);
-            }
+            resolve(tex);
           },
           undefined,
-          (err) => {
-            if (!finished) {
-              finished = true;
-              clearTimeout(fallbackTimer);
-              console.warn(`Failed to load texture ${url}, using fallback:`, err);
-              loadedCount++;
-              if (typeof onProgress === "function") {
-                onProgress(loadedCount, totalCount);
-              }
-              resolve(createDummyTexture());
-            }
-          }
-        );
-      });
+          reject
+        )
+      );
 
     return Promise.all(urls.map(loadTex)).then(
       ([
@@ -2140,20 +2097,7 @@
     const barFillEl = document.getElementById("loader-bar-fill");
     const percentEl = document.getElementById("loader-percent");
     const progressBarEl = document.getElementById("loader-progressbar");
-
-    const dismissLoader = () => {
-      if (loaderEl && !loaderEl.classList.contains("is-loaded")) {
-        loaderEl.classList.add("is-loaded");
-        if (typeof forceScrollToTop === "function") forceScrollToTop();
-      }
-    };
-
-    // Watchdog safety timeout: under NO circumstances will the screen freeze for more than 3.5s
-    const safetyTimeout = setTimeout(() => {
-      console.warn("Safety timeout triggered: smoothly dismissing loader.");
-      setLoaderProgress(100, "Pronto!");
-      dismissLoader();
-    }, 3500);
+    if (!canvas) return;
 
     const setLoaderProgress = (pct, statusMsg) => {
       const clamped = Math.min(100, Math.max(0, Math.round(pct)));
@@ -2163,55 +2107,51 @@
       if (statusMsg && statusEl) statusEl.textContent = statusMsg;
     };
 
-    if (!canvas) {
-      clearTimeout(safetyTimeout);
-      dismissLoader();
-      return;
-    }
-
     setLoaderProgress(8, "Inicializando motor WebGL...");
 
-    let sizes, renderer, mainScene, mainCamera;
-    try {
-      THREE.ShaderChunk.simplex = SIMPLEX_NOISE_GLSL;
-      THREE.ColorManagement.enabled = true;
+    THREE.ShaderChunk.simplex = SIMPLEX_NOISE_GLSL;
+    THREE.ColorManagement.enabled = true;
 
-      sizes = computeSizes();
-      renderer = new THREE.WebGLRenderer({
-        canvas,
-        powerPreference: "high-performance",
-        alpha: true,
-        precision: "lowp",
-      });
-      renderer.autoClear = false;
-      renderer.setPixelRatio(sizes.pixelRatio);
-      renderer.setSize(sizes.width, sizes.height);
+    let sizes = computeSizes();
+    const renderer = new THREE.WebGLRenderer({
+      canvas,
+      powerPreference: "high-performance",
+      alpha: true,
+      precision: "lowp",
+    });
+    renderer.autoClear = false;
+    renderer.setPixelRatio(sizes.pixelRatio);
+    renderer.setSize(sizes.width, sizes.height);
 
-      mainScene = new THREE.Scene();
-      mainCamera = new THREE.PerspectiveCamera(
-        2 * Math.atan(sizes.height / 2 / 10) * (180 / Math.PI),
-        sizes.width / sizes.height,
-        0.1,
-        10
-      );
-      mainCamera.position.z = 10;
-    } catch (glInitErr) {
-      console.warn("WebGL initialization note:", glInitErr);
-      clearTimeout(safetyTimeout);
-      dismissLoader();
-      return;
-    }
+    const mainScene = new THREE.Scene();
+    const mainCamera = new THREE.PerspectiveCamera(
+      2 * Math.atan(sizes.height / 2 / 10) * (180 / Math.PI),
+      sizes.width / sizes.height,
+      0.1,
+      10
+    );
+    mainCamera.position.z = 10;
+
+    let currentPct = 8;
+    const progressTicker = setInterval(() => {
+      if (currentPct < 88) {
+        currentPct += Math.max(1, Math.round((88 - currentPct) * 0.12));
+        setLoaderProgress(currentPct, `Carregando texturas 2.5D & Shaders...`);
+      }
+    }, 150);
 
     let assets;
     try {
       assets = await loadLiquidAssets((loaded, total) => {
-        const pct = 10 + (loaded / total) * 82;
-        setLoaderProgress(pct, `Carregando texturas 2.5D & Shaders (${loaded}/${total})...`);
+        const realPct = 10 + (loaded / total) * 82;
+        currentPct = Math.max(currentPct, realPct);
+        setLoaderProgress(currentPct, `Carregando texturas 2.5D & Shaders (${loaded}/${total})...`);
       });
+      clearInterval(progressTicker);
     } catch (err) {
-      console.warn("Assets load completed with fallbacks:", err);
-      clearTimeout(safetyTimeout);
-      dismissLoader();
+      clearInterval(progressTicker);
+      console.error("Failed to load Liquid Motion assets:", err);
+      if (statusEl) statusEl.textContent = "Erro ao carregar assets (abra via http://localhost:8080)";
       return;
     }
 
@@ -2227,18 +2167,19 @@
       heroScene = new LiquidHeroScene(renderer, sizes, mouse, assets, fluidCursor, backgroundNoise);
       mainScene.add(heroScene.compositionMesh);
     } catch (initErr) {
-      console.warn("Scene setup note:", initErr);
-      clearTimeout(safetyTimeout);
-      dismissLoader();
+      console.error("Failed to initialize scene at 96%:", initErr);
+      if (statusEl) statusEl.textContent = `Erro na inicialização: ${initErr.message}`;
       return;
     }
 
     setLoaderProgress(100, "Pronto!");
-    clearTimeout(safetyTimeout);
 
-    setTimeout(() => {
-      dismissLoader();
-    }, 280);
+    if (loaderEl) {
+      setTimeout(() => {
+        loaderEl.classList.add("is-loaded");
+        forceScrollToTop();
+      }, 280);
+    }
 
     window.addEventListener("resize", () => {
       const next = computeSizes();
@@ -3178,14 +3119,8 @@
     }
   }
 
-  const startApp = () => {
+  window.addEventListener("DOMContentLoaded", () => {
     initPortfolioUI();
     initLiquidMotion();
-  };
-
-  if (document.readyState === "loading") {
-    window.addEventListener("DOMContentLoaded", startApp);
-  } else {
-    startApp();
-  }
+  });
 })();
