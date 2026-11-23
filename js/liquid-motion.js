@@ -604,7 +604,30 @@
 
       // Background remains pure reactive white base; 3D letters render in defaultScene
       vec3 base = mix(background, textureDefaultDiffuse.rgb, textureDefaultDiffuse.a);
-      vec3 rangerLayer = mix(background, textureHelmet.rgb, textureHelmet.a);
+
+      // Inside the liquid hover / Ranger reveal (rangerLayer), keep the 3D letters visible
+      // behind the Ranger and supercharge them with flashy Morphin Grid energy & glowing rim effects!
+      vec2 glowStep = vec2(0.0022, 0.0022 * uAspect);
+      float aR = texture2D(tDefaultDiffuse, vUv + vec2(glowStep.x, 0.0)).a;
+      float aL = texture2D(tDefaultDiffuse, vUv - vec2(glowStep.x, 0.0)).a;
+      float aU = texture2D(tDefaultDiffuse, vUv + vec2(0.0, glowStep.y)).a;
+      float aD = texture2D(tDefaultDiffuse, vUv - vec2(0.0, glowStep.y)).a;
+      float letterNeighborMax = max(max(aR, aL), max(aU, aD));
+      float letterEdge = clamp(abs(aR - aL) + abs(aU - aD), 0.0, 1.0);
+      float letterOuterHalo = clamp((letterNeighborMax - textureDefaultDiffuse.a) * 1.6, 0.0, 1.0);
+
+      float energySweep = 0.5 + 0.5 * sin(vUv.x * 26.0 - vUv.y * 16.0 - uTime * 7.2);
+      float shimmerBand = pow(0.5 + 0.5 * sin(vUv.x * 42.0 + vUv.y * 24.0 - uTime * 9.5), 4.0);
+      vec3 energyTint = mix(uRangerColor, vec3(1.0), 0.32 + 0.35 * shimmerBand);
+
+      vec3 flashyLetterRgb = mix(textureDefaultDiffuse.rgb, energyTint, 0.42 + 0.28 * energySweep);
+      flashyLetterRgb += letterEdge * mix(uRangerColor, vec3(1.0), 0.55) * 0.95;
+      flashyLetterRgb += shimmerBand * vec3(0.28);
+
+      vec3 rangerBgWithLetters = mix(background, flashyLetterRgb, textureDefaultDiffuse.a);
+      rangerBgWithLetters = mix(rangerBgWithLetters, energyTint, letterOuterHalo * (1.0 - textureHelmet.a) * 0.72);
+
+      vec3 rangerLayer = mix(rangerBgWithLetters, textureHelmet.rgb, textureHelmet.a);
       vec3 finalColor = mix(base, rangerLayer, cursorEffect);
 
       if (SHOW_HELMET_PERMANENTLY) {
@@ -1803,12 +1826,19 @@
             baseY: posY,
             offsetX: 0,
             offsetY: 0,
+            offsetZ: 0,
             targetOffsetX: 0,
             targetOffsetY: 0,
+            targetOffsetZ: 0,
+            scaleBoost: 0,
+            targetScaleBoost: 0,
+            hoverGlow: 0,
             rotX: 0,
             rotY: 0,
+            rotZ: 0,
             targetRotX: 0,
             targetRotY: 0,
+            targetRotZ: 0,
             velX: 0,
             velY: 0,
           });
@@ -1969,20 +1999,24 @@
           const ny = (normY - screenY) / Math.max(radY, 0.001);
           const dist = Math.hypot(nx, ny);
 
-          if (dist < 1.05) {
-            const influence = 1 - dist / 1.05;
-            // Move smoothly toward the direction the mouse passed
-            const moveStepX = (dx * 0.0014 + (normX - screenX) * 0.14) * influence;
-            const moveStepY = (-dy * 0.0014 + (normY - screenY) * 0.14) * influence;
+          if (dist < 1.15) {
+            const influence = 1 - dist / 1.15;
+            // Move smoothly toward the direction the mouse passed + flashy 3D pop-out & scale surge
+            const moveStepX = (dx * 0.0018 + (normX - screenX) * 0.18) * influence;
+            const moveStepY = (-dy * 0.0018 + (normY - screenY) * 0.18) * influence;
 
-            item.targetOffsetX = clamp(item.targetOffsetX + moveStepX, -0.042, 0.042);
-            item.targetOffsetY = clamp(item.targetOffsetY + moveStepY, -0.042, 0.042);
+            item.targetOffsetX = clamp(item.targetOffsetX + moveStepX, -0.055, 0.055);
+            item.targetOffsetY = clamp(item.targetOffsetY + moveStepY, -0.055, 0.055);
+            item.targetOffsetZ = Math.max(item.targetOffsetZ, 0.095 * influence);
+            item.targetScaleBoost = Math.max(item.targetScaleBoost, 0.26 * influence);
+            item.hoverGlow = Math.min(1, item.hoverGlow + 0.45 * influence);
 
-            // Tilt and rotate in 3D toward the mouse pass direction
-            item.targetRotY = clamp(item.targetRotY + (dx * 0.018 + nx * 0.22) * influence, -0.82, 0.82);
-            item.targetRotX = clamp(item.targetRotX + (dy * 0.018 - ny * 0.22) * influence, -0.68, 0.68);
-            item.velY = clamp(item.velY + dx * 0.0045 * influence, -0.14, 0.14);
-            item.velX = clamp(item.velX + dy * 0.0045 * influence, -0.14, 0.14);
+            // Eye-catching 3D tilt, spin & roll toward the mouse pass direction
+            item.targetRotY = clamp(item.targetRotY + (dx * 0.024 + nx * 0.34) * influence, -1.05, 1.05);
+            item.targetRotX = clamp(item.targetRotX + (dy * 0.024 - ny * 0.34) * influence, -0.85, 0.85);
+            item.targetRotZ = clamp(item.targetRotZ + (-dx * 0.008 - nx * 0.12) * influence, -0.32, 0.32);
+            item.velY = clamp(item.velY + dx * 0.0065 * influence, -0.18, 0.18);
+            item.velX = clamp(item.velX + dy * 0.0065 * influence, -0.18, 0.18);
           }
         });
       };
@@ -1995,8 +2029,12 @@
           item.velY = 0;
           item.targetOffsetX = 0;
           item.targetOffsetY = 0;
+          item.targetOffsetZ = 0;
+          item.targetScaleBoost = 0;
+          item.hoverGlow = 0;
           item.targetRotX = 0;
           item.targetRotY = 0;
+          item.targetRotZ = 0;
         });
       };
 
@@ -2228,24 +2266,37 @@
             item.velY = 0;
             item.targetOffsetX = 0;
             item.targetOffsetY = 0;
+            item.targetOffsetZ = 0;
+            item.targetScaleBoost = 0;
+            item.hoverGlow = 0;
             item.targetRotX = 0;
             item.targetRotY = 0;
+            item.targetRotZ = 0;
 
             item.offsetX += (0 - item.offsetX) * 0.35;
             item.offsetY += (0 - item.offsetY) * 0.35;
+            item.offsetZ += (0 - item.offsetZ) * 0.35;
+            item.scaleBoost += (0 - item.scaleBoost) * 0.35;
             item.rotX += (0 - item.rotX) * 0.35;
             item.rotY += (0 - item.rotY) * 0.35;
+            item.rotZ += (0 - item.rotZ) * 0.35;
 
             if (Math.abs(item.offsetX) < 0.0003) item.offsetX = 0;
             if (Math.abs(item.offsetY) < 0.0003) item.offsetY = 0;
+            if (Math.abs(item.offsetZ) < 0.0003) item.offsetZ = 0;
+            if (Math.abs(item.scaleBoost) < 0.0003) item.scaleBoost = 0;
             if (Math.abs(item.rotX) < 0.0005) item.rotX = 0;
             if (Math.abs(item.rotY) < 0.0005) item.rotY = 0;
+            if (Math.abs(item.rotZ) < 0.0005) item.rotZ = 0;
 
             item.mesh.position.x = item.baseX + item.offsetX;
             item.mesh.position.y = item.baseY + item.offsetY;
+            item.mesh.position.z = item.offsetZ;
+            const s = 1 + item.scaleBoost;
+            item.mesh.scale.set(s, s, s);
             item.mesh.rotation.x = item.rotX;
             item.mesh.rotation.y = item.rotY;
-            item.mesh.rotation.z = 0;
+            item.mesh.rotation.z = item.rotZ;
             return;
           }
 
@@ -2256,28 +2307,40 @@
           item.velX *= 0.90;
 
           // Gently decay hover targets back toward rest
-          item.targetOffsetX *= 0.95;
-          item.targetOffsetY *= 0.95;
-          item.targetRotX *= 0.94;
-          item.targetRotY *= 0.94;
+          item.targetOffsetX *= 0.94;
+          item.targetOffsetY *= 0.94;
+          item.targetOffsetZ *= 0.90;
+          item.targetScaleBoost *= 0.90;
+          item.hoverGlow *= 0.92;
+          item.targetRotX *= 0.93;
+          item.targetRotY *= 0.93;
+          item.targetRotZ *= 0.91;
 
           // Subtle organic 3D idle motion + independent hover target
           const idleRotY = Math.sin(elapsed * 2.0 + idx * 0.45) * 0.14 * resumeRamp;
           const idleRotX = Math.cos(elapsed * 1.6 + idx * 0.35) * 0.09 * resumeRamp;
           const idleFloatY = Math.sin(elapsed * 2.2 + idx * 0.5) * 0.0045 * resumeRamp;
 
-          item.offsetX += (item.targetOffsetX - item.offsetX) * 0.16;
-          item.offsetY += (item.targetOffsetY - item.offsetY) * 0.16;
-          item.rotX += (idleRotX + item.targetRotX - item.rotX) * 0.16;
-          item.rotY += (idleRotY + item.targetRotY - item.rotY) * 0.16;
+          item.offsetX += (item.targetOffsetX - item.offsetX) * 0.18;
+          item.offsetY += (item.targetOffsetY - item.offsetY) * 0.18;
+          item.offsetZ += (item.targetOffsetZ - item.offsetZ) * 0.22;
+          item.scaleBoost += (item.targetScaleBoost - item.scaleBoost) * 0.22;
+          item.rotX += (idleRotX + item.targetRotX - item.rotX) * 0.18;
+          item.rotY += (idleRotY + item.targetRotY - item.rotY) * 0.18;
+          item.rotZ += (item.targetRotZ - item.rotZ) * 0.18;
 
           item.mesh.position.x = item.baseX + item.offsetX;
           item.mesh.position.y = item.baseY + item.offsetY + idleFloatY;
+          item.mesh.position.z = item.offsetZ;
+          const s = 1 + item.scaleBoost;
+          item.mesh.scale.set(s, s, s);
           item.mesh.rotation.x = item.rotX;
           item.mesh.rotation.y = item.rotY;
+          item.mesh.rotation.z = item.rotZ;
 
           // Isolated Natural 3D Lighting exclusively on the letters (never touches the character!):
-          // Calculates surface normal N from the letter's 3D tilt and dot product with a virtual studio key light.
+          // Calculates surface normal N from the letter's 3D tilt and dot product with a virtual studio key light,
+          // plus a flashy specular energy surge when the letter is hovered.
           if (item.faceMat && item.sideMat) {
             const lightX = -0.35 + this.easedMouse.normalized.value.x * 0.55;
             const lightY = 0.48 - this.easedMouse.normalized.value.y * 0.35;
@@ -2293,9 +2356,9 @@
             const nz = Math.cos(item.rotX) * Math.cos(item.rotY);
 
             const ndotl = Math.max(0, (nx * lx + ny * ly + nz * lz) / lLen);
-            const spec = Math.pow(ndotl, 8) * 0.14;
-            const faceLight = Math.min(1.06, 0.86 + ndotl * 0.16 + spec);
-            const sideLight = Math.min(1.05, 0.68 + (1 - Math.abs(nz)) * 0.32 + ndotl * 0.15);
+            const spec = Math.pow(ndotl, 8) * 0.16 + item.hoverGlow * 0.22;
+            const faceLight = Math.min(1.18, 0.86 + ndotl * 0.16 + spec);
+            const sideLight = Math.min(1.16, 0.68 + (1 - Math.abs(nz)) * 0.34 + ndotl * 0.16 + item.hoverGlow * 0.25);
 
             item.faceMat.color.setRGB(faceLight, faceLight, faceLight * 0.99);
             item.sideMat.color.setRGB(sideLight, sideLight, sideLight);
