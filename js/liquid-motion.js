@@ -2125,18 +2125,42 @@
 
     setLoaderProgress(6, "Inicializando motor WebGL...");
 
+    canvas.addEventListener(
+      "webglcontextlost",
+      (event) => {
+        event.preventDefault();
+        console.warn("WebGL context lost. Waiting for restore...");
+      },
+      false
+    );
+
     let sizes, renderer, mainScene, mainCamera;
     try {
       THREE.ShaderChunk.simplex = SIMPLEX_NOISE_GLSL;
       THREE.ColorManagement.enabled = true;
 
       sizes = computeSizes();
-      renderer = new THREE.WebGLRenderer({
-        canvas,
-        powerPreference: "high-performance",
-        alpha: true,
-        precision: "lowp",
-      });
+
+      const configs = [
+        { canvas, alpha: true, antialias: false, powerPreference: "default" },
+        { canvas, alpha: true, antialias: false, failIfMajorPerformanceCaveat: false },
+        { canvas, alpha: true, antialias: false, powerPreference: "high-performance" },
+        { canvas, alpha: true }
+      ];
+
+      for (const cfg of configs) {
+        try {
+          renderer = new THREE.WebGLRenderer(cfg);
+          if (renderer && renderer.getContext()) break;
+        } catch (e) {
+          console.warn("Retrying WebGLRenderer with fallback:", e);
+        }
+      }
+
+      if (!renderer || !renderer.getContext()) {
+        throw new Error("Muitas abas abertas no navegador. Feche as outras abas do site e recarregue.");
+      }
+
       renderer.autoClear = false;
       renderer.setPixelRatio(sizes.pixelRatio);
       renderer.setSize(sizes.width, sizes.height);
@@ -2153,10 +2177,16 @@
       console.error("WebGL error:", glErr);
       if (statusEl) statusEl.textContent = `Aviso WebGL: ${glErr.message || glErr}`;
       if (loaderEl) {
-        setTimeout(() => loaderEl.classList.add("is-loaded"), 1200);
+        setTimeout(() => loaderEl.classList.add("is-loaded"), 2500);
       }
       return;
     }
+
+    window.addEventListener("beforeunload", () => {
+      try {
+        if (renderer) renderer.dispose();
+      } catch (e) {}
+    });
 
     setLoaderProgress(10, "Carregando texturas 2.5D & Shaders [00/22]...");
 
