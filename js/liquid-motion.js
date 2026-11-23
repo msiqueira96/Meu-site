@@ -1680,10 +1680,12 @@
 
       this.helmet = new RangerCharacter(renderer, sizes, assets);
 
-      this.hemisphereLight = new THREE.HemisphereLight(0xffffff, 0x000000, 2.5);
-      this.pointLight = new THREE.PointLight(0xffffff, 2.5);
-      this.pointLight.position.set(-0.75, 0.2, 0.4);
-      this.defaultScene.add(this.hemisphereLight, this.pointLight);
+      this.hemisphereLight = new THREE.HemisphereLight(0xffffff, 0x2a2e24, 2.65);
+      this.pointLight = new THREE.PointLight(0xffffff, 2.8);
+      this.pointLight.position.set(-0.75, 0.25, 0.55);
+      this.letterKeyLight = new THREE.PointLight(0xfffdf7, 3.4);
+      this.letterKeyLight.position.set(0.55, 0.5, 0.75);
+      this.defaultScene.add(this.hemisphereLight, this.pointLight, this.letterKeyLight);
 
       this.init3DLetters();
       this.applyResponsive();
@@ -1755,27 +1757,29 @@
           sideTex.magFilter = THREE.LinearFilter;
           sideTex.needsUpdate = true;
 
-          const faceMat = new THREE.MeshBasicMaterial({
+          const faceMat = new THREE.MeshStandardMaterial({
             map: tex,
             transparent: true,
             alphaTest: 0.35,
             depthWrite: true,
             depthTest: true,
+            roughness: 0.26,
+            metalness: 0.08,
             side: THREE.DoubleSide,
           });
 
-          const sideMat = new THREE.MeshBasicMaterial({
+          const sideMat = new THREE.MeshStandardMaterial({
             map: sideTex,
             transparent: true,
             alphaTest: 0.35,
             depthWrite: true,
             depthTest: true,
+            roughness: 0.42,
+            metalness: 0.16,
             side: THREE.DoubleSide,
           });
 
-          // True Solid 3D Extruded Letter Block:
-          // 28 closely-packed Z-slices with identical X/Y orientation (NO mirrored Math.PI flip!)
-          // and hardware Z-buffer alphaTest occlusion so side walls form a continuous 3D volume.
+          // True Solid 3D Extruded Letter Block with Natural Lighting & Depth Occlusion:
           const letterMesh = new THREE.Group();
           for (let s = 0; s < sliceCount; s++) {
             const t = s / (sliceCount - 1); // 0 (back) -> 1 (front)
@@ -1824,7 +1828,7 @@
       const strokeHex = profile.letterStroke || profile.frameHex || profile.accentHex || "#11130E";
 
       this.letterItems.forEach((item) => {
-        // 1. Draw Front/Back Face (e.g. White center + Black border on Black Ranger)
+        // 1. Draw Front/Back Face with Natural Studio Light Gradient & Inner Bevel Highlight
         const ctx = item.ctx;
         ctx.clearRect(0, 0, 256, 256);
         ctx.save();
@@ -1834,16 +1838,48 @@
         ctx.miterLimit = 2;
         ctx.font = 'bold 172px "Times New Roman", Georgia, serif';
 
-        ctx.lineWidth = 14;
-        ctx.strokeStyle = strokeHex;
+        // Outer border with subtle top-left light bevel
+        const borderGrad = ctx.createLinearGradient(28, 24, 228, 232);
+        if (rangerKey === "black") {
+          borderGrad.addColorStop(0, "#383F31");
+          borderGrad.addColorStop(0.45, "#141710");
+          borderGrad.addColorStop(1, "#070806");
+        } else {
+          borderGrad.addColorStop(0, "#FFFFFF");
+          borderGrad.addColorStop(0.28, strokeHex);
+          borderGrad.addColorStop(1, strokeHex);
+        }
+        ctx.lineWidth = 15;
+        ctx.strokeStyle = borderGrad;
         ctx.strokeText(item.char, 128, 128);
 
-        ctx.fillStyle = fillHex;
+        // Natural top-left studio illumination across the letter face
+        const faceGrad = ctx.createLinearGradient(36, 28, 220, 228);
+        if (rangerKey === "black") {
+          faceGrad.addColorStop(0, "#FFFFFF");
+          faceGrad.addColorStop(0.55, "#F9FAF6");
+          faceGrad.addColorStop(1, "#E2E6DC");
+        } else if (rangerKey === "silver") {
+          faceGrad.addColorStop(0, "#FFFFFF");
+          faceGrad.addColorStop(0.5, "#E2E8F0");
+          faceGrad.addColorStop(1, "#B8C4D4");
+        } else {
+          faceGrad.addColorStop(0, "#2E3428");
+          faceGrad.addColorStop(0.5, fillHex);
+          faceGrad.addColorStop(1, "#0D0F0A");
+        }
+        ctx.fillStyle = faceGrad;
         ctx.fillText(item.char, 128, 128);
+
+        // Crisp inner specular rim highlight (simulates natural top key light catching the serif edge)
+        ctx.lineWidth = 2.5;
+        ctx.strokeStyle = rangerKey === "black" ? "rgba(255, 255, 255, 0.95)" : "rgba(255, 255, 255, 0.45)";
+        ctx.strokeText(item.char, 126.5, 126.5);
+
         ctx.restore();
         item.tex.needsUpdate = true;
 
-        // 2. Draw Solid 3D Extruded Side Wall Volume
+        // 2. Draw Solid 3D Extruded Side Wall Volume with Natural Directional Shading
         if (item.sideCtx && item.sideTex) {
           const sCtx = item.sideCtx;
           sCtx.clearRect(0, 0, 256, 256);
@@ -1854,15 +1890,16 @@
           sCtx.miterLimit = 2;
           sCtx.font = 'bold 172px "Times New Roman", Georgia, serif';
 
-          const grad = sCtx.createLinearGradient(0, 28, 0, 228);
+          const grad = sCtx.createLinearGradient(24, 20, 232, 236);
           if (rangerKey === "black") {
-            grad.addColorStop(0, "#2C3226");
-            grad.addColorStop(0.5, "#11130E");
-            grad.addColorStop(1, "#080906");
+            grad.addColorStop(0, "#434B3B");
+            grad.addColorStop(0.38, "#1E221A");
+            grad.addColorStop(0.75, "#11130E");
+            grad.addColorStop(1, "#060705");
           } else {
             grad.addColorStop(0, strokeHex);
-            grad.addColorStop(0.35, "#181B14");
-            grad.addColorStop(1, "#0B0D09");
+            grad.addColorStop(0.4, "#1C2018");
+            grad.addColorStop(1, "#090B07");
           }
 
           sCtx.lineWidth = 16;
@@ -2239,12 +2276,16 @@
         });
       }
 
-      // Subtle camera parallax
+      // Subtle camera parallax & dynamic natural key light tracking
       this.camera.position.x = this.easedMouse.normalized.value.x * 0.02 * this.helmetRevealValue;
       if (this.sizes.width > 768) {
         this.camera.position.y = -this.easedMouse.normalized.value.y * 0.02 * this.helmetRevealValue;
       } else {
         this.camera.position.y = 0;
+      }
+      if (this.letterKeyLight) {
+        this.letterKeyLight.position.x = 0.45 + this.easedMouse.normalized.value.x * 0.65;
+        this.letterKeyLight.position.y = 0.45 - this.easedMouse.normalized.value.y * 0.45;
       }
 
       // Render 2.5D Black Ranger pass synced with user head
