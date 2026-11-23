@@ -1595,7 +1595,7 @@
       this.fluidCursor = fluidCursor;
       this.backgroundNoise = backgroundNoise;
 
-      this.activeRangerKey = "black";
+      this.activeRangerKey = "silver";
       this.helmetRevealValue = 1;
       this.easedMouse = {
         normalized: mouse.createEasedNormalized(0.025),
@@ -1688,6 +1688,7 @@
       this.init3DLetters();
       this.applyResponsive();
       this.bindUIControls();
+      this.setRanger("silver", { pulseMorph: false });
     }
 
     init3DLetters() {
@@ -1698,17 +1699,17 @@
       this.defaultScene.add(this.lettersGroup);
 
       // Super Mario World 2 / Yoshi's Island 3D Pause Letters ("Times New Roman", serif)
-      // Tighter spacing (~20px closer per letter) with optical kerning per glyph
+      // Tight, compact word spacing with optical kerning per glyph
       const rows = [
-        { text: "MARCOS", y: 0.27, spacing: 0.195 },
-        { text: "SIQUEIRA", y: 0.04, spacing: 0.178 },
+        { text: "MARCOS", y: 0.23, spacing: 0.145 },
+        { text: "SIQUEIRA", y: 0.04, spacing: 0.132 },
       ];
 
       const getGlyphAdvanceFactor = (ch) => {
-        if (ch === "I") return 0.72;
-        if (ch === "M") return 1.14;
-        if (ch === "Q" || ch === "U" || ch === "R" || ch === "A") return 1.02;
-        return 0.96;
+        if (ch === "I") return 0.62;
+        if (ch === "M") return 1.12;
+        if (ch === "Q" || ch === "U" || ch === "R" || ch === "A") return 0.96;
+        return 0.90;
       };
 
       const planeGeo = new THREE.PlaneGeometry(0.19, 0.23);
@@ -3203,7 +3204,7 @@
 
       // Active navigation link highlight + automatic menu Ranger accent color sync on scroll
       let currentId = "hero";
-      let currentRangerKey = "black";
+      let currentRangerKey = "silver";
       sections.forEach((sec) => {
         const rect = sec.getBoundingClientRect();
         if (rect.top <= vh * 0.42) {
