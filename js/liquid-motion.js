@@ -11,32 +11,6 @@
 (function () {
   "use strict";
 
-  // Force page to ALWAYS start at top (scrollY = 0) on open, reload (F5), unload or navigation
-  if ("scrollRestoration" in history) {
-    history.scrollRestoration = "manual";
-  }
-  document.documentElement.classList.add("is-initial-loading");
-  window.scrollTo(0, 0);
-  document.documentElement.scrollTop = 0;
-  if (document.body) document.body.scrollTop = 0;
-
-  if (window.location.hash) {
-    history.replaceState(null, "", window.location.pathname + window.location.search);
-  }
-
-  const forceScrollToTop = () => {
-    window.scrollTo(0, 0);
-    document.documentElement.scrollTop = 0;
-    if (document.body) document.body.scrollTop = 0;
-  };
-
-  window.addEventListener("load", () => {
-    forceScrollToTop();
-    setTimeout(() => {
-      document.documentElement.classList.remove("is-initial-loading");
-    }, 450);
-  });
-
   const GL_ROOT = "assets/gl";
 
   const ASSETS = {
@@ -599,7 +573,13 @@
 
       background = mix(background, cursorBackground, step(1.0 - hoverTransition, uHelmetHover));
 
-      // Background remains pure reactive liquid white base
+      // Giant "MARCOS SIQUEIRA" sign rendered directly behind the 2.5D character
+      vec4 titleSample = texture2D(tTitleText, vUv);
+      vec3 signBaseColor = mix(vec3(0.08, 0.09, 0.06), uRangerColor, 0.22);
+      vec3 signHoverColor = mix(uRangerColor, vec3(0.06, 0.07, 0.05), 0.15);
+      vec3 signColor = mix(signBaseColor, signHoverColor, cursorEffect);
+      background = mix(background, signColor, titleSample.a);
+
       vec3 base = mix(background, textureDefaultDiffuse.rgb, textureDefaultDiffuse.a);
       vec3 rangerLayer = mix(background, textureHelmet.rgb, textureHelmet.a);
       vec3 finalColor = mix(base, rangerLayer, cursorEffect);
@@ -1502,86 +1482,51 @@
   const RANGER_PROFILES = {
     black: {
       name: "RANGER PRETO",
-      accentHex: "#F4F6F0",
-      frameHex: "#1C2018",
-      pillFg: "#FFFFFF",
-      waveHex: "#262B22",
-      suitHex: "#1C2018",
-      signFill: "rgba(20, 23, 16, 0.72)",
-      signStroke: "rgba(10, 12, 8, 0.96)",
-      signSubFill: "rgba(20, 23, 16, 0.42)",
+      accentHex: "#D2FF00",
+      waveHex: "#D2FF00",
+      suitHex: "#D2FF00",
       tintMix: 0.0,
     },
     red: {
       name: "RANGER VERMELHO",
       accentHex: "#FF2233",
-      frameHex: "#FF2233",
-      pillFg: "#FF2233",
       waveHex: "#FF2233",
       suitHex: "#FF1E27",
-      signFill: "rgba(235, 22, 38, 0.74)",
-      signStroke: "rgba(155, 8, 20, 0.96)",
-      signSubFill: "rgba(200, 18, 32, 0.45)",
       tintMix: 0.94,
     },
     blue: {
       name: "RANGER AZUL",
       accentHex: "#0088FF",
-      frameHex: "#0088FF",
-      pillFg: "#0088FF",
       waveHex: "#0088FF",
       suitHex: "#0077FF",
-      signFill: "rgba(0, 132, 255, 0.74)",
-      signStroke: "rgba(0, 74, 175, 0.96)",
-      signSubFill: "rgba(0, 110, 225, 0.45)",
       tintMix: 0.94,
     },
     green: {
       name: "RANGER VERDE",
       accentHex: "#00E676",
-      frameHex: "#00E676",
-      pillFg: "#00E676",
       waveHex: "#00E676",
       suitHex: "#00D66C",
-      signFill: "rgba(0, 212, 106, 0.74)",
-      signStroke: "rgba(0, 130, 62, 0.96)",
-      signSubFill: "rgba(0, 170, 84, 0.45)",
       tintMix: 0.94,
     },
     yellow: {
       name: "RANGER AMARELO",
       accentHex: "#FFD000",
-      frameHex: "#FFD000",
-      pillFg: "#FFD000",
       waveHex: "#FFD000",
       suitHex: "#FFC400",
-      signFill: "rgba(255, 204, 0, 0.82)",
-      signStroke: "rgba(130, 92, 0, 0.96)",
-      signSubFill: "rgba(175, 128, 0, 0.50)",
       tintMix: 0.94,
     },
     pink: {
       name: "RANGER ROSA",
       accentHex: "#FF2A85",
-      frameHex: "#FF2A85",
-      pillFg: "#FF2A85",
       waveHex: "#FF2A85",
       suitHex: "#FF207E",
-      signFill: "rgba(255, 38, 130, 0.74)",
-      signStroke: "rgba(175, 12, 82, 0.96)",
-      signSubFill: "rgba(215, 24, 108, 0.45)",
       tintMix: 0.94,
     },
     silver: {
       name: "RANGER PRATA",
       accentHex: "#D8E2EC",
-      frameHex: "#94A3B8",
-      pillFg: "#E2E8F0",
-      waveHex: "#94A3B8",
+      waveHex: "#C8D6E5",
       suitHex: "#C8D6E5",
-      signFill: "rgba(120, 136, 156, 0.74)",
-      signStroke: "rgba(45, 55, 72, 0.96)",
-      signSubFill: "rgba(82, 96, 115, 0.46)",
       tintMix: 0.0,
     },
   };
@@ -1677,18 +1622,6 @@
 
       this.helmet = new RangerCharacter(renderer, sizes, assets);
 
-      // 3D Super Mario World 2 Title Sign Mesh placed in 2.5D space behind the character
-      this.titleMesh = new THREE.Mesh(
-        new THREE.PlaneGeometry(2.35, 1.18),
-        new THREE.MeshBasicMaterial({
-          map: this.titleTexture,
-          transparent: true,
-          depthWrite: false,
-        })
-      );
-      this.titleMesh.position.set(0, 0.12, -0.16);
-      this.defaultScene.add(this.titleMesh);
-
       this.hemisphereLight = new THREE.HemisphereLight(0xffffff, 0x000000, 2.5);
       this.pointLight = new THREE.PointLight(0xffffff, 2.5);
       this.pointLight.position.set(-0.75, 0.2, 0.4);
@@ -1698,12 +1631,11 @@
       this.bindUIControls();
     }
 
-    drawTitleSign(rangerKey = this.activeRangerKey) {
+    drawTitleSign() {
       const canvas = this.titleCanvas;
       const ctx = canvas.getContext("2d");
       if (!ctx) return;
 
-      const profile = RANGER_PROFILES[rangerKey] || RANGER_PROFILES.black;
       const w = canvas.width;
       const h = canvas.height;
       ctx.clearRect(0, 0, w, h);
@@ -1712,22 +1644,19 @@
       ctx.textAlign = "center";
       ctx.textBaseline = "middle";
 
-      // Giant highlighted 3D "MARCOS SIQUEIRA" sign right behind the character, colored by active Ranger
-      ctx.font = '700 295px "Bebas Neue", Impact, sans-serif';
-      ctx.lineWidth = 14;
-      ctx.shadowColor = profile.accentHex || "#D2FF00";
-      ctx.shadowBlur = 24;
-      ctx.fillStyle = "#151811";
-      ctx.strokeStyle = profile.accentHex || "#D2FF00";
+      // Giant "MARCOS SIQUEIRA" sign right behind the character's head & shoulders (below top navbar)
+      ctx.font = '400 290px "Bebas Neue", Impact, sans-serif';
+      ctx.lineWidth = 7;
+      ctx.strokeStyle = "rgba(20, 23, 16, 0.50)";
+      ctx.fillStyle = "rgba(20, 23, 16, 0.32)";
 
-      ctx.fillText("MARCOS SIQUEIRA", w * 0.5, h * 0.36);
-      ctx.shadowBlur = 0;
-      ctx.strokeText("MARCOS SIQUEIRA", w * 0.5, h * 0.36);
+      ctx.fillText("MARCOS SIQUEIRA", w * 0.5, h * 0.33);
+      ctx.strokeText("MARCOS SIQUEIRA", w * 0.5, h * 0.33);
 
-      // Second highlighted band behind shoulders
-      ctx.font = '600 108px "Bebas Neue", Impact, sans-serif';
-      ctx.fillStyle = "rgba(22, 26, 18, 0.76)";
-      ctx.fillText("JS DEVELOPER   •   WEB DESIGN   •   PAID TRAFFIC", w * 0.5, h * 0.56);
+      // Second subtle outline band behind shoulders
+      ctx.font = '400 112px "Bebas Neue", Impact, sans-serif';
+      ctx.fillStyle = "rgba(20, 23, 16, 0.16)";
+      ctx.fillText("JS DEVELOPER   •   WEB DESIGN   •   PAID TRAFFIC", w * 0.5, h * 0.50);
 
       ctx.restore();
       this.titleTexture.needsUpdate = true;
@@ -1737,9 +1666,6 @@
       const profile = RANGER_PROFILES[key] || RANGER_PROFILES.black;
       this.activeRangerKey = key;
 
-      // Redraw background "MARCOS SIQUEIRA" sign in the active Ranger's color
-      this.drawTitleSign(key);
-
       // Swap actual Movie Ranger character texture & alpha silhouette
       if (this.assets && this.assets.textures && this.assets.textures.rangerVariants) {
         const variant =
@@ -1747,10 +1673,8 @@
         this.helmet.setVariant(variant);
       }
 
-      // Update CSS accent color, frame color, and pill foreground color
+      // Update CSS accent color & UI indicators
       document.documentElement.style.setProperty("--accent", profile.accentHex);
-      document.documentElement.style.setProperty("--frame-accent", profile.frameHex || profile.accentHex);
-      document.documentElement.style.setProperty("--pill-fg", profile.pillFg || profile.accentHex);
 
       const activeNameEl = document.getElementById("morphin-active-name");
       if (activeNameEl) {
@@ -1896,24 +1820,13 @@
 
     applyResponsive() {
       if (this.sizes.width > 768) {
-        this.camera.position.z = 3.65;
-        this.head.instance.position.y = -0.16;
-        this.head.instance.scale.set(0.90, 0.90, 0.90);
-        if (this.titleMesh) {
-          this.titleMesh.position.set(0, 0.12, -0.16);
-          this.titleMesh.scale.set(1.0, 1.0, 1.0);
-        }
+        this.camera.position.z = 3.32;
+        this.head.instance.position.y = -0.04;
       } else {
-        this.camera.position.z = 4.45;
-        this.head.instance.position.y = -0.20;
-        this.head.instance.scale.set(0.85, 0.85, 0.85);
-        if (this.titleMesh) {
-          this.titleMesh.position.set(0, 0.10, -0.16);
-          this.titleMesh.scale.set(0.85, 0.85, 0.85);
-        }
+        this.camera.position.z = 4.10;
+        this.head.instance.position.y = -0.06;
       }
       this.helmet.instance.position.copy(this.head.instance.position);
-      this.helmet.instance.scale.copy(this.head.instance.scale);
 
       this.compositionMesh.scale.set(this.sizes.width, this.sizes.height, 1);
       this.compositionMesh.material.uniforms.uAspect.value = this.sizes.width / this.sizes.height;
@@ -1943,27 +1856,6 @@
         this.camera.position.y = -this.easedMouse.normalized.value.y * 0.02 * this.helmetRevealValue;
       } else {
         this.camera.position.y = 0;
-      }
-
-      // Super Mario World 2 Mode-7 style 3D spinning title:
-      // At scrollY <= 10 (top of page), title is hidden in 3D distance.
-      // As you scroll (10px -> 0.48vh), it performs a 3D Mode-7 spin around Y, tilts on X, and lands directly behind Marcos!
-      if (this.titleMesh) {
-        const scrollY = window.scrollY || 0;
-        const vh = window.innerHeight || 800;
-        const pScroll = Math.min(Math.max((scrollY - 10) / (vh * 0.48), 0), 1);
-
-        const spinY = (1 - pScroll) * Math.PI * 4.0;
-        const tiltX = Math.sin((1 - pScroll) * Math.PI) * 0.55;
-        const tiltZ = Math.sin((1 - pScroll) * Math.PI) * 0.20;
-        const baseScale = this.sizes.width > 768 ? 1.0 : 0.85;
-        const scale = (0.2 + pScroll * 0.8) * baseScale;
-
-        this.titleMesh.rotation.y = spinY + this.easedMouse.normalized.value.x * 0.08;
-        this.titleMesh.rotation.x = tiltX - this.easedMouse.normalized.value.y * 0.06;
-        this.titleMesh.rotation.z = tiltZ;
-        this.titleMesh.scale.set(scale, scale, 1);
-        this.titleMesh.material.opacity = pScroll;
       }
 
       // Render 2.5D Black Ranger pass synced with user head
@@ -2148,44 +2040,12 @@
     THREE.ColorManagement.enabled = true;
 
     let sizes = computeSizes();
-    let renderer = null;
-
-    // 1. Robust WebGL initialization with progressive fallback
-    try {
-      renderer = new THREE.WebGLRenderer({
-        canvas,
-        alpha: true,
-        failIfMajorPerformanceCaveat: false,
-        powerPreference: "default",
-      });
-    } catch (e1) {
-      try {
-        renderer = new THREE.WebGLRenderer({
-          canvas,
-          powerPreference: "high-performance",
-          alpha: true,
-          precision: "lowp",
-        });
-      } catch (e2) {
-        try {
-          renderer = new THREE.WebGLRenderer({ canvas, alpha: true });
-        } catch (e3) {
-          renderer = null;
-        }
-      }
-    }
-
-    if (!renderer || !renderer.getContext()) {
-      // WebGL is currently disabled or unavailable in this browser session
-      // (e.g., Chrome disabled GPU after multiple tab crashes):
-      // Smoothly dismiss the loader to 100% and show the crisp fallback avatar!
-      setLoaderProgress(100, "Pronto!");
-      if (loaderEl) {
-        setTimeout(() => loaderEl.classList.add("is-loaded"), 260);
-      }
-      return;
-    }
-
+    const renderer = new THREE.WebGLRenderer({
+      canvas,
+      powerPreference: "high-performance",
+      alpha: true,
+      precision: "lowp",
+    });
     renderer.autoClear = false;
     renderer.setPixelRatio(sizes.pixelRatio);
     renderer.setSize(sizes.width, sizes.height);
@@ -2206,9 +2066,8 @@
         setLoaderProgress(pct, `Carregando texturas 2.5D & Shaders (${loaded}/${total})...`);
       });
     } catch (err) {
-      console.warn("Could not load all WebGL assets:", err);
-      setLoaderProgress(100, "Pronto!");
-      if (loaderEl) loaderEl.classList.add("is-loaded");
+      console.error("Failed to load Liquid Motion assets:", err);
+      if (statusEl) statusEl.textContent = "Erro ao carregar assets (abra via http://localhost:8080)";
       return;
     }
 
@@ -2224,29 +2083,18 @@
       heroScene = new LiquidHeroScene(renderer, sizes, mouse, assets, fluidCursor, backgroundNoise);
       mainScene.add(heroScene.compositionMesh);
     } catch (initErr) {
-      console.warn("Scene build warning:", initErr);
-      setLoaderProgress(100, "Pronto!");
-      if (loaderEl) loaderEl.classList.add("is-loaded");
+      console.error("Failed to initialize scene at 96%:", initErr);
+      if (statusEl) statusEl.textContent = `Erro na inicialização: ${initErr.message}`;
       return;
     }
 
     setLoaderProgress(100, "Pronto!");
-    document.body.classList.add("webgl-active");
 
     if (loaderEl) {
       setTimeout(() => {
         loaderEl.classList.add("is-loaded");
-        forceScrollToTop();
-      }, 260);
+      }, 280);
     }
-
-    // Free GPU context on unload so Chrome never leaks WebGL contexts or crashes its GPU process
-    window.addEventListener("beforeunload", () => {
-      try {
-        renderer.dispose();
-        renderer.forceContextLoss();
-      } catch (_) {}
-    });
 
     window.addEventListener("resize", () => {
       const next = computeSizes();
@@ -2256,7 +2104,6 @@
 
       mainCamera.aspect = sizes.width / sizes.height;
       mainCamera.fov = 2 * Math.atan(sizes.height / 2 / 10) * (180 / Math.PI);
-      mainCamera.far = 1000;
       mainCamera.updateProjectionMatrix();
 
       renderer.setPixelRatio(sizes.pixelRatio);
@@ -2500,14 +2347,6 @@
         el: morphinDock.querySelector(".morphin-lock-btn"),
         containerEl: morphinDock.querySelector(".morphin-lock-btn"),
       });
-      const ghostBtn = document.getElementById("btn-toggle-boxes-visibility");
-      if (ghostBtn) {
-        rightBoxSteps.push({
-          type: "reveal",
-          el: ghostBtn,
-          weight: 2,
-        });
-      }
     }
     const rightBoxTyper = createSequenceTypewriter(rightBoxSteps);
     rightBoxTyper.setProgress(0);
@@ -2555,125 +2394,45 @@
     );
     hintTyper.setProgress(0);
 
-    // Fullscreen Character Mode / Boxes Toggle Button inside #morphin-dock:
-    // Locks the scroll and keeps the character photo in clean full screen without framing borders or boxes
-    const heroOverlayLayout = document.getElementById("hero-overlay-layout");
-    const btnToggleBoxesVis = document.getElementById("btn-toggle-boxes-visibility");
-    let isHeroLocked = false;
-
-    if (btnToggleBoxesVis && heroOverlayLayout) {
-      btnToggleBoxesVis.addEventListener("click", () => {
-        isHeroLocked = !isHeroLocked;
-        heroOverlayLayout.classList.toggle("is-boxes-transparent", isHeroLocked);
-        document.body.classList.toggle("hero-scroll-locked", isHeroLocked);
-        document.documentElement.classList.toggle("hero-scroll-locked", isHeroLocked);
-
-        if (isHeroLocked) {
-          window.scrollTo({ top: 0, behavior: "smooth" });
-          btnToggleBoxesVis.textContent = "👁 Mostrar Boxes";
-          btnToggleBoxesVis.title = "Restaurar boxes e liberar o scroll da página";
-        } else {
-          btnToggleBoxesVis.textContent = "👁 Boxes";
-          btnToggleBoxesVis.title = "Tela cheia: ocultar boxes e prender o scroll";
-        }
-      });
-    }
-
-    // Block wheel, touch and keyboard page scroll while hero-scroll-locked is active
-    window.addEventListener(
-      "wheel",
-      (e) => {
-        if (isHeroLocked) {
-          e.preventDefault();
-        }
-      },
-      { passive: false }
-    );
-
-    window.addEventListener(
-      "touchmove",
-      (e) => {
-        if (isHeroLocked) {
-          e.preventDefault();
-        }
-      },
-      { passive: false }
-    );
-
-    window.addEventListener("keydown", (e) => {
-      if (
-        isHeroLocked &&
-        ["Space", "ArrowDown", "ArrowUp", "PageDown", "PageUp", "Home", "End"].includes(e.code)
-      ) {
-        e.preventDefault();
-      }
-    });
-
-    // Build Independent Scroll+Auto Typewriters for ALL Menu Sections (#habilidades, #exemplos, #processo, #contato):
-    // Every menu section slides in from the right EMPTY, and its header + inner cards slide in from the right and write out on scroll!
+    // Build Scroll-Driven Typewriter for Section 2 (#habilidades — "O Que Eu Faço"):
+    // Box slides in from the right EMPTY, then writes out its header and each of the 4 skill cards as you scroll!
+    const section2Track = document.getElementById("section2-scroll-track");
     const section2Card = document.getElementById("habilidades");
-    const scrollTypeCards = [];
-
-    function registerScrollWriteBlock(blockEl, revealCard = false, parentMenuIdx = 0, revealOnly = false) {
-      if (!blockEl) return;
-      const steps = [];
-      if (revealCard || revealOnly) {
-        steps.push({ type: "reveal", el: blockEl, weight: 4 });
-      }
-      if (!revealOnly) {
-        steps.push({ type: "richText", el: blockEl });
-      }
-      const typer = createSequenceTypewriter(steps);
-      typer.setProgress(0);
-      scrollTypeCards.push({
-        el: blockEl,
-        typer,
-        parentMenuIdx,
-        autoP: 0,
-        started: false,
-      });
-    }
-
+    const section2Steps = [];
     if (section2Card) {
-      registerScrollWriteBlock(section2Card.querySelector(".section-head"), false, 0, false);
-      Array.from(section2Card.querySelectorAll(".skill-card")).forEach((sc) => {
-        registerScrollWriteBlock(sc, true, 0, false);
+      const s2Head = section2Card.querySelector(".section-head");
+      if (s2Head) {
+        section2Steps.push({ type: "richText", el: s2Head });
+      }
+      const skillCards = Array.from(section2Card.querySelectorAll(".skill-card"));
+      skillCards.forEach((sc) => {
+        // First reveal the empty skill-card sliding in from the right, then write its contents on scroll
+        section2Steps.push({ type: "reveal", el: sc, weight: 10 });
+        section2Steps.push({ type: "richText", el: sc });
       });
     }
+    const section2Typer = createSequenceTypewriter(section2Steps);
+    section2Typer.setProgress(0);
 
-    ["exemplos", "processo", "contato"].forEach((secId, idxOffset) => {
-      const menuIdx = idxOffset + 1;
+    // Also build scroll-driven typewriters for the headers/steps of Menu 2 (#exemplos), Menu 3 (#processo), Menu 4 (#contato)
+    const extraSectionTypers = ["exemplos", "processo", "contato"].map((secId) => {
       const secEl = document.getElementById(secId);
-      if (!secEl) return;
+      if (!secEl) return null;
+      const steps = [];
       const headEl = secEl.querySelector(".section-head") || secEl.querySelector(".contact-copy");
       if (headEl) {
-        registerScrollWriteBlock(headEl, false, menuIdx, false);
-      }
-      if (secId === "exemplos") {
-        Array.from(secEl.querySelectorAll(".demo-tab")).forEach((tabEl) => {
-          registerScrollWriteBlock(tabEl, true, menuIdx, false);
-        });
-        const stageCard = secEl.querySelector(".demo-stage-card");
-        if (stageCard) {
-          registerScrollWriteBlock(stageCard, true, menuIdx, true);
-        }
+        steps.push({ type: "richText", el: headEl });
       }
       if (secId === "processo") {
         Array.from(secEl.querySelectorAll(".p-step")).forEach((pStep) => {
-          registerScrollWriteBlock(pStep, true, menuIdx, false);
+          steps.push({ type: "reveal", el: pStep, weight: 8 });
+          steps.push({ type: "richText", el: pStep });
         });
       }
-      if (secId === "contato") {
-        const formEl = secEl.querySelector(".briefing-form");
-        if (formEl) {
-          registerScrollWriteBlock(formEl, true, menuIdx, true);
-        }
-        const footerEl = secEl.querySelector(".site-footer");
-        if (footerEl) {
-          registerScrollWriteBlock(footerEl, true, menuIdx, true);
-        }
-      }
-    });
+      const typer = createSequenceTypewriter(steps);
+      typer.setProgress(0);
+      return { secEl, typer };
+    }).filter(Boolean);
 
     // Math helpers for smooth stage transitions
     const clamp01 = (v) => Math.min(Math.max(v, 0), 1);
@@ -2697,26 +2456,21 @@
     let lastTickTime = performance.now();
 
     function applyTimelineAt(rawScrollY, scrollY, now, dtSec) {
-      if (isHeroLocked) {
-        rawScrollY = 0;
-        scrollY = 0;
-      }
-
       const vh = window.innerHeight || 800;
       const vw = window.innerWidth || 1280;
-      const isMobile = vw <= 768;
+      // .hero-scroll-track is 300vh tall and #habilidades (Menu 1) starts at docY = 215vh (margin-top: -85vh).
+      // So #habilidades enters the bottom of the screen (100vh) when scrollY = 115vh,
+      // and reaches the top (15vh) when scrollY = 200vh.
       const section2EnterScrollPx = vh * 1.15;
 
       // 0. Initial Scroll Cue: visible at scrollY = 0 when ONLY the character + name sign are on screen
       if (heroScrollCue) {
-        heroScrollCue.classList.toggle("is-cue-hidden", rawScrollY > 10 || isHeroLocked);
+        heroScrollCue.classList.toggle("is-cue-hidden", rawScrollY > 10);
       }
 
-      // 1. Trigger sequence on First Scroll (rawScrollY >= 10px):
-      //    - On Mobile (isMobile): 1st scroll lifts the character UP (-12vh) and shows ONLY #morphin-dock below him!
-      //      Then scrolling further (scrollY >= 52vh) swaps #morphin-dock out and brings #hero-intro-box into the bottom dock!
-      //    - On Desktop (!isMobile): 1st scroll brings #morphin-dock on the right, and after 1.15s (or scrollY >= 24vh)
-      //      brings #hero-intro-box on the left.
+      // 1. Trigger sequence on First Scroll (rawScrollY >= 10px), with slower, smoother entrance & typing:
+      //    - Right Box (#morphin-dock) + Header appear first
+      //    - After a calm pause (1250ms) or deeper scroll (scrollY >= 24vh), Left Box (#hero-intro-box) rises
       if (rawScrollY < 8) {
         rightBoxTriggered = false;
         leftBoxTriggered = false;
@@ -2732,37 +2486,29 @@
           rightBoxTriggered = true;
           firstScrollTimestamp = now;
         }
-        if (isMobile) {
-          leftBoxTriggered = scrollY >= vh * 0.48;
-          if (!leftBoxTriggered) {
-            leftEnterProgress = Math.max(0, leftEnterProgress - dtSec * 2.2);
-            leftAutoType = 0;
-          }
-        } else if (!leftBoxTriggered && (now - firstScrollTimestamp >= 1150 || scrollY >= vh * 0.24)) {
+        if (!leftBoxTriggered && (now - firstScrollTimestamp >= 1250 || scrollY >= vh * 0.24)) {
           leftBoxTriggered = true;
         }
       }
 
       if (rightBoxTriggered) {
-        rightEnterProgress = Math.min(1, rightEnterProgress + dtSec * 1.2);
-        if (rightEnterProgress > 0.38) {
-          rightAutoType = Math.min(1, rightAutoType + dtSec * 0.72);
+        rightEnterProgress = Math.min(1, rightEnterProgress + dtSec * 1.15);
+        if (rightEnterProgress > 0.42) {
+          rightAutoType = Math.min(1, rightAutoType + dtSec * 0.65);
         }
       }
       if (leftBoxTriggered) {
-        leftEnterProgress = Math.min(1, leftEnterProgress + dtSec * 1.15);
-        hintEnterProgress = Math.min(1, hintEnterProgress + dtSec * 1.05);
-        if (leftEnterProgress > 0.38) {
-          leftAutoType = Math.min(1, leftAutoType + dtSec * 0.56);
-          hintAutoType = Math.min(1, hintAutoType + dtSec * 0.85);
+        leftEnterProgress = Math.min(1, leftEnterProgress + dtSec * 1.05);
+        hintEnterProgress = Math.min(1, hintEnterProgress + dtSec * 0.95);
+        if (leftEnterProgress > 0.42) {
+          leftAutoType = Math.min(1, leftAutoType + dtSec * 0.48);
+          hintAutoType = Math.min(1, hintAutoType + dtSec * 0.78);
         }
       }
 
-      const pEnterR = Math.max(easeOutCubic(rightEnterProgress), easeOutCubic(rangeProgress(scrollY, 15, vh * 0.28)));
-      const pEnterL = isMobile
-        ? Math.max(easeOutCubic(leftEnterProgress), easeOutCubic(rangeProgress(scrollY, vh * 0.48, vh * 0.76)))
-        : Math.max(easeOutCubic(leftEnterProgress), easeOutCubic(rangeProgress(scrollY, vh * 0.20, vh * 0.46)));
-      const pEnterH = Math.max(easeOutCubic(hintEnterProgress), easeOutCubic(rangeProgress(scrollY, vh * 0.25, vh * 0.50)));
+      const pEnterR = Math.max(easeOutCubic(rightEnterProgress), easeOutCubic(rangeProgress(scrollY, 15, vh * 0.30)));
+      const pEnterL = Math.max(easeOutCubic(leftEnterProgress), easeOutCubic(rangeProgress(scrollY, vh * 0.20, vh * 0.48)));
+      const pEnterH = Math.max(easeOutCubic(hintEnterProgress), easeOutCubic(rangeProgress(scrollY, vh * 0.25, vh * 0.52)));
 
       // Header follows Right Box entrance on first scroll
       if (siteHeader) {
@@ -2772,143 +2518,138 @@
       }
 
       // 2. Main Character Stage (#hero-frame-card):
-      //    - In Fullscreen Mode (isHeroLocked): expands to 100% full screen with no border framing, no lift, no fade
-      //    - On Mobile: on the 1st scroll, lifts the character canvas UP (--char-lift-y: -12vh) so the color switcher
-      //      fits cleanly BELOW the character without covering his face!
-      //    - Closes its ~2cm (76px desktop / 14px mobile) frame border at scrollY: 42vh -> 108vh
-      //    - Recedes smoothly in parallax as Menu 1 (#habilidades) rises over it
+      //    - LOCKED ON SCREEN (pushUpPx = 0) for the entire first 115vh of scrolling!
+      //    - Slowly closes its ~2cm (76px) frame border at scrollY: 42vh -> 110vh while boxes stay outside
+      //    - When Menu 1 (#habilidades, z-index: 21) enters at scrollY > 115vh and rises OVER #hero-frame-card (z-index: 10),
+      //      #hero-frame-card recedes smoothly in true parallax (0.42x speed, scale 1.0 -> 0.935, brightness 1.0 -> 0.52)!
       if (heroFrameCard && heroViewport) {
-        if (isHeroLocked) {
-          heroViewport.style.padding = "0px";
-          heroViewport.style.visibility = "visible";
-          heroFrameCard.style.borderRadius = "0px";
-          heroFrameCard.style.borderWidth = "0px";
-          heroFrameCard.style.transform = "none";
-          heroFrameCard.style.filter = "brightness(1)";
-          heroFrameCard.style.pointerEvents = "auto";
-          heroFrameCard.style.setProperty("--char-lift-y", "0px");
-        } else {
-          const pFrame = easeInOutCubic(rangeProgress(scrollY, vh * 0.42, vh * 1.08));
-          const pHeroCovered = easeInOutCubic(rangeProgress(scrollY, section2EnterScrollPx, vh * 2.10));
-          const maxFramePx = vw > 1100 ? 76 : vw > 680 ? 28 : 14;
-          const padPx = (pFrame * maxFramePx).toFixed(1);
-          const radius = Math.round(pFrame * (vw > 680 ? 26 : 20));
-          const borderW = (pFrame * 4).toFixed(1);
+        const pFrame = easeInOutCubic(rangeProgress(scrollY, vh * 0.42, vh * 1.10));
+        const pHeroCovered = easeInOutCubic(rangeProgress(scrollY, section2EnterScrollPx, vh * 2.10));
+        const maxFramePx = vw > 1100 ? 76 : vw > 680 ? 28 : 14;
+        const padPx = (pFrame * maxFramePx).toFixed(1);
+        const radius = Math.round(pFrame * (vw > 680 ? 26 : 20));
+        const borderW = (pFrame * 4).toFixed(1);
 
-          const mobileCharLiftPx = isMobile ? -pEnterR * (vh * 0.12) : 0;
-          heroFrameCard.style.setProperty("--char-lift-y", `${mobileCharLiftPx.toFixed(1)}px`);
+        const parallaxLiftPx = -Math.max(0, scrollY - section2EnterScrollPx) * 0.42;
+        const heroScale = 1 - pHeroCovered * 0.065;
+        const heroBright = 1 - pHeroCovered * 0.48;
 
-          const parallaxLiftPx = -Math.max(0, scrollY - section2EnterScrollPx) * 0.42;
-          const heroScale = 1 - pHeroCovered * 0.065;
-          const heroBright = 1 - pHeroCovered * 0.48;
-
-          heroViewport.style.padding = `${padPx}px`;
-          heroViewport.style.visibility = scrollY > vh * 2.35 ? "hidden" : "visible";
-          heroFrameCard.style.borderRadius = `${radius}px`;
-          heroFrameCard.style.borderWidth = `${borderW}px`;
-          heroFrameCard.style.transform = `translate3d(0, ${parallaxLiftPx.toFixed(1)}px, 0) scale(${heroScale.toFixed(4)})`;
-          heroFrameCard.style.filter = `brightness(${heroBright.toFixed(3)})`;
-          heroFrameCard.style.pointerEvents = scrollY > vh * 1.55 ? "none" : "auto";
-        }
+        heroViewport.style.padding = `${padPx}px`;
+        heroViewport.style.visibility = scrollY > vh * 2.35 ? "hidden" : "visible";
+        heroFrameCard.style.borderRadius = `${radius}px`;
+        heroFrameCard.style.borderWidth = `${borderW}px`;
+        heroFrameCard.style.transform = `translate3d(0, ${parallaxLiftPx.toFixed(1)}px, 0) scale(${heroScale.toFixed(4)})`;
+        heroFrameCard.style.filter = `brightness(${heroBright.toFixed(3)})`;
+        heroFrameCard.style.pointerEvents = scrollY > vh * 1.55 ? "none" : "auto";
       }
 
       // 3. Right Box (#morphin-dock):
-      //    - In Fullscreen Mode (isHeroLocked): dock container stays visible so the ghost button can be clicked to exit
-      //    - On Mobile: appears below the lifted character on 1st scroll, then rises/fades out at 46vh -> 78vh as Left Box enters
-      //    - On Desktop: stays in place while the frame closes, then rises UP first at 110vh -> 172vh
+      //    - Once entered, STAYS IN THE EXACT SAME PLACE ON SCREEN (--scroll-y: 0px) while the frame closes!
+      //    - Then rises UP slowly first (one box at a time) at scrollY: 112vh -> 178vh
       if (morphinDock) {
-        if (isHeroLocked) {
-          morphinDock.classList.remove("is-entrance-hidden");
-          morphinDock.style.setProperty("--scroll-y", "0px");
-          morphinDock.style.setProperty("--box-opacity", "1");
-        } else {
-          const exitStartR = isMobile ? vh * 0.46 : vh * 1.10;
-          const exitEndR = isMobile ? vh * 0.80 : vh * 1.72;
-          const fadeStartR = isMobile ? vh * 0.56 : vh * 1.56;
-          const pExitR = easeInOutCubic(rangeProgress(scrollY, exitStartR, exitEndR));
-          const enterOffsetPx = (1 - pEnterR) * 80;
-          const exitOffsetPx = -pExitR * (isMobile ? vh * 0.45 : vh * 1.05);
-          const totalRightY = enterOffsetPx + exitOffsetPx;
-          const rightOpacity = pEnterR * (1 - rangeProgress(scrollY, fadeStartR, exitEndR));
+        const pExitR = easeInOutCubic(rangeProgress(scrollY, vh * 1.12, vh * 1.78));
+        const enterOffsetPx = (1 - pEnterR) * 80;
+        const exitOffsetPx = -pExitR * (vh * 1.05);
+        const totalRightY = enterOffsetPx + exitOffsetPx;
+        const rightOpacity = pEnterR * (1 - rangeProgress(scrollY, vh * 1.62, vh * 1.80));
 
-          morphinDock.classList.toggle("is-entrance-hidden", rightOpacity < 0.02);
-          morphinDock.style.setProperty("--scroll-y", `${totalRightY.toFixed(1)}px`);
-          morphinDock.style.setProperty("--box-opacity", rightOpacity.toFixed(3));
+        morphinDock.classList.toggle("is-entrance-hidden", rightOpacity < 0.02);
+        morphinDock.style.setProperty("--scroll-y", `${totalRightY.toFixed(1)}px`);
+        morphinDock.style.setProperty("--box-opacity", rightOpacity.toFixed(3));
 
-          const scrollTypeR = rangeProgress(scrollY, 20, vh * 0.34);
-          rightBoxTyper.setProgress(rawScrollY < 8 ? 0 : Math.max(rightAutoType, scrollTypeR));
-        }
+        const scrollTypeR = rangeProgress(scrollY, 25, vh * 0.38);
+        rightBoxTyper.setProgress(rawScrollY < 8 ? 0 : Math.max(rightAutoType, scrollTypeR));
       }
 
       // 4. Left Box (#hero-intro-box):
-      //    - On Mobile: enters into the bottom dock after #morphin-dock rises (48vh -> 76vh), then rises out at 128vh -> 190vh
-      //    - On Desktop: stays in place while the frame closes, then rises UP second at 142vh -> 206vh
+      //    - Once entered, STAYS IN THE EXACT SAME PLACE ON SCREEN (--scroll-y: 0px) while the frame closes
+      //      AND while the Right Box starts rising!
+      //    - Then rises UP slowly second at scrollY: 148vh -> 215vh while Menu 1 rises in parallax!
       if (heroIntroBox) {
-        const exitStartL = isMobile ? vh * 1.25 : vh * 1.42;
-        const exitEndL = isMobile ? vh * 1.88 : vh * 2.06;
-        const fadeStartL = isMobile ? vh * 1.68 : vh * 1.90;
-        const pExitL = easeInOutCubic(rangeProgress(scrollY, exitStartL, exitEndL));
+        const pExitL = easeInOutCubic(rangeProgress(scrollY, vh * 1.48, vh * 2.15));
         const enterOffsetPx = (1 - pEnterL) * 80;
         const exitOffsetPx = -pExitL * (vh * 1.05);
         const totalLeftY = enterOffsetPx + exitOffsetPx;
-        const leftOpacity = pEnterL * (1 - rangeProgress(scrollY, fadeStartL, exitEndL));
+        const leftOpacity = pEnterL * (1 - rangeProgress(scrollY, vh * 1.98, vh * 2.16));
 
         heroIntroBox.classList.toggle("is-entrance-hidden", leftOpacity < 0.02);
         heroIntroBox.style.setProperty("--scroll-y", `${totalLeftY.toFixed(1)}px`);
         heroIntroBox.style.setProperty("--box-opacity", leftOpacity.toFixed(3));
 
-        const typeStartL = isMobile ? vh * 0.50 : vh * 0.22;
-        const typeEndL = isMobile ? vh * 0.88 : vh * 0.54;
-        const scrollTypeL = rangeProgress(scrollY, typeStartL, typeEndL);
+        const scrollTypeL = rangeProgress(scrollY, vh * 0.22, vh * 0.56);
         leftBoxTyper.setProgress(rawScrollY < 8 ? 0 : Math.max(leftAutoType, scrollTypeL));
       }
 
       // 5. Center Hint (#hero-center-hint):
+      //    - Stays in the exact same place on screen while the frame closes, then rises at scrollY: 105vh -> 158vh
       if (heroCenterHint) {
-        const pExitH = easeInOutCubic(rangeProgress(scrollY, vh * 1.02, vh * 1.54));
+        const pExitH = easeInOutCubic(rangeProgress(scrollY, vh * 1.05, vh * 1.58));
         const hintY = (1 - pEnterH) * 35 - pExitH * (vh * 0.95);
-        const hintOpacity = pEnterH * (1 - rangeProgress(scrollY, vh * 1.38, vh * 1.56));
+        const hintOpacity = pEnterH * (1 - rangeProgress(scrollY, vh * 1.42, vh * 1.60));
 
         heroCenterHint.classList.toggle("is-entrance-hidden", hintOpacity < 0.02);
         heroCenterHint.style.setProperty("--scroll-y", `${hintY.toFixed(1)}px`);
         heroCenterHint.style.setProperty("--box-opacity", hintOpacity.toFixed(3));
 
-        const scrollTypeH = rangeProgress(scrollY, vh * 0.24, vh * 0.50);
+        const scrollTypeH = rangeProgress(scrollY, vh * 0.24, vh * 0.52);
         hintTyper.setProgress(rawScrollY < 8 ? 0 : Math.max(hintAutoType, scrollTypeH));
       }
 
       // 6. Stacked Menu Sections Parallax (#habilidades -> #exemplos -> #processo -> #contato):
-      //    - Uses untransformed viewport coordinates (rect.top - card.__lastAppliedY) so there is ZERO
-      //      feedback loop, ZERO vertical jump ("quebrada"), and smooth parallax across all menu cards!
-      //    - Section 2 (#habilidades) slides in from the right (+48vw -> 0px) completely empty as it enters,
-      //      and each card inside writes out smoothly as you scroll!
-      const untransformedTops = menuCards.map((card) => {
-        const r = card.getBoundingClientRect();
-        return r.top - (card.__lastAppliedY || 0);
-      });
+      //    - Section 2 (#habilidades) slides in FROM THE RIGHT completely EMPTY while #hero-intro-box exits on the left,
+      //      locks in place below .site-header, and writes out its title + 4 skill cards as you scroll!
+      //    - Then each subsequent menu card rises over the previous menu card in true parallax.
+      const pinTopPx = 82;
+      const pinRunwayPx = vh * 1.25;
+      let s2ExtraHeight = 0;
+      let s2PinY = 0;
+      let s2SlideX = 0;
 
+      if (section2Track && section2Card) {
+        const s2Height = section2Card.offsetHeight || vh * 0.8;
+        const availH = Math.max(320, vh - 104);
+        s2ExtraHeight = Math.max(0, s2Height - availH);
+        const maxPinTranslate = Math.max(0, pinRunwayPx - s2ExtraHeight);
+        section2Track.style.paddingBottom = `${maxPinTranslate.toFixed(1)}px`;
+
+        const trackRect = section2Track.getBoundingClientRect();
+
+        // Slide in from the right (+68vw -> 0px) as #habilidades enters from the bottom (trackRect.top: 98vh -> 82px)
+        const pSlideIn = easeOutCubic(rangeProgress(vh - trackRect.top, vh * 0.04, vh - pinTopPx));
+        s2SlideX = (1 - pSlideIn) * (vw * 0.68);
+
+        // Pin #habilidades at top = 82px across pinRunwayPx while its content writes out on scroll
+        const scrolledPastPin = Math.min(Math.max(pinTopPx - trackRect.top, 0), pinRunwayPx);
+        const pPin = clamp01(scrolledPastPin / Math.max(pinRunwayPx, 1));
+        const panUpPx = easeInOutCubic(rangeProgress(pPin, 0.34, 0.94)) * s2ExtraHeight;
+        s2PinY = scrolledPastPin - panUpPx;
+
+        // Keep #habilidades 100% EMPTY while sliding in from the right; start writing only once it settles into frame
+        const pWrite = clamp01((pinTopPx + vh * 0.08 - trackRect.top) / Math.max(pinRunwayPx + vh * 0.08, 1));
+        section2Typer.setProgress(pSlideIn < 0.82 ? 0 : pWrite);
+      }
+
+      const cardRects = menuCards.map((card) => card.getBoundingClientRect());
       menuCards.forEach((card, idx) => {
-        const uTop = untransformedTops[idx];
-        const nextUTop = idx + 1 < untransformedTops.length ? untransformedTops[idx + 1] : null;
+        const rect = cardRects[idx];
+        const nextRect = idx + 1 < cardRects.length ? cardRects[idx + 1] : null;
 
-        // Every menu section (#habilidades, #exemplos, #processo, #contato) slides in from the right (+48vw -> 0px)
-        // completely empty as it enters (uTop: 98vh -> 38vh), while the previous section recedes in parallax!
-        const pSlideIn = easeOutCubic(rangeProgress(vh - uTop, vh * 0.02, vh * 0.62));
-        const slideXPx = (1 - pSlideIn) * (vw * 0.48);
+        // Inner content parallax drift as the card enters from the bottom
+        const enterP = easeOutCubic(rangeProgress(vh - rect.top, 0, vh * 0.85));
+        const innerY = idx === 0 ? 0 : (1 - enterP) * 34;
 
-        const enterP = easeOutCubic(rangeProgress(vh - uTop, 0, vh * 0.82));
-        const innerY = (1 - enterP) * 24;
-
+        // Receding parallax when the next menu card rises over this card
         let coverP = 0;
-        if (nextUTop !== null) {
-          coverP = easeInOutCubic(rangeProgress(vh - nextUTop, vh * 0.04, vh * 0.88));
+        if (nextRect) {
+          coverP = easeInOutCubic(rangeProgress(vh - nextRect.top, vh * 0.04, vh * 0.88));
         }
 
-        const cardParallaxY = coverP * (vh * 0.16);
-        const cardScale = 1 - coverP * 0.04;
-        const cardBrightness = 1 - coverP * 0.36;
+        const basePinY = idx === 0 ? s2PinY : 0;
+        const slideXPx = idx === 0 ? s2SlideX : 0;
+        const cardParallaxY = basePinY + coverP * (vh * 0.22);
+        const cardScale = 1 - coverP * 0.048;
+        const cardBrightness = 1 - coverP * 0.42;
 
-        card.__lastAppliedY = cardParallaxY;
         card.style.setProperty("--inner-parallax-y", `${innerY.toFixed(1)}px`);
         card.style.setProperty("--card-slide-x", `${slideXPx.toFixed(1)}px`);
         card.style.setProperty("--card-parallax-y", `${cardParallaxY.toFixed(1)}px`);
@@ -2916,36 +2657,11 @@
         card.style.setProperty("--card-brightness", cardBrightness.toFixed(3));
       });
 
-      // 7. Independent Scroll + Smooth Auto Typewriter for ALL Menu Sections (Sections 2..5):
-      //    - Each section stays blank while sliding in from the right (uTop > 64vh),
-      //      then writes out its header and reveals/writes each inner card as you scroll!
-      scrollTypeCards.forEach((item) => {
-        const parentUTop =
-          untransformedTops[item.parentMenuIdx] !== undefined ? untransformedTops[item.parentMenuIdx] : 0;
-        const sectionReadyToWrite = parentUTop <= vh * 0.64;
-
-        if (!sectionReadyToWrite) {
-          item.started = false;
-          item.autoP = 0;
-          item.typer.setProgress(0);
-          return;
-        }
-
-        const r = item.el.getBoundingClientRect();
-        if (r.top > vh * 0.92) {
-          item.started = false;
-          item.autoP = 0;
-          item.typer.setProgress(0);
-          return;
-        }
-        if (r.top <= vh * 0.84) {
-          item.started = true;
-        }
-        if (item.started) {
-          item.autoP = Math.min(1, item.autoP + dtSec * 0.85);
-        }
-        const scrollP = clamp01((vh * 0.84 - r.top) / (vh * 0.44));
-        item.typer.setProgress(Math.max(item.autoP, scrollP));
+      // Drive scroll-based typewriter on the headers/steps of Menu 2, Menu 3, Menu 4 as they enter
+      extraSectionTypers.forEach(({ secEl, typer }) => {
+        const r = secEl.getBoundingClientRect();
+        const pSecWrite = clamp01((vh * 0.78 - r.top) / (vh * 0.58));
+        typer.setProgress(pSecWrite);
       });
 
       // Active navigation link highlight + automatic menu Ranger accent color sync on scroll
