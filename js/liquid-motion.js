@@ -1991,20 +1991,36 @@
     const totalCount = urls.length;
 
     const loadTex = (url) =>
-      new Promise((resolve, reject) =>
+      new Promise((resolve) => {
+        const onDone = (tex) => {
+          loadedCount++;
+          if (typeof onProgress === "function") {
+            onProgress(loadedCount, totalCount, url);
+          }
+          resolve(tex);
+        };
+
         textureLoader.load(
           url,
-          (tex) => {
-            loadedCount++;
-            if (typeof onProgress === "function") {
-              onProgress(loadedCount, totalCount);
-            }
-            resolve(tex);
-          },
+          (tex) => onDone(tex),
           undefined,
-          reject
-        )
-      );
+          (err) => {
+            console.warn(`[RETRY] Recarregando: ${url}`, err);
+            textureLoader.load(
+              url,
+              (tex) => onDone(tex),
+              undefined,
+              (err2) => {
+                console.error(`[FALHA] Não foi possível carregar ${url}:`, err2);
+                const c = document.createElement("canvas");
+                c.width = 2;
+                c.height = 2;
+                onDone(new THREE.CanvasTexture(c));
+              }
+            );
+          }
+        );
+      });
 
     return Promise.all(urls.map(loadTex)).then(
       ([
@@ -2107,51 +2123,57 @@
       if (statusMsg && statusEl) statusEl.textContent = statusMsg;
     };
 
-    setLoaderProgress(8, "Inicializando motor WebGL...");
+    setLoaderProgress(6, "Inicializando motor WebGL...");
 
-    THREE.ShaderChunk.simplex = SIMPLEX_NOISE_GLSL;
-    THREE.ColorManagement.enabled = true;
+    let sizes, renderer, mainScene, mainCamera;
+    try {
+      THREE.ShaderChunk.simplex = SIMPLEX_NOISE_GLSL;
+      THREE.ColorManagement.enabled = true;
 
-    let sizes = computeSizes();
-    const renderer = new THREE.WebGLRenderer({
-      canvas,
-      powerPreference: "high-performance",
-      alpha: true,
-      precision: "lowp",
-    });
-    renderer.autoClear = false;
-    renderer.setPixelRatio(sizes.pixelRatio);
-    renderer.setSize(sizes.width, sizes.height);
+      sizes = computeSizes();
+      renderer = new THREE.WebGLRenderer({
+        canvas,
+        powerPreference: "high-performance",
+        alpha: true,
+        precision: "lowp",
+      });
+      renderer.autoClear = false;
+      renderer.setPixelRatio(sizes.pixelRatio);
+      renderer.setSize(sizes.width, sizes.height);
 
-    const mainScene = new THREE.Scene();
-    const mainCamera = new THREE.PerspectiveCamera(
-      2 * Math.atan(sizes.height / 2 / 10) * (180 / Math.PI),
-      sizes.width / sizes.height,
-      0.1,
-      10
-    );
-    mainCamera.position.z = 10;
-
-    let currentPct = 8;
-    const progressTicker = setInterval(() => {
-      if (currentPct < 88) {
-        currentPct += Math.max(1, Math.round((88 - currentPct) * 0.12));
-        setLoaderProgress(currentPct, `Carregando texturas 2.5D & Shaders...`);
+      mainScene = new THREE.Scene();
+      mainCamera = new THREE.PerspectiveCamera(
+        2 * Math.atan(sizes.height / 2 / 10) * (180 / Math.PI),
+        sizes.width / sizes.height,
+        0.1,
+        10
+      );
+      mainCamera.position.z = 10;
+    } catch (glErr) {
+      console.error("WebGL error:", glErr);
+      if (statusEl) statusEl.textContent = `Aviso WebGL: ${glErr.message || glErr}`;
+      if (loaderEl) {
+        setTimeout(() => loaderEl.classList.add("is-loaded"), 1200);
       }
-    }, 150);
+      return;
+    }
+
+    setLoaderProgress(10, "Carregando texturas 2.5D & Shaders [00/22]...");
 
     let assets;
     try {
       assets = await loadLiquidAssets((loaded, total) => {
-        const realPct = 10 + (loaded / total) * 82;
-        currentPct = Math.max(currentPct, realPct);
-        setLoaderProgress(currentPct, `Carregando texturas 2.5D & Shaders (${loaded}/${total})...`);
+        const pct = Math.min(95, Math.round(10 + (loaded / total) * 85));
+        const padLoaded = String(loaded).padStart(2, "0");
+        const padTotal = String(total).padStart(2, "0");
+        setLoaderProgress(pct, `Carregando texturas 2.5D & Shaders [${padLoaded}/${padTotal}]...`);
       });
-      clearInterval(progressTicker);
     } catch (err) {
-      clearInterval(progressTicker);
       console.error("Failed to load Liquid Motion assets:", err);
-      if (statusEl) statusEl.textContent = "Erro ao carregar assets (abra via http://localhost:8080)";
+      if (statusEl) statusEl.textContent = "Erro ao carregar assets: " + (err.message || err);
+      if (loaderEl) {
+        setTimeout(() => loaderEl.classList.add("is-loaded"), 1500);
+      }
       return;
     }
 
