@@ -1638,6 +1638,8 @@
         { text: "SIQUEIRA", y: 0.04, spacing: 0.24 },
       ];
 
+      const planeGeo = new THREE.PlaneGeometry(0.19, 0.23);
+
       rows.forEach((row) => {
         const chars = row.text.split("");
         const totalW = (chars.length - 1) * row.spacing;
@@ -1646,9 +1648,6 @@
         chars.forEach((char, i) => {
           const posX = startX + i * row.spacing;
           const posY = row.y;
-
-          // 3D block geometry with real tangible depth
-          const geo = new THREE.BoxGeometry(0.18, 0.22, 0.038);
 
           const canvas = document.createElement("canvas");
           canvas.width = 256;
@@ -1663,25 +1662,28 @@
             transparent: true,
             roughness: 0.25,
             metalness: 0.35,
-          });
-          const backMat = frontMat.clone();
-          const edgeMat = new THREE.MeshStandardMaterial({
-            color: 0x181b14,
-            roughness: 0.45,
-            metalness: 0.55,
+            side: THREE.DoubleSide,
           });
 
-          // Three.js Box faces: [right, left, top, bottom, front, back]
-          const mesh = new THREE.Mesh(geo, [edgeMat, edgeMat, edgeMat, edgeMat, frontMat, backMat]);
-          mesh.position.set(posX, posY, 0);
-          this.lettersGroup.add(mesh);
+          // 3D double-sided letter block with depth
+          const letterMesh = new THREE.Group();
+          const frontMesh = new THREE.Mesh(planeGeo, frontMat);
+          frontMesh.position.z = 0.012;
+          const backMesh = new THREE.Mesh(planeGeo, frontMat);
+          backMesh.position.z = -0.012;
+          backMesh.rotation.y = Math.PI;
+          letterMesh.add(frontMesh);
+          letterMesh.add(backMesh);
+
+          letterMesh.position.set(posX, posY, 0);
+          this.lettersGroup.add(letterMesh);
 
           this.letterItems.push({
             char,
             canvas,
             ctx,
             tex,
-            mesh,
+            mesh: letterMesh,
             baseX: posX,
             baseY: posY,
             velX: (Math.random() - 0.5) * 0.02,
@@ -1726,44 +1728,44 @@
       const canvasEl = this.renderer.domElement;
       if (!canvasEl) return;
 
-      const raycaster = new THREE.Raycaster();
-      const pointer = new THREE.Vector2();
       let isDragging = false;
       let activeItem = null;
       let lastX = 0;
       let lastY = 0;
 
-      const getPointerPos = (e) => {
+      const getNormalizedPos = (clientX, clientY) => {
         const rect = canvasEl.getBoundingClientRect();
-        const clientX = e.touches ? e.touches[0].clientX : e.clientX;
-        const clientY = e.touches ? e.touches[0].clientY : e.clientY;
         return {
-          x: ((clientX - rect.left) / rect.width) * 2 - 1,
-          y: -((clientY - rect.top) / rect.height) * 2 + 1,
-          clientX,
-          clientY,
+          normX: ((clientX - rect.left) / rect.width) * 2 - 1,
+          normY: -(((clientY - rect.top) / rect.height) * 2 - 1),
         };
       };
 
       const onDown = (e) => {
-        const pos = getPointerPos(e);
-        pointer.x = pos.x;
-        pointer.y = pos.y;
-        lastX = pos.clientX;
-        lastY = pos.clientY;
+        const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+        const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+        lastX = clientX;
+        lastY = clientY;
 
-        raycaster.setFromCamera(pointer, this.camera);
-        const meshes = this.letterItems.map((it) => it.mesh);
-        const intersects = raycaster.intersectObjects(meshes);
+        const { normX, normY } = getNormalizedPos(clientX, clientY);
 
-        if (intersects.length > 0) {
-          isDragging = true;
-          const hitMesh = intersects[0].object;
-          activeItem = this.letterItems.find((it) => it.mesh === hitMesh);
-          if (activeItem) {
-            activeItem.velY = 0;
-            activeItem.velX = 0;
+        let closest = null;
+        let minDist = 1e9;
+        this.letterItems.forEach((item) => {
+          const screenX = item.mesh.position.x * 0.72;
+          const screenY = item.mesh.position.y * 1.45;
+          const dist = Math.hypot(normX - screenX, normY - screenY);
+          if (dist < minDist) {
+            minDist = dist;
+            closest = item;
           }
+        });
+
+        isDragging = true;
+        activeItem = minDist < 0.45 ? closest : null;
+        if (activeItem) {
+          activeItem.velY = 0;
+          activeItem.velX = 0;
         }
       };
 
@@ -1777,10 +1779,9 @@
         lastY = clientY;
 
         if (activeItem) {
-          activeItem.velY = dx * 0.028;
-          activeItem.velX = dy * 0.028;
+          activeItem.velY += dx * 0.024;
+          activeItem.velX += dy * 0.024;
 
-          // Propagate a wave of 3D rotation to adjacent letters (Yoshi's Island wave!)
           const activeIdx = this.letterItems.indexOf(activeItem);
           this.letterItems.forEach((it, idx) => {
             if (it !== activeItem) {
@@ -1791,6 +1792,11 @@
                 it.velX += dy * 0.012 * wavePower;
               }
             }
+          });
+        } else {
+          this.letterItems.forEach((it) => {
+            it.velY += dx * 0.012;
+            it.velX += dy * 0.012;
           });
         }
       };
