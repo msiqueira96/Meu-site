@@ -1385,6 +1385,25 @@
   // 2.5D Marcos Siqueira Portrait & 3D Ranger Layers
   // =========================================================================
 
+  function createExtendedCharacterGeometry(segs) {
+    const geo = new THREE.PlaneGeometry(1, 1, segs, segs);
+    const pos = geo.attributes.position;
+    if (pos && pos.array) {
+      const arr = pos.array;
+      for (let i = 0; i < arr.length; i += 3) {
+        const y = arr[i + 1];
+        // Smoothly extend the lower blazer/torso hem (y < -0.38) downward so when the character
+        // recedes into the background on mobile scroll, his body never shows a horizontal cut-off edge.
+        if (y < -0.38) {
+          const t = (-0.38 - y) / 0.12;
+          arr[i + 1] = y - t * (0.20 + 0.16 * t);
+        }
+      }
+      pos.needsUpdate = true;
+    }
+    return geo;
+  }
+
   class MarcosPortrait {
     constructor(assets, mouse, sizes, camera) {
       this.sizes = sizes;
@@ -1394,7 +1413,7 @@
       };
 
       const portraitSegs = IS_LOW_END ? 48 : (sizes.width <= 768 ? 64 : 128);
-      this.geometry = new THREE.PlaneGeometry(1, 1, portraitSegs, portraitSegs);
+      this.geometry = createExtendedCharacterGeometry(portraitSegs);
       this.material = new THREE.MeshStandardMaterial({
         displacementMap: assets.textures.head.depth,
         displacementScale: 0.25,
@@ -1493,7 +1512,7 @@
       this.renderer = renderer;
       this.sizes = sizes;
       const portraitSegs = IS_LOW_END ? 48 : (sizes.width <= 768 ? 64 : 128);
-      this.geometry = new THREE.PlaneGeometry(1, 1, portraitSegs, portraitSegs);
+      this.geometry = createExtendedCharacterGeometry(portraitSegs);
       this.material = new THREE.MeshStandardMaterial({
         map: assets.textures.ranger.diffuse,
         displacementMap: assets.textures.ranger.depth,
@@ -1539,6 +1558,7 @@
     update(camera, headMesh) {
       this.instance.position.copy(headMesh.position);
       this.instance.rotation.copy(headMesh.rotation);
+      this.instance.scale.copy(headMesh.scale);
 
       this.renderer.setRenderTarget(this.renderTarget);
       this.renderer.clear();
@@ -2245,10 +2265,47 @@
       }
     }
 
+    updateMobileStageLayout(targetRecede, immediate = false) {
+      if (this.sizes.width > 768) return;
+      if (typeof this.mobileRecede !== "number" || immediate) {
+        this.mobileRecede = targetRecede;
+      } else {
+        this.mobileRecede += (targetRecede - this.mobileRecede) * 0.18;
+      }
+      const r = this.mobileRecede;
+      const aspect = this.sizes.width / Math.max(this.sizes.height, 1);
+      const tanHalfFov = 0.1316525; // Math.tan((15 * Math.PI) / 360)
+      const halfH = this.camera.position.z * tanHalfFov;
+      const halfHLetters = (this.camera.position.z + 0.18) * tanHalfFov;
+
+      // 1. 3D Letreiro ("MARCOS SIQUEIRA") positioned in the upper demarcated zone above his hair (Photo 1 & Photo 3)
+      if (this.lettersGroup) {
+        const mobileLetterScale = Math.min(0.68, Math.max(0.45, aspect * 1.04));
+        this.lettersGroup.scale.set(mobileLetterScale, mobileLetterScale, mobileLetterScale);
+        const midNdcY = 0.55 - r * 0.08;
+        const lettersY = midNdcY * halfHLetters - 0.135 * mobileLetterScale;
+        this.lettersGroup.position.set(0, lettersY, -0.18);
+      }
+
+      // 2. Character Portrait & Ranger Suit:
+      //    - At r=0 (Photo 1): full character below the upper 3D letreiro
+      //    - At r=1 (Photo 3): recedes into the background (scale 0.75) so his face sits in the red circle
+      //      and his shoulders/blazer/shirt fill the red rectangle all the way behind the bottom dock
+      const normFactor = halfH / 0.612;
+      const charScale = 1.0 - r * 0.25;
+      const charY = (-0.075 - r * 0.015) * normFactor;
+
+      this.head.instance.scale.set(charScale, charScale, 1);
+      this.head.instance.position.y = charY;
+      this.helmet.instance.scale.copy(this.head.instance.scale);
+      this.helmet.instance.position.copy(this.head.instance.position);
+    }
+
     applyResponsive() {
       const aspect = this.sizes.width / Math.max(this.sizes.height, 1);
       if (this.sizes.width > 768) {
         this.camera.position.z = 3.32;
+        this.head.instance.scale.set(1, 1, 1);
         this.head.instance.position.y = -0.04;
         if (this.lettersGroup) {
           this.lettersGroup.scale.set(1.0, 1.0, 1.0);
@@ -2257,14 +2314,10 @@
       } else {
         // Fit character and 3D letters cleanly inside narrow portrait mobile screens
         this.camera.position.z = Math.min(4.85, Math.max(4.15, 2.15 / Math.max(aspect, 0.42)));
-        this.head.instance.position.y = -0.06;
-        if (this.lettersGroup) {
-          const mobileLetterScale = Math.min(0.72, Math.max(0.42, aspect * 0.96));
-          this.lettersGroup.scale.set(mobileLetterScale, mobileLetterScale, mobileLetterScale);
-          this.lettersGroup.position.set(0, 0.08, -0.18);
-        }
+        this.updateMobileStageLayout(window.__mobileHeroRecedeProgress || 0, true);
       }
       this.helmet.instance.position.copy(this.head.instance.position);
+      this.helmet.instance.scale.copy(this.head.instance.scale);
 
       this.compositionMesh.scale.set(this.sizes.width, this.sizes.height, 1);
       this.compositionMesh.material.uniforms.uAspect.value = aspect;
@@ -2284,6 +2337,10 @@
     update(elapsed, delta) {
       const fluidTexture = this.fluidCursor.sourceTarget.texture;
       const noiseTexture = this.backgroundNoise.renderTarget.texture;
+
+      if (this.sizes.width <= 768) {
+        this.updateMobileStageLayout(window.__mobileHeroRecedeProgress || 0, false);
+      }
 
       this.head.update(delta, this.helmetRevealValue, fluidTexture);
       this.easedMouse.normalized.update(delta);
@@ -3110,6 +3167,15 @@
     let rightAutoType = 0;
     let leftAutoType = 0;
     let hintAutoType = 0;
+    let rightTypedMax = 0;
+    let leftTypedMax = 0;
+    let hintTypedMax = 0;
+    let section2TypedMax = 0;
+    const extraSectionTypedMax = new Array(extraSectionTypers.length).fill(0);
+    let hasVisitedSection2 = false;
+    let returningToPhoto1 = false;
+    let returnLowestScrollY = 0;
+    let prevRawScrollY = window.scrollY || 0;
     let smoothScrollY = window.scrollY || 0;
     let lastAppliedScrollY = -999;
     let needsTimelineRefresh = true;
@@ -3118,6 +3184,12 @@
 
     window.addEventListener("resize", () => {
       needsTimelineRefresh = true;
+    }, { passive: true });
+
+    window.addEventListener("touchend", () => {
+      if (returningToPhoto1 && (window.scrollY || 0) > 4) {
+        window.scrollTo({ top: 0, behavior: "smooth" });
+      }
     }, { passive: true });
 
     function applyTimelineAt(rawScrollY, scrollY, now, dtSec) {
@@ -3131,29 +3203,63 @@
       const isMobile = vw <= 768;
       const section2EnterScrollPx = vh * 1.15;
 
+      const rawDeltaY = rawScrollY - prevRawScrollY;
+      prevRawScrollY = rawScrollY;
+
+      // Detect when user has reached Section 2 (#habilidades) and then scrolls UP back into Section 1 (#hero):
+      // Instead of playing the Hero boxes in reverse over the character's face and un-typing texts backwards,
+      // return Section 1 directly to the clean initial screen (Photo 1).
+      if (rawScrollY >= vh * 1.05) {
+        hasVisitedSection2 = true;
+        returningToPhoto1 = false;
+      } else if (hasVisitedSection2 && rawDeltaY < -0.5 && rawScrollY < vh * 1.05) {
+        returningToPhoto1 = true;
+        hasVisitedSection2 = false;
+        returnLowestScrollY = rawScrollY;
+        window.scrollTo({ top: 0, behavior: "smooth" });
+      }
+
+      if (returningToPhoto1) {
+        if (rawScrollY < returnLowestScrollY) {
+          returnLowestScrollY = rawScrollY;
+        }
+        if (rawScrollY <= 10 || rawScrollY > returnLowestScrollY + 24) {
+          returningToPhoto1 = false;
+        }
+      }
+
       // Auto-pause WebGL loop when Hero stage is completely covered by Section 2+
       window.__isHeroStageVisible = isHeroLocked || scrollY <= vh * 2.35;
 
-      // 0. Initial Scroll Cue: visible at scrollY = 0 when ONLY the character + name sign are on screen
+      // 0. Initial Scroll Cue: visible at scrollY = 0 (or when returning to Photo 1)
       if (heroScrollCue) {
-        heroScrollCue.classList.toggle("is-cue-hidden", rawScrollY > 10 || isHeroLocked);
+        heroScrollCue.classList.toggle("is-cue-hidden", (rawScrollY > 10 && !returningToPhoto1) || isHeroLocked);
       }
 
       // 1. Trigger sequence on First Scroll (rawScrollY >= 10px):
-      //    - On Mobile (isMobile): 1st scroll lifts the character UP (-12vh) and shows ONLY #morphin-dock below him!
-      //      Then scrolling further (scrollY >= 48vh) swaps #morphin-dock out and brings #hero-intro-box into the bottom dock!
-      //    - On Desktop (!isMobile): 1st scroll brings #morphin-dock on the right, and after 1.15s (or scrollY >= 24vh)
-      //      brings #hero-intro-box on the left.
-      if (rawScrollY < 8) {
+      //    - On Mobile (isMobile): 1st scroll recedes the character into the background (Photo 3 red circle/rectangle)
+      //      and shows ONLY #morphin-dock below him! Then scrolling further (scrollY >= 54vh) swaps #morphin-dock
+      //      out and brings #hero-intro-box into the bottom dock!
+      //    - When returning from Section 2 to Section 1 (returningToPhoto1): immediately resets to Photo 1 state!
+      if (rawScrollY < 8 || returningToPhoto1) {
         rightBoxTriggered = false;
         leftBoxTriggered = false;
         firstScrollTimestamp = 0;
-        rightEnterProgress = Math.max(0, rightEnterProgress - dtSec * 1.8);
-        leftEnterProgress = Math.max(0, leftEnterProgress - dtSec * 1.8);
-        hintEnterProgress = Math.max(0, hintEnterProgress - dtSec * 1.8);
+        if (returningToPhoto1) {
+          rightEnterProgress = 0;
+          leftEnterProgress = 0;
+          hintEnterProgress = 0;
+        } else {
+          rightEnterProgress = Math.max(0, rightEnterProgress - dtSec * 1.8);
+          leftEnterProgress = Math.max(0, leftEnterProgress - dtSec * 1.8);
+          hintEnterProgress = Math.max(0, hintEnterProgress - dtSec * 1.8);
+        }
         rightAutoType = 0;
         leftAutoType = 0;
         hintAutoType = 0;
+        rightTypedMax = 0;
+        leftTypedMax = 0;
+        hintTypedMax = 0;
       } else {
         if (!rightBoxTriggered) {
           rightBoxTriggered = true;
@@ -3185,11 +3291,20 @@
         }
       }
 
-      const pEnterR = Math.max(easeOutCubic(rightEnterProgress), easeOutCubic(rangeProgress(scrollY, 15, vh * 0.30)));
-      const pEnterL = isMobile
-        ? Math.max(easeOutCubic(leftEnterProgress), easeOutCubic(rangeProgress(scrollY, vh * 0.54, vh * 0.78)))
-        : Math.max(easeOutCubic(leftEnterProgress), easeOutCubic(rangeProgress(scrollY, vh * 0.20, vh * 0.48)));
-      const pEnterH = Math.max(easeOutCubic(hintEnterProgress), easeOutCubic(rangeProgress(scrollY, vh * 0.25, vh * 0.52)));
+      const pEnterR = returningToPhoto1
+        ? 0
+        : Math.max(easeOutCubic(rightEnterProgress), easeOutCubic(rangeProgress(scrollY, 15, vh * 0.30)));
+      const pEnterL = returningToPhoto1
+        ? 0
+        : isMobile
+          ? Math.max(easeOutCubic(leftEnterProgress), easeOutCubic(rangeProgress(scrollY, vh * 0.54, vh * 0.78)))
+          : Math.max(easeOutCubic(leftEnterProgress), easeOutCubic(rangeProgress(scrollY, vh * 0.20, vh * 0.48)));
+      const pEnterH = returningToPhoto1
+        ? 0
+        : Math.max(easeOutCubic(hintEnterProgress), easeOutCubic(rangeProgress(scrollY, vh * 0.25, vh * 0.52)));
+
+      // Sync mobile 3D character recession progress (0 = Photo 1 full size, 1 = Photo 3 receded into red circle/rectangle)
+      window.__mobileHeroRecedeProgress = isMobile && !isHeroLocked && !returningToPhoto1 ? pEnterR : 0;
 
       // Header follows Right Box entrance on first scroll
       if (siteHeader) {
@@ -3199,13 +3314,11 @@
       }
 
       // 2. Main Character Stage (#hero-frame-card):
-      //    - In Fullscreen Mode (isHeroLocked): expands to 100% full screen with no border framing, no lift, no fade
-      //    - On Mobile: on the 1st scroll, lifts the character canvas UP (--char-lift-y: -12vh) so the color switcher
-      //      fits cleanly BELOW the character without covering his face!
-      //    - Closes its frame border at scrollY: 42vh -> 110vh
+      //    - Never lifts the canvas upward in CSS (--char-lift-y: 0px) so the character is never cut off at the bottom
+      //    - Closes its frame border at scrollY: 42vh -> 110vh (unless returningToPhoto1)
       //    - Recedes smoothly in parallax as Menu 1 (#habilidades) rises over it
       if (heroFrameCard && heroViewport) {
-        if (isHeroLocked) {
+        if (isHeroLocked || returningToPhoto1) {
           heroViewport.style.padding = "0px";
           heroViewport.style.visibility = "visible";
           heroFrameCard.style.borderRadius = "0px";
@@ -3222,8 +3335,7 @@
           const radius = Math.round(pFrame * (vw > 680 ? 26 : 20));
           const borderW = (pFrame * 4).toFixed(1);
 
-          const mobileCharLiftPx = isMobile ? -pEnterR * (vh * 0.12) : 0;
-          heroFrameCard.style.setProperty("--char-lift-y", `${mobileCharLiftPx.toFixed(1)}px`);
+          heroFrameCard.style.setProperty("--char-lift-y", "0px");
 
           const parallaxLiftPx = -Math.max(0, scrollY - section2EnterScrollPx) * 0.42;
           const heroScale = 1 - pHeroCovered * 0.065;
@@ -3240,21 +3352,22 @@
       }
 
       // 3. Right Box (#morphin-dock):
-      //    - In Fullscreen Mode (isHeroLocked): dock container stays visible so the ghost button can be clicked to exit
-      //    - On Mobile: appears below the lifted character on 1st scroll, then exits cleanly by 54vh BEFORE Left Box enters
-      //    - On Desktop: stays in place while the frame closes, then rises UP at 112vh -> 178vh
       if (morphinDock) {
         if (isHeroLocked) {
           morphinDock.classList.remove("is-entrance-hidden");
           morphinDock.style.setProperty("--scroll-y", "0px");
           morphinDock.style.setProperty("--box-opacity", "1");
+        } else if (returningToPhoto1) {
+          morphinDock.classList.add("is-entrance-hidden");
+          morphinDock.style.setProperty("--box-opacity", "0");
         } else {
           const exitStartR = isMobile ? vh * 0.36 : vh * 1.12;
           const exitEndR = isMobile ? vh * 0.54 : vh * 1.78;
-          const fadeStartR = isMobile ? vh * 0.40 : vh * 1.62;
+          const fadeStartR = isMobile ? vh * 0.38 : vh * 1.62;
           const pExitR = easeInOutCubic(rangeProgress(scrollY, exitStartR, exitEndR));
           const enterOffsetPx = (1 - pEnterR) * 80;
-          const exitOffsetPx = -pExitR * (isMobile ? vh * 0.35 : vh * 1.05);
+          // On mobile, fade out in place at the bottom dock instead of floating up across the character's face
+          const exitOffsetPx = -pExitR * (isMobile ? 16 : vh * 1.05);
           const totalRightY = enterOffsetPx + exitOffsetPx;
           const rightOpacity = pEnterR * (1 - rangeProgress(scrollY, fadeStartR, exitEndR));
 
@@ -3263,22 +3376,28 @@
           morphinDock.style.setProperty("--box-opacity", rightOpacity.toFixed(3));
 
           const scrollTypeR = rangeProgress(scrollY, 25, vh * 0.35);
-          rightBoxTyper.setProgress(rawScrollY < 8 ? 0 : Math.max(rightAutoType, scrollTypeR));
+          if (rightOpacity < 0.01) {
+            rightTypedMax = 0;
+          } else {
+            rightTypedMax = Math.max(rightTypedMax, rightAutoType, scrollTypeR);
+          }
+          rightBoxTyper.setProgress(rawScrollY < 8 ? 0 : rightTypedMax);
         }
       }
 
       // 4. Left Box (#hero-intro-box):
       if (heroIntroBox) {
-        if (isHeroLocked) {
+        if (isHeroLocked || returningToPhoto1) {
           heroIntroBox.classList.add("is-entrance-hidden");
           heroIntroBox.style.setProperty("--box-opacity", "0");
         } else {
           const exitStartL = isMobile ? vh * 0.88 : vh * 1.48;
-          const exitEndL = isMobile ? vh * 1.22 : vh * 2.15;
-          const fadeStartL = isMobile ? vh * 0.98 : vh * 1.98;
+          const exitEndL = isMobile ? vh * 1.15 : vh * 2.15;
+          const fadeStartL = isMobile ? vh * 0.90 : vh * 1.98;
           const pExitL = easeInOutCubic(rangeProgress(scrollY, exitStartL, exitEndL));
           const enterOffsetPx = (1 - pEnterL) * 80;
-          const exitOffsetPx = -pExitL * (isMobile ? vh * 0.40 : vh * 1.05);
+          // On mobile, fade out in place at the bottom dock instead of floating up across the character's face (Photo 2)
+          const exitOffsetPx = -pExitL * (isMobile ? 16 : vh * 1.05);
           const totalLeftY = enterOffsetPx + exitOffsetPx;
           const leftOpacity = pEnterL * (1 - rangeProgress(scrollY, fadeStartL, exitEndL));
 
@@ -3291,22 +3410,37 @@
             isMobile ? vh * 0.54 : vh * 0.22,
             isMobile ? vh * 0.78 : vh * 0.56
           );
-          leftBoxTyper.setProgress(rawScrollY < 8 ? 0 : Math.max(leftAutoType, scrollTypeL));
+          if (leftOpacity < 0.01) {
+            leftTypedMax = 0;
+          } else {
+            leftTypedMax = Math.max(leftTypedMax, leftAutoType, scrollTypeL);
+          }
+          leftBoxTyper.setProgress(rawScrollY < 8 ? 0 : leftTypedMax);
         }
       }
 
       // 5. Center Hint (#hero-center-hint):
       if (heroCenterHint) {
-        const pExitH = easeInOutCubic(rangeProgress(scrollY, vh * 1.05, vh * 1.58));
-        const hintY = (1 - pEnterH) * 35 - pExitH * (vh * 0.95);
-        const hintOpacity = pEnterH * (1 - rangeProgress(scrollY, vh * 1.42, vh * 1.60));
+        if (returningToPhoto1) {
+          heroCenterHint.classList.add("is-entrance-hidden");
+          heroCenterHint.style.setProperty("--box-opacity", "0");
+        } else {
+          const pExitH = easeInOutCubic(rangeProgress(scrollY, vh * 1.05, vh * 1.58));
+          const hintY = (1 - pEnterH) * 35 - pExitH * (vh * 0.95);
+          const hintOpacity = pEnterH * (1 - rangeProgress(scrollY, vh * 1.42, vh * 1.60));
 
-        heroCenterHint.classList.toggle("is-entrance-hidden", hintOpacity < 0.02);
-        heroCenterHint.style.setProperty("--scroll-y", `${hintY.toFixed(1)}px`);
-        heroCenterHint.style.setProperty("--box-opacity", hintOpacity.toFixed(3));
+          heroCenterHint.classList.toggle("is-entrance-hidden", hintOpacity < 0.02);
+          heroCenterHint.style.setProperty("--scroll-y", `${hintY.toFixed(1)}px`);
+          heroCenterHint.style.setProperty("--box-opacity", hintOpacity.toFixed(3));
 
-        const scrollTypeH = rangeProgress(scrollY, vh * 0.24, vh * 0.52);
-        hintTyper.setProgress(rawScrollY < 8 ? 0 : Math.max(hintAutoType, scrollTypeH));
+          const scrollTypeH = rangeProgress(scrollY, vh * 0.24, vh * 0.52);
+          if (hintOpacity < 0.01) {
+            hintTypedMax = 0;
+          } else {
+            hintTypedMax = Math.max(hintTypedMax, hintAutoType, scrollTypeH);
+          }
+          hintTyper.setProgress(rawScrollY < 8 ? 0 : hintTypedMax);
+        }
       }
 
       // 6. Stacked Menu Sections Parallax (#habilidades -> #exemplos -> #processo -> #contato):
@@ -3349,17 +3483,27 @@
         card.style.setProperty("--card-brightness", IS_LOW_END ? "1" : cardBrightness.toFixed(3));
       });
 
-      // Drive typewriter on Section 2 (#habilidades) as it settles into view
+      // Drive typewriter on Section 2 (#habilidades) as it settles into view (never un-types backwards while visible)
       const s2UTop = untransformedTops[0] !== undefined ? untransformedTops[0] : vh;
       const s2WriteP = clamp01((vh * 0.88 - s2UTop) / (vh * 0.65));
-      section2Typer.setProgress(s2WriteP);
+      if (s2UTop > vh * 1.02) {
+        section2TypedMax = 0;
+      } else {
+        section2TypedMax = Math.max(section2TypedMax, s2WriteP);
+      }
+      section2Typer.setProgress(section2TypedMax);
 
       // Drive scroll-based typewriter on the headers/steps of Menu 2, Menu 3, Menu 4 as they enter
       extraSectionTypers.forEach(({ secEl, typer }, tIdx) => {
         const cardIdx = tIdx + 1;
         const uTop = untransformedTops[cardIdx] !== undefined ? untransformedTops[cardIdx] : vh;
         const pSecWrite = clamp01((vh * 0.85 - uTop) / (vh * 0.58));
-        typer.setProgress(pSecWrite);
+        if (uTop > vh * 1.02) {
+          extraSectionTypedMax[tIdx] = 0;
+        } else {
+          extraSectionTypedMax[tIdx] = Math.max(extraSectionTypedMax[tIdx] || 0, pSecWrite);
+        }
+        typer.setProgress(extraSectionTypedMax[tIdx]);
       });
 
       // Active navigation link highlight + automatic menu Ranger accent color sync on scroll
