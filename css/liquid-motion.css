@@ -37,6 +37,10 @@
   --accent: #FFFFFF;
   --frame-accent: #11130E;
   --pill-fg: #FFFFFF;
+  /* Fallbacks rgba() para navegadores antigos (iOS Safari < 16.2 / Android WebView antigo) */
+  --accent-soft: rgba(255, 255, 255, 0.14);
+  --accent-border: rgba(255, 255, 255, 0.42);
+  --accent-glow: rgba(255, 255, 255, 0.32);
   --accent-soft: color-mix(in srgb, var(--accent) 14%, transparent);
   --accent-border: color-mix(in srgb, var(--accent) 42%, transparent);
   --accent-glow: color-mix(in srgb, var(--accent) 32%, transparent);
@@ -2488,4 +2492,23 @@ canvas.gl {
   .form-row {
     grid-template-columns: minmax(0, 1fr);
   }
+}
+
+/* =========================================================================
+   Otimização de GPU/Composição para Aparelhos Mais Antigos (html.is-low-end)
+   ========================================================================= */
+
+html.is-low-end .site-header,
+html.is-low-end .hero-intro-box,
+html.is-low-end .morphin-dock,
+html.is-low-end .hero-center-hint,
+html.is-low-end .btn-outline {
+  backdrop-filter: blur(8px) !important;
+  -webkit-backdrop-filter: blur(8px) !important;
+}
+
+html.is-low-end .parallax-menu-card,
+html.is-low-end .hero-frame-card {
+  filter: none !important;
+  will-change: transform;
 }

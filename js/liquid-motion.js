@@ -93,6 +93,30 @@
     },
   };
 
+  // Adaptive Hardware Tier Detection for Older / Low-End Devices
+  const IS_MOBILE_DEVICE =
+    window.innerWidth <= 768 || /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent || "");
+  const IS_LOW_END =
+    (typeof navigator.hardwareConcurrency === "number" && navigator.hardwareConcurrency <= 4) ||
+    (typeof navigator.deviceMemory === "number" && navigator.deviceMemory <= 4);
+  if (IS_LOW_END) {
+    document.documentElement.classList.add("is-low-end");
+  }
+
+  const SUPPORTS_COLOR_MIX =
+    typeof window.CSS !== "undefined" &&
+    typeof window.CSS.supports === "function" &&
+    window.CSS.supports("color", "color-mix(in srgb, #ffffff 50%, transparent)");
+
+  function hexToRgbaString(hex, alpha) {
+    const clean = String(hex || "#FFFFFF").replace("#", "");
+    const num = parseInt(clean.length === 3 ? clean.replace(/(.)/g, "$1$1") : clean, 16) || 0xffffff;
+    const r = (num >> 16) & 255;
+    const g = (num >> 8) & 255;
+    const b = num & 255;
+    return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+  }
+
   const LIQUID_CONFIG = {
     headScene: {
       COLOR_OUTLINE: "#CBCBB9",
@@ -117,18 +141,18 @@
       IS_WIREFRAME_ANIMATING: true,
     },
     fluid: {
-      iterations_poisson: 4,
-      iterations_viscous: 4,
+      iterations_poisson: IS_LOW_END ? 2 : 4,
+      iterations_viscous: IS_LOW_END ? 2 : 4,
       dissipation: 0.96,
       mouse_force: 50,
-      resolution: 0.1,
+      resolution: IS_LOW_END ? 0.075 : 0.1,
       cursor_size: 18,
       straightness: 1,
       viscous: 30,
       isBounce: false,
       dt: 0.014,
       isViscous: false,
-      BFECC: true,
+      BFECC: !IS_LOW_END,
     },
   };
 
@@ -653,9 +677,8 @@
   function computeSizes() {
     const width = window.innerWidth;
     const height = window.innerHeight;
-    const pixelRatio = width > 768
-      ? Math.min(window.devicePixelRatio, 1.25)
-      : Math.min(window.devicePixelRatio, 2);
+    const maxRatio = IS_LOW_END ? 1.0 : 1.25;
+    const pixelRatio = Math.min(window.devicePixelRatio || 1, maxRatio);
     return { width, height, pixelRatio };
   }
 
@@ -1370,7 +1393,8 @@
         normalized: mouse.createEasedNormalized(0.025),
       };
 
-      this.geometry = new THREE.PlaneGeometry(1, 1, 128, 128);
+      const portraitSegs = IS_LOW_END ? 48 : (sizes.width <= 768 ? 64 : 128);
+      this.geometry = new THREE.PlaneGeometry(1, 1, portraitSegs, portraitSegs);
       this.material = new THREE.MeshStandardMaterial({
         displacementMap: assets.textures.head.depth,
         displacementScale: 0.25,
@@ -1468,7 +1492,8 @@
     constructor(renderer, sizes, assets) {
       this.renderer = renderer;
       this.sizes = sizes;
-      this.geometry = new THREE.PlaneGeometry(1, 1, 128, 128);
+      const portraitSegs = IS_LOW_END ? 48 : (sizes.width <= 768 ? 64 : 128);
+      this.geometry = new THREE.PlaneGeometry(1, 1, portraitSegs, portraitSegs);
       this.material = new THREE.MeshStandardMaterial({
         map: assets.textures.ranger.diffuse,
         displacementMap: assets.textures.ranger.depth,
@@ -1493,7 +1518,7 @@
       this.renderTarget = new THREE.WebGLRenderTarget(
         this.sizes.width * this.sizes.pixelRatio,
         this.sizes.height * this.sizes.pixelRatio,
-        { samples: 2 }
+        { samples: IS_LOW_END || this.sizes.width <= 768 ? 0 : 2 }
       );
     }
 
@@ -1690,7 +1715,7 @@
       this.defaultRenderTarget = new THREE.WebGLRenderTarget(
         this.sizes.width * this.sizes.pixelRatio,
         this.sizes.height * this.sizes.pixelRatio,
-        { samples: 1 }
+        { samples: IS_LOW_END || this.sizes.width <= 768 ? 0 : 1 }
       );
 
       this.cameraTransformGroup = new THREE.Group();
@@ -1737,7 +1762,7 @@
 
       const planeGeo = new THREE.PlaneGeometry(0.19, 0.23);
       const totalDepth = 0.068;
-      const sliceCount = 28;
+      const sliceCount = IS_LOW_END ? 10 : (this.sizes.width <= 768 ? 14 : 28);
 
       rows.forEach((row) => {
         const chars = row.text.split("");
@@ -2053,11 +2078,18 @@
       this.activeRangerKey = key;
       this.updateLetterTextures(key);
 
-      // Swap actual Movie Ranger character texture & alpha silhouette
+      // Swap actual Movie Ranger character texture & alpha silhouette (with lazy-load fallback)
       if (this.assets && this.assets.textures && this.assets.textures.rangerVariants) {
         const variant =
-          this.assets.textures.rangerVariants[key] || this.assets.textures.rangerVariants.black;
+          this.assets.textures.rangerVariants[key] || this.assets.textures.rangerVariants.silver;
         this.helmet.setVariant(variant);
+        if (variant && !variant.loaded && typeof this.assets.ensureRangerVariantLoaded === "function") {
+          this.assets.ensureRangerVariantLoaded(key, (loadedVariant) => {
+            if (this.activeRangerKey === key) {
+              this.helmet.setVariant(loadedVariant);
+            }
+          });
+        }
       }
 
       // Update CSS accent color, frame border color & UI indicators
@@ -2065,6 +2097,11 @@
       document.documentElement.style.setProperty("--accent", profile.accentHex);
       document.documentElement.style.setProperty("--frame-accent", profile.frameHex || profile.accentHex);
       document.documentElement.style.setProperty("--pill-fg", profile.pillFg || profile.accentHex);
+      if (!SUPPORTS_COLOR_MIX) {
+        document.documentElement.style.setProperty("--accent-soft", hexToRgbaString(profile.accentHex, 0.14));
+        document.documentElement.style.setProperty("--accent-border", hexToRgbaString(profile.accentHex, 0.42));
+        document.documentElement.style.setProperty("--accent-glow", hexToRgbaString(profile.accentHex, 0.32));
+      }
 
       const activeNameEl = document.getElementById("morphin-active-name");
       if (activeNameEl) {
@@ -2406,41 +2443,33 @@
 
   function loadLiquidAssets(onProgress) {
     const textureLoader = new THREE.TextureLoader();
-    const urls = [
+    // Boot fast with only the 10 essential textures (Head + Default Silver Ranger + Noise).
+    // The remaining 6 Ranger color variants are lazy-loaded in the background after boot.
+    const essentialUrls = [
       ASSETS.textures.head.diffuse,
       ASSETS.textures.head.depth,
       ASSETS.textures.head.alpha,
       ASSETS.textures.head.normal,
       ASSETS.textures.head.shadow,
-      ASSETS.textures.ranger.diffuse,
+      ASSETS.textures.rangerVariants.silver.diffuse,
       ASSETS.textures.ranger.depth,
-      ASSETS.textures.ranger.alpha,
+      ASSETS.textures.rangerVariants.silver.alpha,
       ASSETS.textures.ranger.normal,
       ASSETS.textures.noise.texture,
-      ASSETS.textures.rangerVariants.red.diffuse,
-      ASSETS.textures.rangerVariants.red.alpha,
-      ASSETS.textures.rangerVariants.blue.diffuse,
-      ASSETS.textures.rangerVariants.blue.alpha,
-      ASSETS.textures.rangerVariants.green.diffuse,
-      ASSETS.textures.rangerVariants.green.alpha,
-      ASSETS.textures.rangerVariants.yellow.diffuse,
-      ASSETS.textures.rangerVariants.yellow.alpha,
-      ASSETS.textures.rangerVariants.pink.diffuse,
-      ASSETS.textures.rangerVariants.pink.alpha,
-      ASSETS.textures.rangerVariants.silver.diffuse,
-      ASSETS.textures.rangerVariants.silver.alpha,
     ];
     let loadedCount = 0;
-    const totalCount = urls.length;
+    const totalCount = essentialUrls.length;
 
-    const loadTex = (url) =>
+    const loadTex = (url, trackProgress = true) =>
       new Promise((resolve, reject) =>
         textureLoader.load(
           url,
           (tex) => {
-            loadedCount++;
-            if (typeof onProgress === "function") {
-              onProgress(loadedCount, totalCount);
+            if (trackProgress) {
+              loadedCount++;
+              if (typeof onProgress === "function") {
+                onProgress(loadedCount, totalCount);
+              }
             }
             resolve(tex);
           },
@@ -2449,30 +2478,18 @@
         )
       );
 
-    return Promise.all(urls.map(loadTex)).then(
+    return Promise.all(essentialUrls.map((u) => loadTex(u, true))).then(
       ([
         headDiffuse,
         headDepth,
         headAlpha,
         headNormal,
         headShadow,
-        rangerDiffuse,
+        silverDiffuse,
         rangerDepth,
-        rangerAlpha,
+        silverAlpha,
         rangerNormal,
         noiseTex,
-        redDiffuse,
-        redAlpha,
-        blueDiffuse,
-        blueAlpha,
-        greenDiffuse,
-        greenAlpha,
-        yellowDiffuse,
-        yellowAlpha,
-        pinkDiffuse,
-        pinkAlpha,
-        silverDiffuse,
-        silverAlpha,
       ]) => {
         headDiffuse.minFilter = THREE.LinearFilter;
         headDiffuse.magFilter = THREE.LinearFilter;
@@ -2484,23 +2501,69 @@
 
         headDepth.colorSpace = THREE.SRGBColorSpace;
 
-        [
-          rangerDiffuse,
-          redDiffuse,
-          blueDiffuse,
-          greenDiffuse,
-          yellowDiffuse,
-          pinkDiffuse,
-          silverDiffuse,
-        ].forEach((tex) => {
-          tex.minFilter = THREE.LinearFilter;
-          tex.magFilter = THREE.LinearFilter;
-          tex.colorSpace = THREE.SRGBColorSpace;
-        });
+        silverDiffuse.minFilter = THREE.LinearFilter;
+        silverDiffuse.magFilter = THREE.LinearFilter;
+        silverDiffuse.colorSpace = THREE.SRGBColorSpace;
 
         rangerDepth.colorSpace = THREE.SRGBColorSpace;
 
         configureNonHeadTexture(noiseTex);
+
+        const variantSources = {
+          red: ASSETS.textures.rangerVariants.red,
+          blue: ASSETS.textures.rangerVariants.blue,
+          green: ASSETS.textures.rangerVariants.green,
+          yellow: ASSETS.textures.rangerVariants.yellow,
+          pink: ASSETS.textures.rangerVariants.pink,
+          black: {
+            diffuse: ASSETS.textures.ranger.diffuse,
+            alpha: ASSETS.textures.ranger.alpha,
+          },
+        };
+
+        const rangerVariants = {
+          silver: { diffuse: silverDiffuse, alpha: silverAlpha, loaded: true },
+          red: { diffuse: silverDiffuse, alpha: silverAlpha, loaded: false },
+          blue: { diffuse: silverDiffuse, alpha: silverAlpha, loaded: false },
+          green: { diffuse: silverDiffuse, alpha: silverAlpha, loaded: false },
+          yellow: { diffuse: silverDiffuse, alpha: silverAlpha, loaded: false },
+          pink: { diffuse: silverDiffuse, alpha: silverAlpha, loaded: false },
+          black: { diffuse: silverDiffuse, alpha: silverAlpha, loaded: false },
+        };
+
+        const pendingPromises = {};
+
+        const ensureRangerVariantLoaded = (key, onReady) => {
+          const existing = rangerVariants[key];
+          if (!existing || existing.loaded) {
+            if (existing && typeof onReady === "function") onReady(existing);
+            return Promise.resolve(existing);
+          }
+          if (!pendingPromises[key]) {
+            const src = variantSources[key];
+            if (!src) return Promise.resolve(existing);
+            pendingPromises[key] = Promise.all([
+              loadTex(src.diffuse, false),
+              loadTex(src.alpha, false),
+            ])
+              .then(([diffTex, alphaTex]) => {
+                diffTex.minFilter = THREE.LinearFilter;
+                diffTex.magFilter = THREE.LinearFilter;
+                diffTex.colorSpace = THREE.SRGBColorSpace;
+                rangerVariants[key] = {
+                  diffuse: diffTex,
+                  alpha: alphaTex,
+                  loaded: true,
+                };
+                return rangerVariants[key];
+              })
+              .catch(() => existing);
+          }
+          return pendingPromises[key].then((v) => {
+            if (typeof onReady === "function") onReady(v);
+            return v;
+          });
+        };
 
         return {
           textures: {
@@ -2512,21 +2575,28 @@
               shadow: headShadow,
             },
             ranger: {
-              diffuse: rangerDiffuse,
+              diffuse: silverDiffuse,
               depth: rangerDepth,
-              alpha: rangerAlpha,
+              alpha: silverAlpha,
               normal: rangerNormal,
             },
-            rangerVariants: {
-              black: { diffuse: rangerDiffuse, alpha: rangerAlpha },
-              red: { diffuse: redDiffuse, alpha: redAlpha },
-              blue: { diffuse: blueDiffuse, alpha: blueAlpha },
-              green: { diffuse: greenDiffuse, alpha: greenAlpha },
-              yellow: { diffuse: yellowDiffuse, alpha: yellowAlpha },
-              pink: { diffuse: pinkDiffuse, alpha: pinkAlpha },
-              silver: { diffuse: silverDiffuse, alpha: silverAlpha },
-            },
+            rangerVariants,
             noise: { texture: noiseTex },
+          },
+          ensureRangerVariantLoaded,
+          preloadAllRangerVariants: (onEachLoaded) => {
+            const keys = ["red", "blue", "green", "yellow", "pink", "black"];
+            let chain = Promise.resolve();
+            keys.forEach((k) => {
+              chain = chain.then(() =>
+                ensureRangerVariantLoaded(k, (loadedVar) => {
+                  if (typeof onEachLoaded === "function") {
+                    onEachLoaded(k, loadedVar);
+                  }
+                })
+              );
+            });
+            return chain;
           },
         };
       }
@@ -2610,6 +2680,16 @@
       setTimeout(() => {
         loaderEl.classList.add("is-loaded");
         forceScrollToTop();
+        // Lazy-load secondary Ranger variants in the background after the hero is interactive
+        if (assets && typeof assets.preloadAllRangerVariants === "function") {
+          setTimeout(() => {
+            assets.preloadAllRangerVariants((loadedKey, loadedVariant) => {
+              if (heroScene && heroScene.activeRangerKey === loadedKey) {
+                heroScene.helmet.setVariant(loadedVariant);
+              }
+            });
+          }, 350);
+        }
       }, 280);
     }
 
@@ -2631,7 +2711,14 @@
       heroScene.resize();
     });
 
+    window.__isHeroStageVisible = true;
+
     gsap.ticker.add(() => {
+      if (document.hidden || window.__isHeroStageVisible === false) {
+        clock.getDelta();
+        return;
+      }
+
       const delta = Math.min(clock.getDelta(), 1 / 30) * 100;
       const elapsed = clock.getElapsedTime();
 
@@ -2978,6 +3065,7 @@
           btnToggleBoxesVis.textContent = "👁 Boxes";
           btnToggleBoxesVis.title = "Tela cheia: ocultar boxes e prender o scroll";
         }
+        needsTimelineRefresh = true;
       });
     }
 
@@ -3023,8 +3111,14 @@
     let leftAutoType = 0;
     let hintAutoType = 0;
     let smoothScrollY = window.scrollY || 0;
+    let lastAppliedScrollY = -999;
+    let needsTimelineRefresh = true;
     let lastActiveSectionId = "hero";
     let lastTickTime = performance.now();
+
+    window.addEventListener("resize", () => {
+      needsTimelineRefresh = true;
+    }, { passive: true });
 
     function applyTimelineAt(rawScrollY, scrollY, now, dtSec) {
       if (isHeroLocked) {
@@ -3036,6 +3130,9 @@
       const vw = window.innerWidth || 1280;
       const isMobile = vw <= 768;
       const section2EnterScrollPx = vh * 1.15;
+
+      // Auto-pause WebGL loop when Hero stage is completely covered by Section 2+
+      window.__isHeroStageVisible = isHeroLocked || scrollY <= vh * 2.35;
 
       // 0. Initial Scroll Cue: visible at scrollY = 0 when ONLY the character + name sign are on screen
       if (heroScrollCue) {
@@ -3137,7 +3234,7 @@
           heroFrameCard.style.borderRadius = `${radius}px`;
           heroFrameCard.style.borderWidth = `${borderW}px`;
           heroFrameCard.style.transform = `translate3d(0, ${parallaxLiftPx.toFixed(1)}px, 0) scale(${heroScale.toFixed(4)})`;
-          heroFrameCard.style.filter = `brightness(${heroBright.toFixed(3)})`;
+          heroFrameCard.style.filter = IS_LOW_END ? "none" : `brightness(${heroBright.toFixed(3)})`;
           heroFrameCard.style.pointerEvents = scrollY > vh * 1.55 ? "none" : "auto";
         }
       }
@@ -3249,7 +3346,7 @@
         card.style.setProperty("--card-slide-x", `${slideXPx.toFixed(1)}px`);
         card.style.setProperty("--card-parallax-y", `${cardParallaxY.toFixed(1)}px`);
         card.style.setProperty("--card-parallax-scale", cardScale.toFixed(4));
-        card.style.setProperty("--card-brightness", cardBrightness.toFixed(3));
+        card.style.setProperty("--card-brightness", IS_LOW_END ? "1" : cardBrightness.toFixed(3));
       });
 
       // Drive typewriter on Section 2 (#habilidades) as it settles into view
@@ -3297,7 +3394,21 @@
       if (Math.abs(targetY - smoothScrollY) < 0.25) {
         smoothScrollY = targetY;
       }
-      applyTimelineAt(targetY, smoothScrollY, now, dtSec);
+
+      const isScrollMoving =
+        Math.abs(targetY - smoothScrollY) >= 0.05 ||
+        Math.abs(smoothScrollY - lastAppliedScrollY) >= 0.05;
+      const isEntranceAnimating =
+        (rightBoxTriggered && (rightEnterProgress < 1 || rightAutoType < 1)) ||
+        (leftBoxTriggered && (leftEnterProgress < 1 || leftAutoType < 1 || hintEnterProgress < 1 || hintAutoType < 1)) ||
+        (!rightBoxTriggered && (rightEnterProgress > 0 || leftEnterProgress > 0 || hintEnterProgress > 0)) ||
+        (rightBoxTriggered && !leftBoxTriggered);
+
+      if (isScrollMoving || isEntranceAnimating || needsTimelineRefresh) {
+        lastAppliedScrollY = smoothScrollY;
+        needsTimelineRefresh = false;
+        applyTimelineAt(targetY, smoothScrollY, now, dtSec);
+      }
       requestAnimationFrame(tickTimeline);
     }
 
