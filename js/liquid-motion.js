@@ -119,12 +119,12 @@
 
   const LIQUID_CONFIG = {
     headScene: {
-      COLOR_OUTLINE: "#94A8D0",
-      COLOR_FOREGROUND: "#0F1A38",
-      COLOR_BACKGROUND: "#EEF4FF",
-      COLOR_CURSOR_FOREGROUND: "#B4CBEF",
-      COLOR_CURSOR_BACKGROUND: "#DCE8FF",
-      COLOR_CURSOR_OUTLINE: "#DCE8FF",
+      COLOR_OUTLINE: "#2563EB",
+      COLOR_FOREGROUND: "#0E1738",
+      COLOR_BACKGROUND: "#060916",
+      COLOR_CURSOR_FOREGROUND: "#1E3A7A",
+      COLOR_CURSOR_BACKGROUND: "#111D42",
+      COLOR_CURSOR_OUTLINE: "#00FFA3",
       COLOR_FILTER: "#1E3A8A",
       SCALE: 1,
       SPEED: 0.1,
@@ -609,8 +609,8 @@
           edge = 1.0;
         }
 
-        background = mix(COLOR_BACKGROUND, mix(COLOR_BACKGROUND, COLOR_OUTLINE, uReveal), edge);
-        cursorBackground = mix(cursorBackground, COLOR_CURSOR_OUTLINE, edge);
+        background = mix(background, mix(COLOR_BACKGROUND, COLOR_OUTLINE, uReveal), edge * 0.72);
+        cursorBackground = mix(cursorBackground, COLOR_CURSOR_OUTLINE, edge * 0.85);
       }
 
       background = mix(background, uColorHover, step(textureBackgroundNoise.g, -0.1 + uHover * 1.1));
@@ -1581,7 +1581,8 @@
       pillFg: "#00FFA3",
       letterFill: "#FFFFFF",
       letterStroke: "#11130E",
-      waveHex: "#0F172A",
+      waveHex: "#141E3C",
+      outlineHex: "#38BDF8",
       suitHex: "#161F33",
       tintMix: 0.0,
     },
@@ -1590,9 +1591,10 @@
       accentHex: "#FF2A54",
       frameHex: "#FF2A54",
       pillFg: "#FF2A54",
-      letterFill: "#0D1326",
+      letterFill: "#F4F7FF",
       letterStroke: "#FF2A54",
-      waveHex: "#FF2A54",
+      waveHex: "#241028",
+      outlineHex: "#FF2A54",
       suitHex: "#FF1E38",
       tintMix: 0.94,
     },
@@ -1601,9 +1603,10 @@
       accentHex: "#00F5D4",
       frameHex: "#0088FF",
       pillFg: "#00F5D4",
-      letterFill: "#0D1326",
+      letterFill: "#F4F7FF",
       letterStroke: "#00A8FF",
-      waveHex: "#0088FF",
+      waveHex: "#0E2048",
+      outlineHex: "#00F5D4",
       suitHex: "#0077FF",
       tintMix: 0.94,
     },
@@ -1612,9 +1615,10 @@
       accentHex: "#00FF88",
       frameHex: "#10B981",
       pillFg: "#00FF88",
-      letterFill: "#0D1326",
+      letterFill: "#F4F7FF",
       letterStroke: "#00FF88",
-      waveHex: "#00E676",
+      waveHex: "#0C262C",
+      outlineHex: "#00FF88",
       suitHex: "#00D66C",
       tintMix: 0.94,
     },
@@ -1623,9 +1627,10 @@
       accentHex: "#FFD000",
       frameHex: "#F59E0B",
       pillFg: "#FFD000",
-      letterFill: "#0D1326",
+      letterFill: "#F4F7FF",
       letterStroke: "#FFD000",
-      waveHex: "#FFD000",
+      waveHex: "#262012",
+      outlineHex: "#FFD000",
       suitHex: "#FFC400",
       tintMix: 0.94,
     },
@@ -1634,9 +1639,10 @@
       accentHex: "#FF2A9D",
       frameHex: "#EC4899",
       pillFg: "#FF2A9D",
-      letterFill: "#0D1326",
+      letterFill: "#F4F7FF",
       letterStroke: "#FF2A9D",
-      waveHex: "#FF2A85",
+      waveHex: "#261030",
+      outlineHex: "#FF2A9D",
       suitHex: "#FF207E",
       tintMix: 0.94,
     },
@@ -1645,9 +1651,10 @@
       accentHex: "#00FFA3",
       frameHex: "#38BDF8",
       pillFg: "#00FFA3",
-      letterFill: "#F0F6FF",
-      letterStroke: "#1E3A5F",
-      waveHex: "#8DA8D6",
+      letterFill: "#F4F7FF",
+      letterStroke: "#38BDF8",
+      waveHex: "#101B3E",
+      outlineHex: "#38BDF8",
       suitHex: "#C8D6E5",
       tintMix: 0.0,
     },
@@ -1928,20 +1935,16 @@
         ctx.strokeStyle = borderGrad;
         ctx.strokeText(item.char, 128, 128);
 
-        // Natural top-left studio illumination across the letter face
+        // Natural top-left studio illumination across the letter face (High-contrast Holographic Chrome on Dark Cyber Stage)
         const faceGrad = ctx.createLinearGradient(36, 28, 220, 228);
         if (rangerKey === "black") {
           faceGrad.addColorStop(0, "#FFFFFF");
           faceGrad.addColorStop(0.55, "#F9FAF6");
           faceGrad.addColorStop(1, "#E2E6DC");
-        } else if (rangerKey === "silver") {
-          faceGrad.addColorStop(0, "#FFFFFF");
-          faceGrad.addColorStop(0.5, "#E8F1FF");
-          faceGrad.addColorStop(1, "#B8CCE8");
         } else {
-          faceGrad.addColorStop(0, "#1E2D5A");
+          faceGrad.addColorStop(0, "#FFFFFF");
           faceGrad.addColorStop(0.5, fillHex);
-          faceGrad.addColorStop(1, "#060916");
+          faceGrad.addColorStop(1, "#B8CCE8");
         }
         ctx.fillStyle = faceGrad;
         ctx.fillText(item.char, 128, 128);
@@ -2137,10 +2140,14 @@
 
       const u = this.compositionMesh.material.uniforms;
       const targetWaveColor = toSRGBColor(profile.waveHex);
+      const targetOutlineColor = toSRGBColor(profile.outlineHex || profile.frameHex || profile.accentHex);
+      const targetCursorOutlineColor = toSRGBColor(profile.accentHex || "#00FFA3");
       const targetSuitColor = toSRGBColor(profile.suitHex);
 
-      // Tween background wave foreground color
+      // Tween background wave foreground & glowing cyber contour lines
       const startFg = u.COLOR_FOREGROUND.value.clone();
+      const startOutline = u.COLOR_OUTLINE.value.clone();
+      const startCursorOutline = u.COLOR_CURSOR_OUTLINE.value.clone();
       const startSuit = u.uRangerColor.value.clone();
       const startHover = u.uColorHover.value.clone();
       const colorState = { t: 0 };
@@ -2152,6 +2159,8 @@
         overwrite: true,
         onUpdate: () => {
           u.COLOR_FOREGROUND.value.lerpColors(startFg, targetWaveColor, colorState.t);
+          u.COLOR_OUTLINE.value.lerpColors(startOutline, targetOutlineColor, colorState.t);
+          u.COLOR_CURSOR_OUTLINE.value.lerpColors(startCursorOutline, targetCursorOutlineColor, colorState.t);
           u.uRangerColor.value.lerpColors(startSuit, targetSuitColor, colorState.t);
           u.uColorHover.value.lerpColors(startHover, targetWaveColor, colorState.t);
         },

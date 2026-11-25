@@ -486,8 +486,8 @@ textarea:focus-visible {
   position: relative;
   width: 100%;
   height: 100%;
-  background: #EEF4FF;
-  color: var(--ink-dark);
+  background: #060916;
+  color: var(--ink-light);
   overflow: hidden;
   pointer-events: auto;
   transform-origin: center top;
