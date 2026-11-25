@@ -119,13 +119,13 @@
 
   const LIQUID_CONFIG = {
     headScene: {
-      COLOR_OUTLINE: "#CBCBB9",
-      COLOR_FOREGROUND: "#22261E",
-      COLOR_BACKGROUND: "#F8F8F3",
-      COLOR_CURSOR_FOREGROUND: "#CFD2C5",
-      COLOR_CURSOR_BACKGROUND: "#E8E8DF",
-      COLOR_CURSOR_OUTLINE: "#E8E8DF",
-      COLOR_FILTER: "#50593F",
+      COLOR_OUTLINE: "#94A8D0",
+      COLOR_FOREGROUND: "#0F1A38",
+      COLOR_BACKGROUND: "#EEF4FF",
+      COLOR_CURSOR_FOREGROUND: "#B4CBEF",
+      COLOR_CURSOR_BACKGROUND: "#DCE8FF",
+      COLOR_CURSOR_OUTLINE: "#DCE8FF",
+      COLOR_FILTER: "#1E3A8A",
       SCALE: 1,
       SPEED: 0.1,
       THICKNESS: 0.000005,
@@ -1567,50 +1567,53 @@
   }
 
   // =========================================================================
-  // Ranger Profiles (Colors for Menu, Morphin Balls & Suit Shader)
+  // Ranger Profiles — Gamified High-Tech 50-30-10 Color System
+  // - 50-60% Base: Deep Cyber Obsidian (#060916)
+  // - 30% Structural Frame (frameHex): Cyber Tech Blue / Indigo / Tactical HUD
+  // - 10% Pattern-Breaker (accentHex): High-voltage Neon contrast for CTAs & active states
   // =========================================================================
 
   const RANGER_PROFILES = {
     black: {
       name: "RANGER PRETO",
-      accentHex: "#FFFFFF",
+      accentHex: "#00FFA3",
       frameHex: "#11130E",
-      pillFg: "#FFFFFF",
+      pillFg: "#00FFA3",
       letterFill: "#FFFFFF",
       letterStroke: "#11130E",
-      waveHex: "#22261E",
-      suitHex: "#1C2018",
+      waveHex: "#0F172A",
+      suitHex: "#161F33",
       tintMix: 0.0,
     },
     red: {
       name: "RANGER VERMELHO",
-      accentHex: "#FF2233",
-      frameHex: "#FF2233",
-      pillFg: "#FF2233",
-      letterFill: "#181B14",
-      letterStroke: "#FF2233",
-      waveHex: "#FF2233",
-      suitHex: "#FF1E27",
+      accentHex: "#FF2A54",
+      frameHex: "#FF2A54",
+      pillFg: "#FF2A54",
+      letterFill: "#0D1326",
+      letterStroke: "#FF2A54",
+      waveHex: "#FF2A54",
+      suitHex: "#FF1E38",
       tintMix: 0.94,
     },
     blue: {
       name: "RANGER AZUL",
-      accentHex: "#0088FF",
+      accentHex: "#00F5D4",
       frameHex: "#0088FF",
-      pillFg: "#0088FF",
-      letterFill: "#181B14",
-      letterStroke: "#0088FF",
+      pillFg: "#00F5D4",
+      letterFill: "#0D1326",
+      letterStroke: "#00A8FF",
       waveHex: "#0088FF",
       suitHex: "#0077FF",
       tintMix: 0.94,
     },
     green: {
       name: "RANGER VERDE",
-      accentHex: "#00E676",
-      frameHex: "#00E676",
-      pillFg: "#00E676",
-      letterFill: "#181B14",
-      letterStroke: "#00E676",
+      accentHex: "#00FF88",
+      frameHex: "#10B981",
+      pillFg: "#00FF88",
+      letterFill: "#0D1326",
+      letterStroke: "#00FF88",
       waveHex: "#00E676",
       suitHex: "#00D66C",
       tintMix: 0.94,
@@ -1618,9 +1621,9 @@
     yellow: {
       name: "RANGER AMARELO",
       accentHex: "#FFD000",
-      frameHex: "#FFD000",
+      frameHex: "#F59E0B",
       pillFg: "#FFD000",
-      letterFill: "#181B14",
+      letterFill: "#0D1326",
       letterStroke: "#FFD000",
       waveHex: "#FFD000",
       suitHex: "#FFC400",
@@ -1628,23 +1631,23 @@
     },
     pink: {
       name: "RANGER ROSA",
-      accentHex: "#FF2A85",
-      frameHex: "#FF2A85",
-      pillFg: "#FF2A85",
-      letterFill: "#181B14",
-      letterStroke: "#FF2A85",
+      accentHex: "#FF2A9D",
+      frameHex: "#EC4899",
+      pillFg: "#FF2A9D",
+      letterFill: "#0D1326",
+      letterStroke: "#FF2A9D",
       waveHex: "#FF2A85",
       suitHex: "#FF207E",
       tintMix: 0.94,
     },
     silver: {
       name: "RANGER PRATA",
-      accentHex: "#D8E2EC",
-      frameHex: "#94A3B8",
-      pillFg: "#D8E2EC",
-      letterFill: "#E2E8F0",
-      letterStroke: "#475569",
-      waveHex: "#C8D6E5",
+      accentHex: "#00FFA3",
+      frameHex: "#38BDF8",
+      pillFg: "#00FFA3",
+      letterFill: "#F0F6FF",
+      letterStroke: "#1E3A5F",
+      waveHex: "#8DA8D6",
       suitHex: "#C8D6E5",
       tintMix: 0.0,
     },
@@ -1933,12 +1936,12 @@
           faceGrad.addColorStop(1, "#E2E6DC");
         } else if (rangerKey === "silver") {
           faceGrad.addColorStop(0, "#FFFFFF");
-          faceGrad.addColorStop(0.5, "#E2E8F0");
-          faceGrad.addColorStop(1, "#B8C4D4");
+          faceGrad.addColorStop(0.5, "#E8F1FF");
+          faceGrad.addColorStop(1, "#B8CCE8");
         } else {
-          faceGrad.addColorStop(0, "#2E3428");
+          faceGrad.addColorStop(0, "#1E2D5A");
           faceGrad.addColorStop(0.5, fillHex);
-          faceGrad.addColorStop(1, "#0D0F0A");
+          faceGrad.addColorStop(1, "#060916");
         }
         ctx.fillStyle = faceGrad;
         ctx.fillText(item.char, 128, 128);
@@ -1970,8 +1973,8 @@
             grad.addColorStop(1, "#060705");
           } else {
             grad.addColorStop(0, strokeHex);
-            grad.addColorStop(0.4, "#1C2018");
-            grad.addColorStop(1, "#090B07");
+            grad.addColorStop(0.4, "#101938");
+            grad.addColorStop(1, "#050814");
           }
 
           sCtx.lineWidth = 16;
