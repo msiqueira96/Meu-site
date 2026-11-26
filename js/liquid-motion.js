@@ -2228,11 +2228,10 @@
       this.titleTexture.needsUpdate = true;
       this.drawTitleSign();
 
-      // 3º Plano: Dedicated Transparent Palm Trees Layer Texture (6 detailed realistic coconut palm trees)
-      const initialPreset = CURRENT_QUALITY_PRESET || QUALITY_PRESETS.medium;
+      // 3º Plano: Dedicated Transparent Palm Trees Layer Texture (generated ONCE at 2048x768, never regenerated on quality change!)
       this.palmsCanvas = document.createElement("canvas");
-      this.palmsCanvas.width = initialPreset.palmsWidth;
-      this.palmsCanvas.height = initialPreset.palmsHeight;
+      this.palmsCanvas.width = 2048;
+      this.palmsCanvas.height = 768;
       this.palmsTexture = new TextureCtor(this.palmsCanvas);
       this.palmsTexture.minFilter = THREE.LinearFilter;
       this.palmsTexture.magFilter = THREE.LinearFilter;
@@ -2487,12 +2486,7 @@
       if (this.helmet && typeof this.helmet.setGeometrySegments === "function") {
         this.helmet.setGeometrySegments(preset.portraitSegs);
       }
-      if (this.palmsCanvas && (this.palmsCanvas.width !== preset.palmsWidth || this.palmsCanvas.height !== preset.palmsHeight)) {
-        this.palmsCanvas.width = preset.palmsWidth;
-        this.palmsCanvas.height = preset.palmsHeight;
-        this.drawRetrowavePalmsLayer();
-        if (this.palmsTexture) this.palmsTexture.needsUpdate = true;
-      }
+      // Never redraw or resize palmsCanvas here — palms are generated once at boot!
       this.init3DLetters();
       this.applyResponsive();
     }
@@ -3801,83 +3795,90 @@
     window.addEventListener("resize", syncSizesAndRenderer);
 
     // =======================================================================
-    // Gear Menu UI & Live Quality Preset Switcher (Fraco / Médio / Avançado)
+    // Minimal Gear Menu: Fraco / Normal / Forte + 30Hz / 60Hz / 90Hz / 120Hz
     // =======================================================================
     const gearBtn = document.getElementById("quality-gear-btn");
     const gearPanel = document.getElementById("quality-gear-panel");
-    const gearCloseBtn = document.getElementById("quality-panel-close");
-    const gearCurrentLabel = document.getElementById("quality-gear-current-label");
-    const gearHzBadge = document.getElementById("quality-gear-hz-badge");
-    const detectedCpuGpuEl = document.getElementById("detected-cpu-gpu");
-    const detectedTierBadgeEl = document.getElementById("detected-tier-badge");
-    const qualityModePillEl = document.getElementById("quality-mode-pill");
-    const qualityLiveTelemetryEl = document.getElementById("quality-live-telemetry");
     const tierButtons = document.querySelectorAll(".quality-option-btn[data-quality-tier]");
-    const autoResetBtn = document.getElementById("quality-auto-reset-btn");
+    const hzButtons = document.querySelectorAll(".quality-hz-btn[data-hz-option]");
 
-    const updateGearMenuUI = (liveFps) => {
-      const preset = CURRENT_QUALITY_PRESET || QUALITY_PRESETS.medium;
-      const recPreset = QUALITY_PRESETS[HARDWARE_PROFILE.recommendedTier] || QUALITY_PRESETS.medium;
-      const hz = window.__displayHz || 60;
+    let savedHzPref = null;
+    try {
+      savedHzPref = parseInt(localStorage.getItem("ms_target_hz_override") || "", 10);
+    } catch (_e) {
+      savedHzPref = null;
+    }
 
-      if (gearCurrentLabel) {
-        gearCurrentLabel.textContent = preset.shortLabel;
-      }
-      if (gearHzBadge) {
-        gearHzBadge.textContent = `${hz}Hz`;
-      }
-      if (detectedCpuGpuEl) {
-        detectedCpuGpuEl.textContent = HARDWARE_PROFILE.summary;
-      }
-      if (detectedTierBadgeEl) {
-        detectedTierBadgeEl.textContent = `Ideal para este processador: ${recPreset.label} (${recPreset.desc})`;
-      }
-      if (qualityModePillEl) {
-        qualityModePillEl.textContent = IS_QUALITY_AUTO ? "Automático" : "Manual";
-        qualityModePillEl.classList.toggle("is-manual", !IS_QUALITY_AUTO);
+    const defaultHzForTier = (tierKey) => {
+      if (tierKey === "low") return 30;
+      if (tierKey === "high") return 90;
+      return 60;
+    };
+
+    let hasManualHz = [30, 60, 90, 120].includes(savedHzPref);
+    let activeTargetHz = hasManualHz ? savedHzPref : defaultHzForTier(ACTIVE_QUALITY_TIER);
+    window.__displayHz = activeTargetHz;
+
+    const applyTargetHz = (hzVal, { persist = true } = {}) => {
+      const target = [30, 60, 90, 120].includes(Number(hzVal)) ? Number(hzVal) : 60;
+      activeTargetHz = target;
+      window.__displayHz = target;
+      document.documentElement.setAttribute("data-display-hz", String(target));
+
+      if (persist) {
+        hasManualHz = true;
+        try {
+          localStorage.setItem("ms_target_hz_override", String(target));
+        } catch (_e) {}
       }
 
-      document.querySelectorAll("[data-rec-for]").forEach((badge) => {
-        badge.hidden = badge.getAttribute("data-rec-for") !== HARDWARE_PROFILE.recommendedTier;
+      if (typeof gsap.ticker.fps === "function") {
+        // 30Hz and 60Hz cap the ticker FPS; 90Hz and 120Hz unlock high-frequency ticker updates
+        gsap.ticker.fps(target >= 120 ? -1 : target);
+      }
+      if (typeof gsap.ticker.lagSmoothing === "function") {
+        gsap.ticker.lagSmoothing(0);
+      }
+
+      hzButtons.forEach((btn) => {
+        const isSelected = Number(btn.getAttribute("data-hz-option")) === activeTargetHz;
+        btn.classList.toggle("is-active", isSelected);
+        btn.setAttribute("aria-checked", isSelected ? "true" : "false");
       });
+    };
 
+    const updateGearMenuUI = () => {
       tierButtons.forEach((btn) => {
         const isSelected = btn.getAttribute("data-quality-tier") === ACTIVE_QUALITY_TIER;
         btn.classList.toggle("is-active", isSelected);
         btn.setAttribute("aria-checked", isSelected ? "true" : "false");
       });
 
-      if (qualityLiveTelemetryEl) {
-        const fpsStr = liveFps ? `${Math.round(liveFps)} FPS` : `${hz}Hz VSync`;
-        qualityLiveTelemetryEl.textContent = `${fpsStr} • ${sizes.renderWidth}×${sizes.renderHeight}px (${sizes.pixelRatio.toFixed(2)}x DPR) • 3D ${preset.letterSlices} camadas`;
-      }
+      hzButtons.forEach((btn) => {
+        const isSelected = Number(btn.getAttribute("data-hz-option")) === activeTargetHz;
+        btn.classList.toggle("is-active", isSelected);
+        btn.setAttribute("aria-checked", isSelected ? "true" : "false");
+      });
     };
 
-    const applyQualityTier = (tierOrAuto, { persist = true } = {}) => {
-      if (tierOrAuto === "auto") {
-        IS_QUALITY_AUTO = true;
-        ACTIVE_QUALITY_TIER = HARDWARE_PROFILE.recommendedTier;
-        if (persist) {
-          try {
-            localStorage.removeItem("ms_quality_tier_override");
-          } catch (_e) {}
-        }
-      } else if (QUALITY_PRESETS[tierOrAuto]) {
-        IS_QUALITY_AUTO = !persist;
-        ACTIVE_QUALITY_TIER = tierOrAuto;
-        if (persist) {
-          try {
-            localStorage.setItem("ms_quality_tier_override", tierOrAuto);
-          } catch (_e) {}
-        }
-      } else {
-        return;
+    const applyQualityTier = (tierKey, { persist = true } = {}) => {
+      if (!QUALITY_PRESETS[tierKey]) return;
+      IS_QUALITY_AUTO = !persist;
+      ACTIVE_QUALITY_TIER = tierKey;
+      if (persist) {
+        try {
+          localStorage.setItem("ms_quality_tier_override", tierKey);
+        } catch (_e) {}
       }
 
       CURRENT_QUALITY_PRESET = QUALITY_PRESETS[ACTIVE_QUALITY_TIER] || QUALITY_PRESETS.medium;
       IS_LOW_END = ACTIVE_QUALITY_TIER === "low";
       document.documentElement.setAttribute("data-quality-tier", ACTIVE_QUALITY_TIER);
       document.documentElement.classList.toggle("is-low-end", IS_LOW_END);
+
+      if (!hasManualHz) {
+        applyTargetHz(defaultHzForTier(ACTIVE_QUALITY_TIER), { persist: false });
+      }
 
       syncSizesAndRenderer();
       fluidCursor.applyQualityPreset(CURRENT_QUALITY_PRESET);
@@ -3886,6 +3887,7 @@
     };
 
     window.__applyQualityTier = applyQualityTier;
+    window.__applyTargetHz = applyTargetHz;
 
     if (gearBtn && gearPanel) {
       const toggleGearPanel = (forceOpen) => {
@@ -3898,13 +3900,6 @@
         e.stopPropagation();
         toggleGearPanel();
       });
-
-      if (gearCloseBtn) {
-        gearCloseBtn.addEventListener("click", (e) => {
-          e.stopPropagation();
-          toggleGearPanel(false);
-        });
-      }
 
       document.addEventListener("click", (e) => {
         if (!gearPanel.hidden && !gearPanel.contains(e.target) && !gearBtn.contains(e.target)) {
@@ -3919,30 +3914,18 @@
         });
       });
 
-      if (autoResetBtn) {
-        autoResetBtn.addEventListener("click", () => {
-          applyQualityTier("auto", { persist: true });
+      hzButtons.forEach((btn) => {
+        btn.addEventListener("click", () => {
+          const targetHz = Number(btn.getAttribute("data-hz-option"));
+          applyTargetHz(targetHz, { persist: true });
         });
-      }
+      });
     }
 
+    applyTargetHz(activeTargetHz, { persist: false });
     updateGearMenuUI();
 
     window.__isHeroStageVisible = true;
-    window.__displayHz = 90;
-
-    // Unlock GSAP ticker so it runs at the user's native screen refresh rate (60Hz, 90Hz, 120Hz, 144Hz, 240Hz)
-    if (typeof gsap.ticker.fps === "function") {
-      gsap.ticker.fps(-1);
-    }
-    if (typeof gsap.ticker.lagSmoothing === "function") {
-      gsap.ticker.lagSmoothing(0);
-    }
-
-    let hzSampleCount = 0;
-    let hzSampleAccumSec = 0;
-    let autoHzUpgraded = false;
-    let lowFpsWindows = 0;
 
     gsap.ticker.add(() => {
       if (document.hidden || window.__isHeroStageVisible === false) {
@@ -3951,61 +3934,9 @@
       }
 
       const rawDt = clock.getDelta();
-      // Live Display Refresh Rate (Hz) Detector (measures native VSync: 60Hz, 90Hz, 120Hz, 144Hz, 240Hz)
-      if (rawDt > 0.002 && rawDt < 0.06) {
-        hzSampleAccumSec += rawDt;
-        hzSampleCount++;
-        if (hzSampleCount >= 45) {
-          const avgFps = hzSampleCount / hzSampleAccumSec;
-          const standardHz = [60, 90, 120, 144, 165, 240];
-          let closestHz = 60;
-          let minDiff = 999;
-          for (let i = 0; i < standardHz.length; i++) {
-            const diff = Math.abs(avgFps - standardHz[i]);
-            if (diff < minDiff) {
-              minDiff = diff;
-              closestHz = standardHz[i];
-            }
-          }
-          window.__displayHz = closestHz;
-          document.documentElement.setAttribute("data-display-hz", String(closestHz));
-
-          // Smart Auto-Promotion / Protection when in Automatic Processor Mode:
-          // 1) If a 90Hz/120Hz+ smartphone or monitor is running smoothly (>= 75 FPS) and was initially classified as "medium"
-          //    (e.g. browser hid the exact GPU model), promote it to "high" (Avançado) so 90Hz/120Hz screens never look pixelated!
-          if (
-            IS_QUALITY_AUTO &&
-            !autoHzUpgraded &&
-            !HARDWARE_PROFILE.explicitLow &&
-            closestHz >= 90 &&
-            avgFps >= 75 &&
-            ACTIVE_QUALITY_TIER === "medium"
-          ) {
-            autoHzUpgraded = true;
-            HARDWARE_PROFILE.recommendedTier = "high";
-            applyQualityTier("high", { persist: false });
-          } else if (IS_QUALITY_AUTO && avgFps < 28) {
-            // 2) If a device in Automatic mode sustains < 28 FPS across 2 consecutive windows, step down one tier to prevent lag
-            lowFpsWindows++;
-            if (lowFpsWindows >= 2) {
-              lowFpsWindows = 0;
-              if (ACTIVE_QUALITY_TIER === "high") {
-                applyQualityTier("medium", { persist: false });
-              } else if (ACTIVE_QUALITY_TIER === "medium") {
-                applyQualityTier("low", { persist: false });
-              }
-            }
-          } else {
-            lowFpsWindows = 0;
-          }
-
-          updateGearMenuUI(avgFps);
-          hzSampleCount = 0;
-          hzSampleAccumSec = 0;
-        }
-      }
-
-      const delta = Math.min(rawDt, 1 / 30) * 100;
+      const targetFrameDt = 1 / Math.max(30, activeTargetHz || 60);
+      const hzSpeedScale = (activeTargetHz || 60) / 60;
+      const delta = Math.min(rawDt || targetFrameDt, 1 / 24) * 100 * Math.min(1.35, Math.max(0.75, hzSpeedScale));
       const elapsed = clock.getElapsedTime();
 
       idleState.update();

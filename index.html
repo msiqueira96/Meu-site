@@ -13,9 +13,9 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="css/liquid-motion.css?v=58" />
-  <script defer src="js/three-vendor.min.js?v=58"></script>
-  <script defer src="js/liquid-motion.js?v=58"></script>
+  <link rel="stylesheet" href="css/liquid-motion.css?v=59" />
+  <script defer src="js/three-vendor.min.js?v=59"></script>
+  <script defer src="js/liquid-motion.js?v=59"></script>
 </head>
 
 <body>
@@ -72,66 +72,26 @@
     </div>
   </header>
 
-  <!-- Floating Hardware Quality & Processor Gear Menu (Fraco / Médio / Avançado) -->
-  <aside class="quality-gear-widget" id="quality-gear-widget" aria-label="Configurações de Qualidade Gráfica 3D">
+  <!-- Minimal Flat White Gear Icon & Direct Quality/Hz Menu (Fraco / Normal / Forte + 30 / 60 / 90 / 120 Hz) -->
+  <aside class="quality-gear-widget" id="quality-gear-widget" aria-label="Qualidade e Hz">
     <button type="button" class="quality-gear-btn" id="quality-gear-btn" aria-expanded="false"
-      aria-controls="quality-gear-panel" title="Qualidade Gráfica 3D &amp; Processador Detectado">
-      <span class="quality-gear-icon" aria-hidden="true">⚙️</span>
-      <span class="quality-gear-label" id="quality-gear-current-label">AUTO</span>
-      <span class="quality-gear-hz" id="quality-gear-hz-badge">90Hz</span>
+      aria-controls="quality-gear-panel" title="Qualidade e Hz">
+      <svg class="quality-gear-svg" viewBox="0 0 24 24" width="26" height="26" fill="#FFFFFF" aria-hidden="true">
+        <path d="M19.14 12.94c.04-.31.06-.63.06-.94 0-.31-.02-.63-.06-.94l2.03-1.58a.49.49 0 0 0 .12-.61l-1.92-3.32a.49.49 0 0 0-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54a.484.484 0 0 0-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96a.49.49 0 0 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.04.31-.06.63-.06.94s.02.63.06.94l-2.03 1.58a.49.49 0 0 0-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6A3.6 3.6 0 1 1 12 8.4a3.6 3.6 0 0 1 0 7.2z"/>
+      </svg>
     </button>
 
     <div class="quality-gear-panel" id="quality-gear-panel" hidden>
-      <div class="quality-panel-header">
-        <div>
-          <span class="quality-panel-eyebrow">MOTOR 3D ADAPTATIVO</span>
-          <h3 class="quality-panel-title">Qualidade Gráfica</h3>
-        </div>
-        <button type="button" class="quality-panel-close" id="quality-panel-close" aria-label="Fechar menu de qualidade">✕</button>
+      <div class="quality-options-row" role="radiogroup" aria-label="Qualidade">
+        <button type="button" class="quality-option-btn" data-quality-tier="low" role="radio" aria-checked="false">Fraco</button>
+        <button type="button" class="quality-option-btn" data-quality-tier="medium" role="radio" aria-checked="false">Normal</button>
+        <button type="button" class="quality-option-btn" data-quality-tier="high" role="radio" aria-checked="false">Forte</button>
       </div>
-
-      <div class="quality-hardware-box">
-        <div class="quality-hw-row">
-          <span class="quality-hw-tag">PROCESSADOR / GPU</span>
-          <span class="quality-hw-auto-pill" id="quality-mode-pill">Automático</span>
-        </div>
-        <strong class="quality-hw-name" id="detected-cpu-gpu">Identificando processador...</strong>
-        <span class="quality-hw-rec" id="detected-tier-badge">Perfil recomendado: Analisando...</span>
-      </div>
-
-      <div class="quality-options-list" role="radiogroup" aria-label="Nível de qualidade 3D">
-        <button type="button" class="quality-option-btn" data-quality-tier="low" role="radio" aria-checked="false">
-          <div class="quality-opt-top">
-            <span class="quality-opt-name">1. Fraco <small>(Leve)</small></span>
-            <span class="quality-opt-badge" data-rec-for="low" hidden>Recomendado</span>
-          </div>
-          <span class="quality-opt-desc">Foco em zero travamentos • 3D simplificado • Resolução leve</span>
-        </button>
-
-        <button type="button" class="quality-option-btn" data-quality-tier="medium" role="radio" aria-checked="false">
-          <div class="quality-opt-top">
-            <span class="quality-opt-name">2. Médio <small>(Equilibrado)</small></span>
-            <span class="quality-opt-badge" data-rec-for="medium" hidden>Recomendado</span>
-          </div>
-          <span class="quality-opt-desc">Nitidez HD 512px • 12 camadas 3D • Fluidez estável</span>
-        </button>
-
-        <button type="button" class="quality-option-btn" data-quality-tier="high" role="radio" aria-checked="false">
-          <div class="quality-opt-top">
-            <span class="quality-opt-name">3. Avançado <small>(Ultra 3D)</small></span>
-            <span class="quality-opt-badge" data-rec-for="high" hidden>Recomendado</span>
-          </div>
-          <span class="quality-opt-desc">Zero pixelado • Retina 2.75x • 22 camadas 3D • 90/120Hz</span>
-        </button>
-      </div>
-
-      <div class="quality-panel-footer">
-        <button type="button" class="quality-auto-reset-btn" id="quality-auto-reset-btn" data-quality-tier="auto">
-          ⚡ Usar Automático do Processador
-        </button>
-        <div class="quality-live-telemetry" id="quality-live-telemetry">
-          60–120Hz VSync • Alta Precisão 3D
-        </div>
+      <div class="quality-hz-row" role="radiogroup" aria-label="Taxa de Atualização">
+        <button type="button" class="quality-hz-btn" data-hz-option="30" role="radio" aria-checked="false">30Hz</button>
+        <button type="button" class="quality-hz-btn" data-hz-option="60" role="radio" aria-checked="false">60Hz</button>
+        <button type="button" class="quality-hz-btn" data-hz-option="90" role="radio" aria-checked="false">90Hz</button>
+        <button type="button" class="quality-hz-btn" data-hz-option="120" role="radio" aria-checked="false">120Hz</button>
       </div>
     </div>
   </aside>
