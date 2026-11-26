@@ -1,0 +1,676 @@
+<!DOCTYPE html>
+<html lang="pt-BR" data-ranger-theme="silver">
+
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=5" />
+  <title>Marcos Siqueira — Programador JS, Web Design, Automações &amp; Tráfego Pago</title>
+  <meta name="description"
+    content="Portfólio de Marcos Siqueira: Programação JavaScript, Criação de Softwares, Web Design Interativo, Automações com IA e Gestão de Tráfego Pago." />
+  <link rel="icon" type="image/png" href="assets/icons/ms-favicon.png?v=14" />
+  <link rel="shortcut icon" type="image/png" href="assets/icons/ms-favicon.png?v=14" />
+  <link rel="apple-touch-icon" href="assets/icons/ms-favicon.png?v=14" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="css/liquid-motion.css?v=51" />
+  <script defer src="js/three-vendor.min.js?v=51"></script>
+  <script defer src="js/liquid-motion.js?v=51"></script>
+</head>
+
+<body>
+  <!-- Loading Overlay -->
+  <div class="liquid-loader" aria-live="polite">
+    <div class="liquid-loader-inner">
+      <div class="liquid-loader-title">MARCOS SIQUEIRA<span class="dot-accent">.</span></div>
+      <div class="liquid-loader-bar-track" id="loader-progressbar" role="progressbar" aria-valuemin="0"
+        aria-valuemax="100" aria-valuenow="0">
+        <div class="liquid-loader-bar-fill" id="loader-bar-fill"></div>
+      </div>
+      <div class="liquid-loader-meta">
+        <span class="liquid-loader-status" id="loader-status-text">Preparando WebGL &amp; Morphin Grid...</span>
+        <span class="liquid-loader-percent" id="loader-percent">0%</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Top Navigation Header (Each menu item has its own Ranger color) -->
+  <header class="site-header is-entrance-hidden" id="topo">
+    <a href="#hero" class="brand-logo" data-ranger-key="silver">
+      <span class="brand-dot" id="brand-dot"></span>
+      <span class="brand-name">MARCOS SIQUEIRA<span class="dot-accent">.</span></span>
+    </a>
+
+    <nav class="site-nav" aria-label="Menu principal">
+      <a href="#hero" class="nav-link is-active" data-ranger-key="silver" style="--nav-color:#C8D6E5">
+        <span class="nav-color-dot" style="background:linear-gradient(135deg,#FFFFFF,#8E9BAE)"></span>
+        <span>Início</span>
+      </a>
+      <a href="#habilidades" class="nav-link" data-ranger-key="red" style="--nav-color:#FF2233">
+        <span class="nav-color-dot" style="background:#FF2233"></span>
+        <span>O Que Eu Faço</span>
+      </a>
+      <a href="#exemplos" class="nav-link" data-ranger-key="blue" style="--nav-color:#0088FF">
+        <span class="nav-color-dot" style="background:#0088FF"></span>
+        <span>Ver Funcionando</span>
+      </a>
+      <a href="#processo" class="nav-link" data-ranger-key="green" style="--nav-color:#00E676">
+        <span class="nav-color-dot" style="background:#00E676"></span>
+        <span>Como Trabalho</span>
+      </a>
+      <a href="#contato" class="nav-link" data-ranger-key="black" style="--nav-color:#11130E">
+        <span class="nav-color-dot" style="background:#11130E;border-color:#FFFFFF"></span>
+        <span>Contato</span>
+      </a>
+    </nav>
+
+    <div class="header-actions">
+      <a href="#contato" class="cta-pill">
+        <span>Contratar Projeto</span>
+        <span aria-hidden="true">↗</span>
+      </a>
+    </div>
+  </header>
+
+  <main class="portfolio-main">
+
+    <!-- ===================================================================
+         HERO SECTION — Marcos Siqueira Interactive Stage
+    ==================================================================== -->
+    <section id="hero" class="hero-scroll-track" data-section-ranger="silver">
+      <div class="hero-sticky-viewport">
+        <div class="hero-frame-card" id="hero-frame-card">
+
+          <!-- WebGL Canvas Inside the Frame Card (Scrolls & frames with the Hero!) -->
+          <div data-gl="head" class="gl-canvas" aria-hidden="true"></div>
+          <div class="gl-wrap" aria-hidden="true">
+            <canvas class="gl"></canvas>
+          </div>
+        </div>
+
+        <!-- Minimal Initial Scroll Prompt (Visible only at scrollY = 0 when only character is on screen) -->
+        <div class="hero-scroll-cue" id="hero-scroll-cue" aria-hidden="true">
+          <span>ROLE PARA DESENVOLVER</span>
+          <span class="scroll-cue-arrow">↓</span>
+        </div>
+      </div>
+
+      <!-- Free-Floating Hero Boxes Layer (Fixed in foreground at z-index: 35 above rising Section 2) -->
+      <div class="hero-overlay-layout" id="hero-overlay-layout">
+
+          <!-- Left Minimal Pitch -->
+          <div class="hero-intro-box is-entrance-hidden" id="hero-intro-box">
+            <div class="status-pill">
+              <span class="status-pulse"></span>
+              <span>IT'S ME, MARCOS SIQUEIRA</span>
+            </div>
+
+            <h1 class="hero-headline">
+              PROGRAMADOR JS,<br />
+              WEB DESIGN &amp; <span class="text-accent">TRÁFEGO PAGO</span>
+            </h1>
+
+            <p class="hero-short-bio">
+              Eu crio <strong>softwares sob medida</strong>, <strong>sites interativos</strong>,
+              <strong>automações com IA</strong> e <strong>campanhas de anúncios</strong> para empresas que querem
+              vender mais e trabalhar menos no manual.
+            </p>
+
+            <div class="hero-actions">
+              <a href="#exemplos" class="btn-primary">
+                <span>Testar Exemplos Práticos</span>
+                <span aria-hidden="true">↓</span>
+              </a>
+              <button type="button" class="btn-outline" data-gl-helmet="hover">
+                <span>⚡ Segurar: Revelar Ranger</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Center Hint Below Character -->
+          <div class="hero-center-hint is-entrance-hidden" id="hero-center-hint">
+            <span>Passe o mouse no personagem para ativar o efeito líquido</span>
+          </div>
+
+          <!-- Right / Bottom Morphin Selector ("Seletor de Bolas Morphin") -->
+          <div class="morphin-dock is-entrance-hidden" id="morphin-dock"
+            aria-label="Seletor Morphin de Cores do Ranger">
+            <div class="morphin-dock-top">
+              <span class="morphin-title">IT'S MORPHIN TIME</span>
+              <span class="morphin-active-name" id="morphin-active-name">RANGER PRATA</span>
+            </div>
+
+            <div class="morphin-balls" role="radiogroup" aria-label="Escolher Ranger">
+              <button type="button" class="morphin-ball is-active" data-ranger-select="silver"
+                style="--ball-color:linear-gradient(135deg,#FFFFFF,#8E9BAE); --ball-ring:#E2E8F0" title="Ranger Prata (Principal)">
+                <span class="ball-core"></span>
+              </button>
+              <button type="button" class="morphin-ball" data-ranger-select="red"
+                style="--ball-color:#FF1E27; --ball-ring:#FF1E27" title="Ranger Vermelho">
+                <span class="ball-core"></span>
+              </button>
+              <button type="button" class="morphin-ball" data-ranger-select="blue"
+                style="--ball-color:#0088FF; --ball-ring:#0088FF" title="Ranger Azul">
+                <span class="ball-core"></span>
+              </button>
+              <button type="button" class="morphin-ball" data-ranger-select="green"
+                style="--ball-color:#00E676; --ball-ring:#00E676" title="Ranger Verde">
+                <span class="ball-core"></span>
+              </button>
+              <button type="button" class="morphin-ball" data-ranger-select="yellow"
+                style="--ball-color:#FFD000; --ball-ring:#FFD000" title="Ranger Amarelo">
+                <span class="ball-core"></span>
+              </button>
+              <button type="button" class="morphin-ball" data-ranger-select="pink"
+                style="--ball-color:#FF2A85; --ball-ring:#FF2A85" title="Ranger Rosa">
+                <span class="ball-core"></span>
+              </button>
+              <button type="button" class="morphin-ball" data-ranger-select="black"
+                style="--ball-color:#11130E; --ball-ring:#11130E; border-color:#11130E" title="Ranger Preto">
+                <span class="ball-core" style="border: 2px solid #FFFFFF"></span>
+              </button>
+            </div>
+
+            <div class="morphin-dock-actions">
+              <button type="button" class="morphin-lock-btn" data-toggle-helmet>
+                Fixar Ranger: OFF
+              </button>
+              <button type="button" class="morphin-ghost-btn" id="btn-toggle-boxes-visibility"
+                title="Tela cheia: ocultar boxes e prender o scroll">
+                👁 Boxes
+              </button>
+            </div>
+          </div>
+
+      </div>
+    </section>
+
+    <!-- ===================================================================
+         STACKED PARALLAX MENU SECTIONS — Each menu rises over the previous in parallax
+    ==================================================================== -->
+    <div class="parallax-sections-stack" id="parallax-content-sheet">
+
+      <!-- ===================================================================
+         01 / O QUE EU FAÇO (Slides in from right empty & writes on scroll)
+    ==================================================================== -->
+      <div class="section2-scroll-track" id="section2-scroll-track">
+      <section id="habilidades" class="content-section parallax-menu-card" data-menu-card="0" data-section-ranger="red" style="--card-z:21">
+        <div class="container">
+          <div class="section-head">
+            <span class="eyebrow">01 / MINHAS HABILIDADES</span>
+            <h2 class="section-heading">TUDO O QUE SUA EMPRESA PRECISA EM <span class="text-accent">UM SÓ LUGAR.</span>
+            </h2>
+            <p class="section-lead">
+              Você não precisa contratar um programador, um designer e um gestor de tráfego separados. Eu conecto todas
+              as
+              pontas:
+            </p>
+          </div>
+
+          <div class="skills-grid">
+            <article class="skill-card" data-ranger-preview="blue">
+              <span class="skill-number">01</span>
+              <h3>Criação de Softwares &amp; Sistemas JS</h3>
+              <p>
+                Desenvolvo sistemas personalizados no navegador: controle financeiro, painéis de vendas, leitura
+                automática de notas fiscais com IA e plataformas SaaS completas.
+              </p>
+              <ul class="skill-list">
+                <li>Painéis administrativos e financeiros sob medida</li>
+                <li>Sistemas integrados com Google Sheets e bancos de dados</li>
+                <li>Código rápido em JavaScript, React e Node.js</li>
+              </ul>
+            </article>
+
+            <article class="skill-card" data-ranger-preview="red">
+              <span class="skill-number">02</span>
+              <h3>Web Design &amp; Sites Interativos</h3>
+              <p>
+                Crio páginas que chamam atenção no primeiro segundo (como este efeito 3D interativo) e são pensadas para
+                transformar visitantes em clientes reais.
+              </p>
+              <ul class="skill-list">
+                <li>Landing Pages de alta conversão</li>
+                <li>Efeitos visuais 3D, WebGL e animações fluidas</li>
+                <li>Sites ultra-rápidos no celular e no computador</li>
+              </ul>
+            </article>
+
+            <article class="skill-card" data-ranger-preview="green">
+              <span class="skill-number">03</span>
+              <h3>Automações com IA &amp; n8n</h3>
+              <p>
+                Elimino tarefas repetitivas da sua rotina. Coloco robôs inteligentes para atender no WhatsApp, ler
+                documentos, cobrar clientes e atualizar seu sistema sozinhos.
+              </p>
+              <ul class="skill-list">
+                <li>Atendimento e agendamento automático no WhatsApp 24h</li>
+                <li>Leitura de PDFs, comprovantes e notas via Inteligência Artificial</li>
+                <li>Conexão automática entre todos os seus aplicativos (n8n)</li>
+              </ul>
+            </article>
+
+            <article class="skill-card" data-ranger-preview="yellow">
+              <span class="skill-number">04</span>
+              <h3>Gestão de Tráfego Pago</h3>
+              <p>
+                Com o site e o atendimento prontos, crio e gerencio seus anúncios no Instagram, Facebook e Google para
+                colocar clientes qualificados todos os dias no seu funil.
+              </p>
+              <ul class="skill-list">
+                <li>Campanhas no Meta Ads e Google Ads focadas em lucro</li>
+                <li>Rastreamento avançado (saber exatamente qual anúncio vendeu)</li>
+                <li>Otimização contínua para diminuir seu custo por cliente</li>
+              </ul>
+            </article>
+          </div>
+        </div>
+      </section>
+      </div>
+
+      <!-- ===================================================================
+         02 / VER FUNCIONANDO NA PRÁTICA (3 Clear, Self-Explanatory Demos)
+    ==================================================================== -->
+      <section id="exemplos" class="content-section content-section--alt parallax-menu-card" data-menu-card="1" data-section-ranger="blue" style="--card-z:22">
+        <div class="container">
+          <div class="section-head">
+            <span class="eyebrow">02 / ENTENDA NA PRÁTICA</span>
+            <h2 class="section-heading">VEJA COMO MINHAS SOLUÇÕES <span class="text-accent">FUNCIONAM NO DIA A
+                DIA.</span>
+            </h2>
+            <p class="section-lead">
+              Escolha um dos 3 exemplos abaixo e clique nos botões para ver, passo a passo, o tipo de tecnologia que eu
+              construo para o seu negócio:
+            </p>
+          </div>
+
+          <!-- 3 Simple Demo Selector Tabs -->
+          <div class="demo-tabs" role="tablist">
+            <button type="button" class="demo-tab is-active" data-demo-tab="leitor">
+              <span class="demo-tab-num">Exemplo 1</span>
+              <strong>Software que Lê Notas Fiscais com IA</strong>
+            </button>
+            <button type="button" class="demo-tab" data-demo-tab="whatsapp">
+              <span class="demo-tab-num">Exemplo 2</span>
+              <strong>Robô que Atende e Vende no WhatsApp</strong>
+            </button>
+            <button type="button" class="demo-tab" data-demo-tab="trafego">
+              <span class="demo-tab-num">Exemplo 3</span>
+              <strong>Simulador de Lucro com Tráfego Pago</strong>
+            </button>
+          </div>
+
+          <!-- ===============================================================
+             EXEMPLO 1: LEITOR AUTOMÁTICO DE NOTAS FISCAIS (Clear 3-step visual flow)
+        ================================================================ -->
+          <div class="demo-box" id="demo-box-leitor">
+            <div class="demo-explanation">
+              <span class="demo-badge">PROBLEMA QUE RESOLVE:</span>
+              <p>
+                Em vez de um funcionário perder horas abrindo PDF por PDF e digitando valores numa planilha, eu crio um
+                sistema onde você <strong>joga os arquivos</strong> e a <strong>Inteligência Artificial lê e preenche
+                  tudo
+                  sozinha em 1 segundo</strong>.
+              </p>
+            </div>
+
+            <div class="step-flow-grid">
+              <!-- Step 1: Choose a document -->
+              <div class="step-panel">
+                <div class="step-header">
+                  <span class="step-circle">1</span>
+                  <strong>Escolha um documento para testar</strong>
+                </div>
+
+                <div class="doc-picker-list">
+                  <button type="button" class="doc-card is-selected" data-doc-index="0">
+                    <span class="doc-icon">📄</span>
+                    <div class="doc-info">
+                      <strong>Nota Fiscal — Servidores Cloud.pdf</strong>
+                      <span>Fornecedor: Cloud Brasil • R$ 4.850,00</span>
+                    </div>
+                  </button>
+
+                  <button type="button" class="doc-card" data-doc-index="1">
+                    <span class="doc-icon">🧾</span>
+                    <div class="doc-info">
+                      <strong>Recibo — Campanha Meta Ads.pdf</strong>
+                      <span>Fornecedor: Meta Ireland • R$ 8.200,00</span>
+                    </div>
+                  </button>
+
+                  <button type="button" class="doc-card" data-doc-index="2">
+                    <span class="doc-icon">📑</span>
+                    <div class="doc-info">
+                      <strong>Fatura — Equipamentos Escritório.pdf</strong>
+                      <span>Fornecedor: TechStore • R$ 3.190,00</span>
+                    </div>
+                  </button>
+                </div>
+
+                <button type="button" class="btn-primary btn-full" id="btn-run-ocr">
+                  <span>🤖 Ler Documento Agora com IA</span>
+                </button>
+              </div>
+
+              <!-- Step 2: Visual AI Scanner -->
+              <div class="step-panel">
+                <div class="step-header">
+                  <span class="step-circle">2</span>
+                  <strong>A IA extrai os dados automaticamente</strong>
+                </div>
+
+                <div class="scanner-preview" id="scanner-preview">
+                  <div class="scanner-laser" id="scanner-laser"></div>
+                  <div class="scanner-doc-header">
+                    <span id="scan-doc-title">Nota Fiscal — Servidores Cloud.pdf</span>
+                    <span class="scan-status-pill" id="scan-status-pill">Pronto para leitura</span>
+                  </div>
+                  <div class="scanner-fields">
+                    <div class="s-field"><span>Fornecedor detectado:</span><strong id="scan-vendor">Cloud Brasil
+                        LTDA</strong></div>
+                    <div class="s-field"><span>CNPJ extraído:</span><strong id="scan-cnpj">48.921.400/0001-89</strong>
+                    </div>
+                    <div class="s-field"><span>Forma de Pagamento:</span><strong id="scan-pay">Pix Corporativo</strong>
+                    </div>
+                    <div class="s-field"><span>Valor Total:</span><strong class="text-accent" id="scan-val">R$
+                        4.850,00</strong></div>
+                  </div>
+                </div>
+
+                <div class="time-saved-banner">
+                  <span>⚡ Tempo da IA: <strong>0,7 segundos</strong></span>
+                  <span>⏳ Digitação manual: ~3 minutos</span>
+                </div>
+              </div>
+
+              <!-- Step 3: Saved in Spreadsheet / ERP -->
+              <div class="step-panel">
+                <div class="step-header">
+                  <span class="step-circle">3</span>
+                  <strong>Salvo direto na sua Planilha / Sistema</strong>
+                </div>
+
+                <div class="mini-sheet">
+                  <div class="mini-sheet-top">
+                    <span>📊 Planilha Financeira Sincronizada</span>
+                    <strong id="sheet-total">Total: R$ 12.400,00</strong>
+                  </div>
+                  <table class="mini-sheet-table">
+                    <thead>
+                      <tr>
+                        <th>Fornecedor</th>
+                        <th>Pagto</th>
+                        <th>Valor</th>
+                      </tr>
+                    </thead>
+                    <tbody id="sheet-tbody">
+                      <tr>
+                        <td>Infra AWS Brasil</td>
+                        <td>Pix</td>
+                        <td class="text-accent">R$ 12.400,00</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- ===============================================================
+             EXEMPLO 2: ROBÔ DE ATENDIMENTO & VENDAS NO WHATSAPP (n8n + IA)
+        ================================================================ -->
+          <div class="demo-box" id="demo-box-whatsapp" hidden>
+            <div class="demo-explanation">
+              <span class="demo-badge">PROBLEMA QUE RESOLVE:</span>
+              <p>
+                Quando um cliente clica no seu anúncio e demora 30 minutos para ser respondido, ele compra do
+                concorrente. Eu crio um <strong>Agente de IA no WhatsApp</strong> que responde em <strong>2
+                  segundos</strong>, tira dúvidas, agenda horários e já atualiza seu painel de vendas:
+              </p>
+            </div>
+
+            <div class="wa-demo-grid">
+              <!-- Step 1 & 2: Simulated WhatsApp Conversation -->
+              <div class="wa-phone-card">
+                <div class="wa-phone-header">
+                  <span class="wa-avatar">🤖</span>
+                  <div>
+                    <strong>Atendimento Automático IA (24h)</strong>
+                    <span>Online • Responde na hora</span>
+                  </div>
+                </div>
+
+                <div class="wa-messages" id="wa-messages" aria-live="polite">
+                  <div class="wa-msg wa-msg--bot">
+                    Olá! Vi que você clicou no nosso anúncio. Como posso ajudar sua empresa hoje?
+                  </div>
+                </div>
+
+                <div class="wa-client-actions">
+                  <span class="wa-action-hint">Clique em uma mensagem abaixo como se você fosse o cliente:</span>
+                  <div class="wa-quick-btns">
+                    <button type="button" class="wa-chip" data-wa-msg="Qual o valor para criar um sistema ou site?"
+                      data-crm-stage="Interesse no Orçamento" data-crm-val="R$ 4.500">
+                      1. "Qual o valor para criar um sistema ou site?"
+                    </button>
+                    <button type="button" class="wa-chip" data-wa-msg="Quero agendar uma reunião ainda essa semana"
+                      data-crm-stage="Reunião Agendada ✓" data-crm-val="R$ 6.800">
+                      2. "Quero agendar uma reunião ainda essa semana"
+                    </button>
+                    <button type="button" class="wa-chip" data-wa-msg="Pronto, acabei de enviar o Pix do projeto!"
+                      data-crm-stage="Venda Fechada &amp; Confirmada ★" data-crm-val="R$ 8.500">
+                      3. "Pronto, acabei de enviar o Pix do projeto!"
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Step 3: Live CRM Update -->
+              <div class="wa-crm-card">
+                <div class="step-header">
+                  <span class="step-circle">✓</span>
+                  <strong>O que acontece no seu Painel de Controle ao mesmo tempo:</strong>
+                </div>
+
+                <div class="crm-live-box">
+                  <div class="crm-row">
+                    <span>Status do Cliente no CRM:</span>
+                    <strong class="text-accent" id="crm-stage-out">Novo Lead Capturado</strong>
+                  </div>
+                  <div class="crm-row">
+                    <span>Tempo de Resposta:</span>
+                    <strong>1,4 segundos (Automático)</strong>
+                  </div>
+                  <div class="crm-row">
+                    <span>Oportunidade Estimada:</span>
+                    <strong id="crm-val-out">R$ 3.500</strong>
+                  </div>
+                  <div class="crm-log" id="crm-log-out">
+                    ✓ Lead veio do Instagram Ads → Atendido pela IA no WhatsApp sem precisar de atendente humano.
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- ===============================================================
+             EXEMPLO 3: SIMULADOR SIMPLES DE TRÁFEGO PAGO + SITE RÁPIDO
+        ================================================================ -->
+          <div class="demo-box" id="demo-box-trafego" hidden>
+            <div class="demo-explanation">
+              <span class="demo-badge">PROBLEMA QUE RESOLVE:</span>
+              <p>
+                Investir em anúncios mandando o cliente para um site lento e sem automação faz você desperdiçar
+                dinheiro.
+                Arraste o controle abaixo para comparar o retorno do <strong>mesmo investimento em anúncios</strong>:
+              </p>
+            </div>
+
+            <div class="traffic-compare-grid">
+              <div class="traffic-sliders">
+                <div class="roi-control-group">
+                  <div class="roi-label-row">
+                    <label for="roi-budget">Quanto você investe por mês em anúncios?</label>
+                    <strong id="roi-budget-val">R$ 5.000</strong>
+                  </div>
+                  <input type="range" id="roi-budget" min="1000" max="30000" step="500" value="5000"
+                    class="roi-slider" />
+                </div>
+
+                <div class="roi-control-group">
+                  <div class="roi-label-row">
+                    <label for="roi-ticket">Valor médio de cada venda sua:</label>
+                    <strong id="roi-ticket-val">R$ 500</strong>
+                  </div>
+                  <input type="range" id="roi-ticket" min="100" max="5000" step="100" value="500" class="roi-slider" />
+                </div>
+              </div>
+
+              <div class="traffic-cards-compare">
+                <!-- Common Structure -->
+                <div class="compare-box compare-box--basic">
+                  <span class="compare-tag">ANÚNCIO COMUM (SEM ENGENHARIA)</span>
+                  <h4>Site lento + Demora no WhatsApp</h4>
+                  <div class="compare-metric">
+                    <span>Contatos gerados:</span>
+                    <strong id="basic-leads">100 leads</strong>
+                  </div>
+                  <div class="compare-metric">
+                    <span>Faturamento estimado:</span>
+                    <strong id="basic-rev">R$ 6.000</strong>
+                  </div>
+                </div>
+
+                <!-- Marcos Siqueira Structure -->
+                <div class="compare-box compare-box--pro">
+                  <span class="compare-tag">ESTRUTURA MARCOS SIQUEIRA</span>
+                  <h4>Tráfego + Site Rápido + Robô IA 24h</h4>
+                  <div class="compare-metric">
+                    <span>Contatos gerados (+60%):</span>
+                    <strong id="pro-leads">160 leads</strong>
+                  </div>
+                  <div class="compare-metric">
+                    <span>Faturamento estimado:</span>
+                    <strong class="text-accent" id="pro-rev">R$ 17.500</strong>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </section>
+
+      <!-- ===================================================================
+         03 / COMO TRABALHO (Simple 4-Step Process)
+    ==================================================================== -->
+      <section id="processo" class="content-section parallax-menu-card" data-menu-card="2" data-section-ranger="green" style="--card-z:23">
+        <div class="container">
+          <div class="section-head">
+            <span class="eyebrow">03 / PASSO A PASSO</span>
+            <h2 class="section-heading">DO RASCUNHO AO AR <span class="text-accent">SEM COMPLICAÇÃO.</span></h2>
+          </div>
+
+          <div class="steps-row">
+            <div class="p-step">
+              <span class="p-step-num">01</span>
+              <h3>Diagnóstico Rápido</h3>
+              <p>Você me conta o que quer vender ou qual trabalho manual quer eliminar da sua empresa.</p>
+            </div>
+            <div class="p-step">
+              <span class="p-step-num">02</span>
+              <h3>Protótipo Visual</h3>
+              <p>Desenho a tela do sistema ou site e mostro funcionando antes de finalizar tudo.</p>
+            </div>
+            <div class="p-step">
+              <span class="p-step-num">03</span>
+              <h3>Código &amp; Automação</h3>
+              <p>Programo o sistema em JavaScript, conecto a Inteligência Artificial, WhatsApp e planilhas.</p>
+            </div>
+            <div class="p-step">
+              <span class="p-step-num">04</span>
+              <h3>Tráfego &amp; Escala</h3>
+              <p>Colocamos os anúncios no ar com rastreamento profissional para trazer clientes todos os dias.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ===================================================================
+         04 / CONTATO DIRETO
+    ==================================================================== -->
+      <section id="contato" class="content-section content-section--last parallax-menu-card" data-menu-card="3" data-section-ranger="black" style="--card-z:24">
+        <div class="container">
+          <div class="contact-box">
+            <div class="contact-copy">
+              <span class="eyebrow">04 / VAMOS CONVERSAR</span>
+              <h2 class="section-heading">QUAL PROJETO VAMOS <span class="text-accent">TIRAR DO PAPEL?</span></h2>
+              <p>
+                Selecione ao lado o que você precisa. Eu mesmo analiso e retorno com o plano prático, prazo e orçamento.
+              </p>
+            </div>
+
+            <form id="briefing-form" class="briefing-form">
+              <div class="form-group">
+                <label class="form-label">1. O que você precisa?</label>
+                <div class="service-selector" id="service-selector">
+                  <button type="button" class="service-chip is-selected" data-service="Sistema / Software em JS">
+                    Sistema / Software em JS
+                  </button>
+                  <button type="button" class="service-chip" data-service="Site 3D / Landing Page">
+                    Site 3D / Landing Page
+                  </button>
+                  <button type="button" class="service-chip" data-service="Automação IA / WhatsApp">
+                    Automação IA / WhatsApp
+                  </button>
+                  <button type="button" class="service-chip" data-service="Gestão de Tráfego Pago">
+                    Gestão de Tráfego Pago
+                  </button>
+                </div>
+              </div>
+
+              <div class="form-row">
+                <div class="form-group">
+                  <label for="client-name" class="form-label">2. Seu Nome</label>
+                  <input type="text" id="client-name" class="form-input" placeholder="Digite seu nome" required />
+                </div>
+                <div class="form-group">
+                  <label for="client-contact" class="form-label">3. Seu WhatsApp</label>
+                  <input type="text" id="client-contact" class="form-input" placeholder="(00) 99999-9999" required />
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label for="client-goal" class="form-label">4. Conte em 1 frase o que você quer criar ou vender:</label>
+                <textarea id="client-goal" class="form-textarea" rows="2"
+                  placeholder="Ex: Quero um site moderno com anúncios e atendimento automático no WhatsApp..."></textarea>
+              </div>
+
+              <div class="form-actions">
+                <button type="submit" class="btn-primary">
+                  <span>Copiar Mensagem Pronta</span>
+                  <span aria-hidden="true">→</span>
+                </button>
+                <span class="copy-feedback" id="copy-feedback" aria-live="polite"></span>
+              </div>
+            </form>
+          </div>
+        </div>
+
+        <footer class="site-footer">
+          <div class="container footer-inner">
+            <div>
+              <strong>MARCOS SIQUEIRA<span class="dot-accent">.</span></strong>
+              <span> — Programador JS · Web Design · Tráfego Pago · Criação de Softwares</span>
+            </div>
+            <a href="#topo" class="back-top-link">Voltar ao topo ↑</a>
+          </div>
+        </footer>
+      </section>
+    </div>
+
+  </main>
+</body>
+
+</html>
