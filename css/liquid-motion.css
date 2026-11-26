@@ -34,23 +34,27 @@
   --bg-card-hover: #1D2230;    /* 30% Estado Hover de Módulo HUD */
   --tech-secondary: rgba(255, 255, 255, 0.16);
 
-  /* 10% Cor de Quebra de Padrão (Um único acento cromático vibrante por vez) */
+  /* 10% Cor de Quebra de Padrão: Harmonia Dual-Tone Ciano (#00E5FF) + Magenta (#FF2E93) sobre Cinza Titânio */
   --accent: #00E5FF;
+  --accent-magenta: #FF2E93;
   --frame-accent: #00E5FF;
   --pill-fg: #00E5FF;
   /* Fallbacks rgba() para navegadores antigos (iOS Safari < 16.2 / Android WebView antigo) */
   --accent-soft: rgba(0, 229, 255, 0.12);
   --accent-border: rgba(0, 229, 255, 0.38);
   --accent-glow: rgba(0, 229, 255, 0.28);
+  --magenta-soft: rgba(255, 46, 147, 0.14);
+  --magenta-border: rgba(255, 46, 147, 0.45);
+  --magenta-glow: rgba(255, 46, 147, 0.32);
   --accent-soft: color-mix(in srgb, var(--accent) 12%, transparent);
   --accent-border: color-mix(in srgb, var(--accent) 38%, transparent);
   --accent-glow: color-mix(in srgb, var(--accent) 28%, transparent);
 
-  /* Contraste Tipográfico Editorial (Acessibilidade WCAG AAA) */
-  --ink-light: #F8FAFC;        /* Títulos e textos principais em branco puro */
-  --ink-secondary: #CBD5E1;    /* Subtítulos e listas em prata-titânio nítido */
-  --ink-muted: #94A3B8;        /* Textos técnicos de apoio */
-  --ink-dark: #07090E;         /* Texto escuro de alto contraste sobre botões 10% */
+  /* Contraste Tipográfico Metálico (Sem branco estourado!) */
+  --ink-light: #E2E8F0;        /* Títulos e textos principais em prata-gelo suave */
+  --ink-secondary: #B8C4D4;    /* Subtítulos e listas em cinza-titânio nítido */
+  --ink-muted: #8492A6;        /* Textos técnicos de apoio */
+  --ink-dark: #090B10;         /* Texto escuro sobre botões neon 10% */
 
   /* Bordas Arquitetônicas, Sombras & Espaçamentos */
   --border-subtle: rgba(255, 255, 255, 0.09);
@@ -147,35 +151,35 @@ body {
   transition: color 0.3s ease;
 }
 
-/* Esquema Exclusivo do Tema Ranger Black: Bordas Pretas (#11130E) e Meio Branco (#FFFFFF) */
+/* Esquema do Tema Ranger Black Harmonizado em Cinza Titânio, Ciano e Magenta (Sem Branco Estourado) */
 html[data-ranger-theme="black"] .site-header,
 html[data-ranger-theme="black"] .hero-intro-box,
 html[data-ranger-theme="black"] .morphin-dock,
 html[data-ranger-theme="black"] .hero-center-hint {
   background: linear-gradient(
     145deg,
-    rgba(255, 255, 255, 0.92) 0%,
-    rgba(255, 255, 255, 0.78) 100%
+    rgba(22, 27, 38, 0.88) 0%,
+    rgba(15, 19, 27, 0.82) 100%
   );
-  border: 2px solid #11130E;
-  color: #11130E;
+  border: 1.5px solid rgba(0, 229, 255, 0.38);
+  color: var(--ink-light);
 }
 
 html[data-ranger-theme="black"] .brand-logo .dot-accent {
-  color: #11130E;
+  color: var(--accent-magenta);
 }
 
 html[data-ranger-theme="black"] .status-pill,
 html[data-ranger-theme="black"] .morphin-active-name,
 html[data-ranger-theme="black"] .hero-headline .text-accent {
-  background: #FFFFFF;
-  color: #11130E;
-  border: 2px solid #11130E;
+  background: var(--magenta-soft);
+  color: var(--accent-magenta);
+  border: 1px solid var(--magenta-border);
 }
 
 html[data-ranger-theme="black"] .status-pulse {
-  background: #11130E;
-  box-shadow: 0 0 6px rgba(17, 19, 14, 0.45);
+  background: var(--accent-magenta);
+  box-shadow: 0 0 8px var(--magenta-glow);
 }
 
 html[data-ranger-theme="black"] .cta-pill,
@@ -184,9 +188,9 @@ html[data-ranger-theme="black"] .hero-intro-box .btn-primary,
 html[data-ranger-theme="black"] .hero-intro-box .btn-outline,
 html[data-ranger-theme="black"] .morphin-lock-btn,
 html[data-ranger-theme="black"] .morphin-ghost-btn {
-  background: #FFFFFF;
-  color: #11130E;
-  border: 2px solid #11130E;
+  background: rgba(24, 30, 42, 0.85);
+  color: var(--ink-light);
+  border: 1px solid rgba(0, 229, 255, 0.42);
 }
 
 html[data-ranger-theme="black"] .cta-pill:hover,
@@ -195,26 +199,26 @@ html[data-ranger-theme="black"] .hero-intro-box .btn-outline:hover,
 html[data-ranger-theme="black"] .morphin-lock-btn:hover,
 html[data-ranger-theme="black"] .morphin-lock-btn.is-active,
 html[data-ranger-theme="black"] .morphin-ghost-btn:hover {
-  background: #11130E;
-  color: #FFFFFF;
-  border-color: #11130E;
+  background: linear-gradient(135deg, var(--accent), var(--accent-magenta));
+  color: #090B10;
+  border-color: transparent;
 }
 
 html[data-ranger-theme="black"] .nav-link.is-active,
 html[data-ranger-theme="black"] .nav-link:hover {
-  background: #FFFFFF;
-  color: #11130E;
-  border: 1.5px solid #11130E;
+  background: rgba(0, 229, 255, 0.12);
+  color: var(--ink-light);
+  border: 1px solid rgba(255, 46, 147, 0.45);
 }
 
 html[data-ranger-theme="black"] .hero-scroll-cue {
-  background: #FFFFFF;
-  color: #11130E;
-  border: 2px solid #11130E;
+  background: rgba(16, 20, 28, 0.88);
+  color: var(--ink-light);
+  border: 1px solid rgba(0, 229, 255, 0.38);
 }
 
 html[data-ranger-theme="black"] .scroll-cue-arrow {
-  color: #11130E;
+  color: var(--accent-magenta);
 }
 
 /* Acessibilidade: Foco visível por teclado em elementos interativos */
@@ -419,13 +423,13 @@ textarea:focus-visible {
   transform: translateY(-1px);
 }
 
-/* 10% Cor de Quebra de Padrão no CTA Principal */
+/* 10% Cor de Quebra de Padrão no CTA Principal (Harmonia Ciano -> Magenta, Sem Branco) */
 .cta-pill {
   display: inline-flex;
   align-items: center;
   gap: 0.45rem;
   text-decoration: none;
-  background: var(--accent);
+  background: linear-gradient(135deg, var(--accent) 0%, #00B4D8 55%, var(--accent-magenta) 100%);
   color: var(--ink-dark);
   font-family: var(--font-display);
   font-size: 1.04rem;
@@ -433,21 +437,21 @@ textarea:focus-visible {
   text-transform: uppercase;
   padding: 0.5rem 1.2rem;
   border-radius: 999px;
-  border: 1px solid var(--accent);
-  box-shadow: 0 6px 20px var(--accent-glow);
+  border: 1px solid rgba(0, 229, 255, 0.55);
+  box-shadow: 0 6px 20px var(--accent-glow), 0 0 18px rgba(255, 46, 147, 0.18);
   transition:
     transform var(--transition-fast),
-    background-color var(--transition-fast),
+    background var(--transition-fast),
     color var(--transition-fast),
     box-shadow var(--transition-fast);
 }
 
 .cta-pill:hover {
   transform: translateY(-2px);
-  background: #FFFFFF;
+  background: linear-gradient(135deg, var(--accent-magenta) 0%, var(--accent) 100%);
   color: var(--ink-dark);
-  border-color: #FFFFFF;
-  box-shadow: 0 10px 26px var(--accent-glow);
+  border-color: var(--accent-magenta);
+  box-shadow: 0 10px 26px var(--magenta-glow);
 }
 
 /* =========================================================================
@@ -711,13 +715,15 @@ canvas.gl {
   color: var(--ink-light);
 }
 
-/* 10% Cor de Quebra de Padrão no Destaque do Título */
+/* 10% Cor de Quebra de Padrão no Destaque do Título (Dual-Tone Ciano + Magenta, Sem Branco) */
 .hero-headline .text-accent {
-  background: var(--accent);
-  color: var(--ink-dark);
-  padding: 0.04em 0.28em;
-  border-radius: 0.28rem;
+  background: linear-gradient(135deg, rgba(0, 229, 255, 0.16) 0%, rgba(255, 46, 147, 0.22) 100%);
+  color: var(--accent);
+  border: 1px solid var(--magenta-border);
+  padding: 0.04em 0.32em;
+  border-radius: 0.32rem;
   display: inline-block;
+  box-shadow: 0 0 18px rgba(255, 46, 147, 0.18);
 }
 
 .hero-short-bio {
@@ -734,11 +740,11 @@ canvas.gl {
   gap: 0.55rem;
 }
 
-/* 10% Cor de Quebra de Padrão nos Botões de Ação Principal */
+/* 10% Cor de Quebra de Padrão nos Botões de Ação Principal (Ciano -> Magenta) */
 .btn-primary {
   appearance: none;
-  border: 1px solid var(--accent);
-  background: var(--accent);
+  border: 1px solid rgba(0, 229, 255, 0.55);
+  background: linear-gradient(135deg, var(--accent) 0%, #00B4D8 55%, var(--accent-magenta) 100%);
   color: var(--ink-dark);
   text-decoration: none;
   font-family: var(--font-display);
@@ -752,21 +758,21 @@ canvas.gl {
   justify-content: center;
   gap: 0.45rem;
   cursor: pointer;
-  box-shadow: 0 8px 22px var(--accent-glow);
+  box-shadow: 0 8px 22px var(--accent-glow), 0 0 18px rgba(255, 46, 147, 0.16);
   transition:
     transform var(--transition-fast),
-    background-color var(--transition-fast),
+    background var(--transition-fast),
     color var(--transition-fast),
     border-color var(--transition-fast),
     box-shadow var(--transition-fast);
 }
 
 .btn-primary:hover {
-  background: #FFFFFF;
+  background: linear-gradient(135deg, var(--accent-magenta) 0%, var(--accent) 100%);
   color: var(--ink-dark);
-  border-color: #FFFFFF;
+  border-color: var(--accent-magenta);
   transform: translateY(-2px);
-  box-shadow: 0 12px 28px var(--accent-glow);
+  box-shadow: 0 12px 28px var(--magenta-glow);
 }
 
 .btn-primary:active {
@@ -1072,10 +1078,11 @@ canvas.gl {
   padding: clamp(4.2rem, 6.5vw, 6.2rem) clamp(1.5rem, 3.2vw, 2.75rem) clamp(5.5rem, 8vw, 7.8rem);
   background-color: var(--bg-page);
   background-image:
-    radial-gradient(circle at 82% 8%, var(--accent-soft) 0%, transparent 42%),
+    radial-gradient(circle at 82% 10%, rgba(0, 229, 255, 0.08) 0%, transparent 42%),
+    radial-gradient(circle at 18% 90%, rgba(255, 46, 147, 0.08) 0%, transparent 42%),
     linear-gradient(rgba(255, 255, 255, 0.018) 1px, transparent 1px),
     linear-gradient(90deg, rgba(255, 255, 255, 0.018) 1px, transparent 1px);
-  background-size: 100% 100%, 44px 44px, 44px 44px;
+  background-size: 100% 100%, 100% 100%, 44px 44px, 44px 44px;
 }
 
 .content-section--alt {

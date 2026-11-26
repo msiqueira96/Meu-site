@@ -592,15 +592,23 @@
       float cursorEffect = step(0.1, textureCursorEffect.r);
 
       float noiseBase = textureBackgroundNoise.r;
-      // Studio Radial Backlight (AAA Character Stage):
-      // Deep carbon-obsidian outer vignette with a soft volumetric studio spotlight behind the portrait & 3D sign
+      // Harmonized Titanium Grey + Cyan (#00E5FF) + Magenta (#FF2E93) Studio Stage:
       vec2 stageDelta = (vUv - vec2(0.5, 0.48)) * vec2(max(uAspect, 0.65), 1.0);
-      float studioSpot = smoothstep(0.92, 0.0, length(stageDelta));
-      vec3 studioCenterColor = mix(vec3(0.16, 0.19, 0.25), uRangerColor, 0.16);
-      vec3 studioBaseBg = mix(COLOR_BACKGROUND, studioCenterColor, studioSpot * 0.85);
+      float studioSpot = smoothstep(0.95, 0.0, length(stageDelta));
+
+      float cyanSpot = smoothstep(0.95, 0.0, length((vUv - vec2(0.26, 0.68)) * vec2(max(uAspect, 0.65), 1.0)));
+      float magentaSpot = smoothstep(0.95, 0.0, length((vUv - vec2(0.74, 0.28)) * vec2(max(uAspect, 0.65), 1.0)));
+
+      vec3 cyberCyan = vec3(0.0, 0.898, 1.0);
+      vec3 cyberMagenta = vec3(1.0, 0.180, 0.576);
+
+      vec3 studioCenterColor = mix(vec3(0.18, 0.21, 0.27), uRangerColor, 0.14);
+      vec3 studioBaseBg = mix(COLOR_BACKGROUND, studioCenterColor, studioSpot * 0.88);
+      studioBaseBg += cyberCyan * (cyanSpot * 0.055) + cyberMagenta * (magentaSpot * 0.055);
 
       vec3 background = studioBaseBg;
-      vec3 cursorBackground = mix(COLOR_CURSOR_BACKGROUND, mix(COLOR_CURSOR_FOREGROUND, uRangerColor, 0.22), noiseBase * 0.35 + 0.35);
+      vec3 dualAccent = mix(cyberCyan, cyberMagenta, clamp(vUv.x * 0.65 + (1.0 - vUv.y) * 0.35, 0.0, 1.0));
+      vec3 cursorBackground = mix(COLOR_CURSOR_BACKGROUND, mix(COLOR_CURSOR_FOREGROUND, dualAccent, 0.28), noiseBase * 0.35 + 0.35);
 
       if (OUTLINE) {
         float edge = 0.0;
@@ -616,10 +624,10 @@
           edge = 1.0;
         }
 
-        // Ultra-clean 1px topographic tech contour lines over the smooth studio spotlight (no binary blobs!)
-        vec3 contourTint = mix(COLOR_OUTLINE, uRangerColor, 0.28);
-        background = mix(studioBaseBg, contourTint, edge * 0.28 * uReveal);
-        cursorBackground = mix(cursorBackground, COLOR_CURSOR_OUTLINE, edge * 0.55);
+        // Crisp 1px topographic lines transitioning smoothly between Cyan, Active Ranger, and Magenta
+        vec3 contourTint = mix(dualAccent, uRangerColor, 0.35);
+        background = mix(studioBaseBg, contourTint, edge * 0.32 * uReveal);
+        cursorBackground = mix(cursorBackground, dualAccent, edge * 0.65);
       }
 
       background = mix(background, uColorHover, step(textureBackgroundNoise.g, -0.1 + uHover * 1.1));
@@ -635,8 +643,11 @@
 
       background = mix(background, cursorBackground, step(1.0 - hoverTransition, uHelmetHover));
 
+      // Crisp 3D letters & portrait composited directly with zero chalky white halo smudge
+      vec3 base = mix(background, textureDefaultDiffuse.rgb, textureDefaultDiffuse.a);
+
       // Inside the liquid hover / Ranger reveal (rangerLayer), keep the 3D letters visible
-      // behind the Ranger and supercharge them with flashy Morphin Grid energy & glowing rim effects!
+      // behind the Ranger and supercharge them with Cyan + Magenta Morphin Grid energy!
       vec2 glowStep = vec2(0.0022, 0.0022 * uAspect);
       float aR = texture2D(tDefaultDiffuse, vUv + vec2(glowStep.x, 0.0)).a;
       float aL = texture2D(tDefaultDiffuse, vUv - vec2(glowStep.x, 0.0)).a;
@@ -646,18 +657,13 @@
       float letterEdge = clamp(abs(aR - aL) + abs(aU - aD), 0.0, 1.0);
       float letterOuterHalo = clamp((letterNeighborMax - textureDefaultDiffuse.a) * 1.6, 0.0, 1.0);
 
-      // Subtle studio rim-backlight around the character & 3D letters so dark hair/blazer separate cleanly from the dark stage
-      vec3 studioBackRim = mix(vec3(0.45, 0.52, 0.65), uRangerColor, 0.35);
-      vec3 litStageBg = mix(background, studioBackRim, letterOuterHalo * 0.26);
-      vec3 base = mix(litStageBg, textureDefaultDiffuse.rgb, textureDefaultDiffuse.a);
-
       float energySweep = 0.5 + 0.5 * sin(vUv.x * 26.0 - vUv.y * 16.0 - uTime * 7.2);
       float shimmerBand = pow(0.5 + 0.5 * sin(vUv.x * 42.0 + vUv.y * 24.0 - uTime * 9.5), 4.0);
-      vec3 energyTint = mix(uRangerColor, vec3(1.0), 0.32 + 0.35 * shimmerBand);
+      vec3 energyTint = mix(uRangerColor, dualAccent, 0.45 + 0.35 * shimmerBand);
 
-      vec3 flashyLetterRgb = mix(textureDefaultDiffuse.rgb, energyTint, 0.42 + 0.28 * energySweep);
-      flashyLetterRgb += letterEdge * mix(uRangerColor, vec3(1.0), 0.55) * 0.95;
-      flashyLetterRgb += shimmerBand * vec3(0.28);
+      vec3 flashyLetterRgb = mix(textureDefaultDiffuse.rgb, energyTint, 0.38 + 0.26 * energySweep);
+      flashyLetterRgb += letterEdge * mix(cyberCyan, cyberMagenta, energySweep) * 0.92;
+      flashyLetterRgb += shimmerBand * dualAccent * 0.32;
 
       vec3 rangerBgWithLetters = mix(background, flashyLetterRgb, textureDefaultDiffuse.a);
       rangerBgWithLetters = mix(rangerBgWithLetters, energyTint, letterOuterHalo * (1.0 - textureHelmet.a) * 0.72);
@@ -1587,46 +1593,50 @@
   const RANGER_PROFILES = {
     black: {
       name: "RANGER PRETO",
-      accentHex: "#FFFFFF",
-      frameHex: "#272B36",
-      pillFg: "#FFFFFF",
-      letterFill: "#FFFFFF",
-      letterStroke: "#11130E",
-      waveHex: "#161922",
-      outlineHex: "#475569",
+      accentHex: "#00E5FF",
+      secondaryHex: "#FF2E93",
+      frameHex: "#272E3F",
+      pillFg: "#00E5FF",
+      letterFill: "#1A202C",
+      letterStroke: "#00E5FF",
+      waveHex: "#161A24",
+      outlineHex: "#00E5FF",
       suitHex: "#1E2430",
       tintMix: 0.0,
     },
     red: {
       name: "RANGER VERMELHO",
-      accentHex: "#FF2A4B",
-      frameHex: "#FF2A4B",
-      pillFg: "#FF2A4B",
-      letterFill: "#F8FAFC",
-      letterStroke: "#FF2A4B",
+      accentHex: "#FF2A54",
+      secondaryHex: "#00E5FF",
+      frameHex: "#FF2A54",
+      pillFg: "#FF2A54",
+      letterFill: "#1C212E",
+      letterStroke: "#FF2A54",
       waveHex: "#1C141B",
-      outlineHex: "#FF2A4B",
+      outlineHex: "#FF2A54",
       suitHex: "#FF1E38",
       tintMix: 0.94,
     },
     blue: {
       name: "RANGER AZUL",
-      accentHex: "#00B4FF",
+      accentHex: "#00E5FF",
+      secondaryHex: "#FF2E93",
       frameHex: "#00B4FF",
-      pillFg: "#00B4FF",
-      letterFill: "#F8FAFC",
-      letterStroke: "#00B4FF",
+      pillFg: "#00E5FF",
+      letterFill: "#192130",
+      letterStroke: "#00E5FF",
       waveHex: "#121B2A",
-      outlineHex: "#00B4FF",
+      outlineHex: "#00E5FF",
       suitHex: "#0088FF",
       tintMix: 0.94,
     },
     green: {
       name: "RANGER VERDE",
       accentHex: "#00F59B",
+      secondaryHex: "#00E5FF",
       frameHex: "#00F59B",
       pillFg: "#00F59B",
-      letterFill: "#F8FAFC",
+      letterFill: "#18222B",
       letterStroke: "#00F59B",
       waveHex: "#111F1D",
       outlineHex: "#00F59B",
@@ -1636,9 +1646,10 @@
     yellow: {
       name: "RANGER AMARELO",
       accentHex: "#FFC800",
+      secondaryHex: "#FF2E93",
       frameHex: "#FFC800",
       pillFg: "#FFC800",
-      letterFill: "#F8FAFC",
+      letterFill: "#212028",
       letterStroke: "#FFC800",
       waveHex: "#201D14",
       outlineHex: "#FFC800",
@@ -1648,9 +1659,10 @@
     pink: {
       name: "RANGER ROSA",
       accentHex: "#FF2E93",
+      secondaryHex: "#00E5FF",
       frameHex: "#FF2E93",
       pillFg: "#FF2E93",
-      letterFill: "#F8FAFC",
+      letterFill: "#201A2B",
       letterStroke: "#FF2E93",
       waveHex: "#201320",
       outlineHex: "#FF2E93",
@@ -1660,11 +1672,12 @@
     silver: {
       name: "RANGER PRATA",
       accentHex: "#00E5FF",
+      secondaryHex: "#FF2E93",
       frameHex: "#00E5FF",
       pillFg: "#00E5FF",
-      letterFill: "#F8FAFC",
-      letterStroke: "#38BDF8",
-      waveHex: "#141A26",
+      letterFill: "#1E2433",
+      letterStroke: "#00E5FF",
+      waveHex: "#161C28",
       outlineHex: "#00E5FF",
       suitHex: "#D0DCE8",
       tintMix: 0.0,
@@ -1710,6 +1723,9 @@
       if (document.fonts && document.fonts.ready) {
         document.fonts.ready.then(() => {
           this.drawTitleSign();
+          if (typeof this.updateLetterTextures === "function") {
+            this.updateLetterTextures(this.activeRangerKey);
+          }
         });
       }
 
@@ -1787,18 +1803,18 @@
       this.lettersGroup.position.set(0, 0, -0.18);
       this.defaultScene.add(this.lettersGroup);
 
-      // Super Mario World 2 / Yoshi's Island 3D Pause Letters ("Times New Roman", serif)
-      // Tight, compact word spacing with optical kerning per glyph
+      // Stylish High-Tech 3D Display Typography ("Bebas Neue" / "Mona Sans Variable" with cyber speed-slant)
+      // Cohesive with the site's headline aesthetic — zero white fill, brushed dark gunmetal + Cyan/Magenta neon bevels
       const rows = [
-        { text: "MARCOS", y: 0.23, spacing: 0.145 },
-        { text: "SIQUEIRA", y: 0.04, spacing: 0.132 },
+        { text: "MARCOS", y: 0.23, spacing: 0.128 },
+        { text: "SIQUEIRA", y: 0.04, spacing: 0.116 },
       ];
 
       const getGlyphAdvanceFactor = (ch) => {
-        if (ch === "I") return 0.62;
-        if (ch === "M") return 1.12;
-        if (ch === "Q" || ch === "U" || ch === "R" || ch === "A") return 0.96;
-        return 0.90;
+        if (ch === "I") return 0.54;
+        if (ch === "M") return 1.08;
+        if (ch === "Q" || ch === "U" || ch === "R" || ch === "A" || ch === "O") return 0.94;
+        return 0.88;
       };
 
       const planeGeo = new THREE.PlaneGeometry(0.19, 0.23);
@@ -1916,86 +1932,107 @@
     }
 
     updateLetterTextures(rangerKey = this.activeRangerKey) {
-      const profile = RANGER_PROFILES[rangerKey] || RANGER_PROFILES.black;
-      const fillHex = profile.letterFill || "#FFFFFF";
-      const strokeHex = profile.letterStroke || profile.frameHex || profile.accentHex || "#11130E";
+      const profile = RANGER_PROFILES[rangerKey] || RANGER_PROFILES.silver;
+      const fillHex = profile.letterFill || "#1E2433";
+      const primaryNeon = profile.letterStroke || profile.accentHex || "#00E5FF";
+      const secondaryNeon = profile.secondaryHex || "#FF2E93";
 
-      this.letterItems.forEach((item) => {
-        // 1. Draw Front/Back Face with Natural Studio Light Gradient & Inner Bevel Highlight
+      this.letterItems.forEach((item, idx) => {
+        // 1. Draw Front/Back Face: Stylized Slanted High-Tech Typography, Anodized Gunmetal Core (NO WHITE!) + Cyan/Magenta Bevel
         const ctx = item.ctx;
         ctx.clearRect(0, 0, 256, 256);
         ctx.save();
+        ctx.translate(128, 132);
+        // Subtle aerodynamic forward speed-slant (-8 deg shear) for modern gaming/cyber identity
+        ctx.transform(1, 0, -0.11, 1, 0, 0);
         ctx.textAlign = "center";
         ctx.textBaseline = "middle";
-        ctx.lineJoin = "round";
-        ctx.miterLimit = 2;
-        ctx.font = 'bold 172px "Times New Roman", Georgia, serif';
+        ctx.lineJoin = "bevel";
+        ctx.miterLimit = 3;
+        ctx.font = '700 202px "Bebas Neue", "Mona Sans Variable", Impact, sans-serif';
 
-        // Outer border with subtle top-left light bevel
-        const borderGrad = ctx.createLinearGradient(28, 24, 228, 232);
-        if (rangerKey === "black") {
-          borderGrad.addColorStop(0, "#383F31");
-          borderGrad.addColorStop(0.45, "#141710");
-          borderGrad.addColorStop(1, "#070806");
-        } else {
-          borderGrad.addColorStop(0, "#FFFFFF");
-          borderGrad.addColorStop(0.28, strokeHex);
-          borderGrad.addColorStop(1, strokeHex);
-        }
-        ctx.lineWidth = 15;
-        ctx.strokeStyle = borderGrad;
-        ctx.strokeText(item.char, 128, 128);
-
-        // Natural top-left studio illumination across the letter face (High-contrast Holographic Chrome on Dark Cyber Stage)
-        const faceGrad = ctx.createLinearGradient(36, 28, 220, 228);
-        if (rangerKey === "black") {
-          faceGrad.addColorStop(0, "#FFFFFF");
-          faceGrad.addColorStop(0.55, "#F9FAF6");
-          faceGrad.addColorStop(1, "#E2E6DC");
-        } else {
-          faceGrad.addColorStop(0, "#FFFFFF");
-          faceGrad.addColorStop(0.5, fillHex);
-          faceGrad.addColorStop(1, "#B8CCE8");
-        }
+        // Step A: Fill interior with Anodized Dark Titanium / Gunmetal Gradient (Zero White!)
+        const faceGrad = ctx.createLinearGradient(-75, -95, 75, 95);
+        faceGrad.addColorStop(0, "#323C52");
+        faceGrad.addColorStop(0.46, fillHex);
+        faceGrad.addColorStop(1, "#0C0F17");
         ctx.fillStyle = faceGrad;
-        ctx.fillText(item.char, 128, 128);
+        ctx.fillText(item.char, 0, 0);
 
-        // Crisp inner specular rim highlight (simulates natural top key light catching the serif edge)
-        ctx.lineWidth = 2.5;
-        ctx.strokeStyle = rangerKey === "black" ? "rgba(255, 255, 255, 0.95)" : "rgba(255, 255, 255, 0.45)";
-        ctx.strokeText(item.char, 126.5, 126.5);
+        // Step B: Internal Cyber Tech Micro-Scanlines & Dual-Tone Metallic Sheen clipped inside the letter face
+        ctx.save();
+        ctx.globalCompositeOperation = "source-atop";
+
+        const sheenGrad = ctx.createLinearGradient(-80, -95, 80, 95);
+        sheenGrad.addColorStop(0, "rgba(0, 229, 255, 0.24)");
+        sheenGrad.addColorStop(0.38, "rgba(148, 163, 184, 0.06)");
+        sheenGrad.addColorStop(0.65, "rgba(15, 19, 28, 0.25)");
+        sheenGrad.addColorStop(1, "rgba(255, 46, 147, 0.26)");
+        ctx.fillStyle = sheenGrad;
+        ctx.fillRect(-128, -128, 256, 256);
+
+        // Diagonal high-tech laser slash across the glyph
+        ctx.fillStyle = idx % 2 === 0 ? "rgba(0, 229, 255, 0.16)" : "rgba(255, 46, 147, 0.16)";
+        ctx.beginPath();
+        ctx.moveTo(-120, -18);
+        ctx.lineTo(120, -52);
+        ctx.lineTo(120, -34);
+        ctx.lineTo(-120, 0);
+        ctx.closePath();
+        ctx.fill();
+
+        // Fine horizontal cyber scanlines inside the gunmetal letter face
+        ctx.fillStyle = "rgba(0, 229, 255, 0.08)";
+        for (let sy = -105; sy < 105; sy += 7) {
+          ctx.fillRect(-120, sy, 240, 2);
+        }
+        ctx.restore();
+
+        // Step C: Outer Dual-Tone Neon Bezel (Cyan -> Titanium -> Magenta, ZERO WHITE!)
+        const borderGrad = ctx.createLinearGradient(-85, -95, 85, 95);
+        borderGrad.addColorStop(0, primaryNeon);
+        borderGrad.addColorStop(0.5, "#64748B");
+        borderGrad.addColorStop(1, secondaryNeon);
+        ctx.lineWidth = 11;
+        ctx.strokeStyle = borderGrad;
+        ctx.strokeText(item.char, 0, 0);
+
+        // Step D: Crisp Inner Specular Neon Rim (catches top-left studio key light in Cyan/Magenta)
+        const rimGrad = ctx.createLinearGradient(-75, -90, 75, 90);
+        rimGrad.addColorStop(0, primaryNeon);
+        rimGrad.addColorStop(0.55, "#94A3B8");
+        rimGrad.addColorStop(1, secondaryNeon);
+        ctx.lineWidth = 2.4;
+        ctx.strokeStyle = rimGrad;
+        ctx.strokeText(item.char, -1.5, -1.5);
 
         ctx.restore();
         item.tex.needsUpdate = true;
 
-        // 2. Draw Solid 3D Extruded Side Wall Volume with Natural Directional Shading
+        // 2. Draw Solid 3D Extruded Side Wall Volume with Anodized Gunmetal + Cyan/Magenta Edge Lighting
         if (item.sideCtx && item.sideTex) {
           const sCtx = item.sideCtx;
           sCtx.clearRect(0, 0, 256, 256);
           sCtx.save();
+          sCtx.translate(128, 132);
+          sCtx.transform(1, 0, -0.11, 1, 0, 0);
           sCtx.textAlign = "center";
           sCtx.textBaseline = "middle";
-          sCtx.lineJoin = "round";
-          sCtx.miterLimit = 2;
-          sCtx.font = 'bold 172px "Times New Roman", Georgia, serif';
+          sCtx.lineJoin = "bevel";
+          sCtx.miterLimit = 3;
+          sCtx.font = '700 202px "Bebas Neue", "Mona Sans Variable", Impact, sans-serif';
 
-          const grad = sCtx.createLinearGradient(24, 20, 232, 236);
-          if (rangerKey === "black") {
-            grad.addColorStop(0, "#434B3B");
-            grad.addColorStop(0.38, "#1E221A");
-            grad.addColorStop(0.75, "#11130E");
-            grad.addColorStop(1, "#060705");
-          } else {
-            grad.addColorStop(0, strokeHex);
-            grad.addColorStop(0.4, "#101938");
-            grad.addColorStop(1, "#050814");
-          }
+          const grad = sCtx.createLinearGradient(-90, -100, 90, 100);
+          grad.addColorStop(0, primaryNeon);
+          grad.addColorStop(0.32, "#1E2636");
+          grad.addColorStop(0.68, "#121722");
+          grad.addColorStop(1, secondaryNeon);
 
-          sCtx.lineWidth = 16;
+          sCtx.lineWidth = 13;
           sCtx.strokeStyle = grad;
-          sCtx.strokeText(item.char, 128, 128);
-          sCtx.fillStyle = grad;
-          sCtx.fillText(item.char, 128, 128);
+          sCtx.strokeText(item.char, 0, 0);
+          sCtx.fillStyle = "#121722";
+          sCtx.fillText(item.char, 0, 0);
           sCtx.restore();
           item.sideTex.needsUpdate = true;
         }
