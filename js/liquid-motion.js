@@ -94,12 +94,13 @@
     },
   };
 
-  // Adaptive Hardware Tier Detection for Older / Low-End Devices
+  // Adaptive Hardware Tier Detection (Only throttle genuinely legacy 2-core / <=2GB devices;
+  // modern 90Hz/120Hz phones with 4GB+ RAM get full high-DPI and native refresh rate!)
   const IS_MOBILE_DEVICE =
     window.innerWidth <= 768 || /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent || "");
   const IS_LOW_END =
-    (typeof navigator.hardwareConcurrency === "number" && navigator.hardwareConcurrency <= 4) ||
-    (typeof navigator.deviceMemory === "number" && navigator.deviceMemory <= 4);
+    (typeof navigator.hardwareConcurrency === "number" && navigator.hardwareConcurrency <= 2) ||
+    (typeof navigator.deviceMemory === "number" && navigator.deviceMemory <= 2);
   if (IS_LOW_END) {
     document.documentElement.classList.add("is-low-end");
   }
@@ -509,6 +510,7 @@
   `;
 
   const COMPOSITION_VERT = `
+    precision highp float;
     varying vec2 vUv;
 
     void main() {
@@ -518,6 +520,7 @@
   `;
 
   const COMPOSITION_FRAG = `
+    precision highp float;
     #include <tonemapping_pars_fragment>
 
     const float PI = 3.141592;
@@ -907,16 +910,14 @@
     syncViewportZoomCompensation();
     const width = window.innerWidth || 1366;
     const height = window.innerHeight || 768;
-    // Render at native 1:1 physical monitor resolution (up to 1600x900) so it is 100% sharp and never pixelated,
-    // while still preventing 4K/5K zoomed-out tabs from overloading the GPU
-    const maxW = IS_LOW_END ? 1280 : 1600;
-    const maxH = IS_LOW_END ? 720 : 900;
-    const pixelRatio = Math.min(
-      window.devicePixelRatio || 1,
-      1.0,
-      maxW / Math.max(width, 1),
-      maxH / Math.max(height, 1)
-    );
+    const isPortraitMobile = width <= 900;
+    // Allow High-DPI up to 2.25x on 90Hz/120Hz smartphones (~900x1950 physical pixels) for razor-sharp quality,
+    // and up to 1.35x on desktop within a 2.25M total pixel budget (protects against zoomed-out 5K tabs).
+    const maxDprCap = IS_LOW_END ? 1.25 : (isPortraitMobile ? 2.25 : 1.35);
+    const rawDpr = Math.min(window.devicePixelRatio || 1, maxDprCap);
+    const maxTotalPixels = IS_LOW_END ? 1100000 : 2250000;
+    const budgetDpr = Math.sqrt(maxTotalPixels / Math.max(width * height, 1));
+    const pixelRatio = Math.min(rawDpr, budgetDpr);
     const renderWidth = Math.max(1, Math.round(width * pixelRatio));
     const renderHeight = Math.max(1, Math.round(height * pixelRatio));
     return { width, height, pixelRatio, renderWidth, renderHeight };
@@ -1541,8 +1542,6 @@
       // Smooth medium-res fluid mask target (512x288, 0 MSAA) — sharp edges with negligible GPU load
       this.sourceTarget = new THREE.WebGLRenderTarget(512, 288, { samples: 0 });
       this.clock = new THREE.Clock();
-      this.delta = 0;
-      this.interval = 1 / 60;
     }
 
     resize() {
@@ -1550,14 +1549,13 @@
     }
 
     update() {
-      this.delta += this.clock.getDelta();
-      if (this.delta > this.interval) {
-        this.simulation.update();
-        this.renderer.setRenderTarget(this.sourceTarget);
-        this.renderer.clear();
-        this.renderer.render(this.scene, this.camera);
-        this.delta %= this.interval;
-      }
+      // Run natively at the user's screen refresh rate (60Hz, 90Hz, 120Hz, 144Hz, 240Hz) without 60fps frame-skipping judder!
+      const frameDt = Math.min(this.clock.getDelta(), 1 / 30);
+      this.simulation.options.dt = Math.max(0.004, Math.min(0.018, frameDt * 0.85));
+      this.simulation.update();
+      this.renderer.setRenderTarget(this.sourceTarget);
+      this.renderer.clear();
+      this.renderer.render(this.scene, this.camera);
     }
   }
 
@@ -2105,10 +2103,11 @@
             ? this.assets.textures.head.diffuse.constructor
             : (window.THREE.Texture || window.THREE.CanvasTexture);
 
-          // 1. Front & Back Face Texture (Middle fill + border)
+          // 1. Front & Back Face Texture (512x512 Retina resolution for razor-sharp quality on 90Hz/120Hz phones & monitors)
+          const texRes = IS_LOW_END ? 256 : 512;
           const canvas = document.createElement("canvas");
-          canvas.width = 256;
-          canvas.height = 256;
+          canvas.width = texRes;
+          canvas.height = texRes;
           const ctx = canvas.getContext("2d");
           const tex = new TextureCtor(canvas);
           tex.minFilter = THREE.LinearFilter;
@@ -2116,10 +2115,10 @@
           tex.colorSpace = THREE.SRGBColorSpace;
           tex.needsUpdate = true;
 
-          // 2. Solid 3D Extrusion Wall Texture (Depth volume between front and back faces)
+          // 2. Solid 3D Extrusion Wall Texture (512x512 Retina resolution)
           const sideCanvas = document.createElement("canvas");
-          sideCanvas.width = 256;
-          sideCanvas.height = 256;
+          sideCanvas.width = texRes;
+          sideCanvas.height = texRes;
           const sideCtx = sideCanvas.getContext("2d");
           const sideTex = new TextureCtor(sideCanvas);
           sideTex.minFilter = THREE.LinearFilter;
@@ -2445,8 +2444,11 @@
         // - Thick Rounded Jet-Black GTA Outline (#07030E) filling the narrow inner counters
         // - Thin Outer GTA VI Sunset Neon Rim (Gold #FFB800 -> Hot Pink #FF1E88 -> Violet #7B1FA2)
         const ctx = item.ctx;
-        ctx.clearRect(0, 0, 256, 256);
+        const cSize = item.canvas ? item.canvas.width : 512;
+        const cScale = cSize / 256;
+        ctx.clearRect(0, 0, cSize, cSize);
         ctx.save();
+        ctx.scale(cScale, cScale);
         ctx.translate(128, 126);
         ctx.lineJoin = "round";
         ctx.lineCap = "round";
@@ -2483,8 +2485,11 @@
         // 2. Solid 3D Extruded Block Side Walls (Heavy Black GTA 3D Block + Outer Neon Rim)
         if (item.sideCtx && item.sideTex) {
           const sCtx = item.sideCtx;
-          sCtx.clearRect(0, 0, 256, 256);
+          const sSize = item.sideCanvas ? item.sideCanvas.width : 512;
+          const sScale = sSize / 256;
+          sCtx.clearRect(0, 0, sSize, sSize);
           sCtx.save();
+          sCtx.scale(sScale, sScale);
           sCtx.translate(128, 126);
           sCtx.lineJoin = "round";
           sCtx.lineCap = "round";
@@ -3365,7 +3370,8 @@
       canvas,
       powerPreference: "high-performance",
       alpha: true,
-      precision: "lowp",
+      precision: "highp",
+      antialias: false,
     });
     renderer.autoClear = false;
     renderer.setPixelRatio(sizes.pixelRatio);
@@ -3449,6 +3455,18 @@
     });
 
     window.__isHeroStageVisible = true;
+    window.__displayHz = 90;
+
+    // Unlock GSAP ticker so it runs at the user's native screen refresh rate (60Hz, 90Hz, 120Hz, 144Hz, 240Hz)
+    if (typeof gsap.ticker.fps === "function") {
+      gsap.ticker.fps(-1);
+    }
+    if (typeof gsap.ticker.lagSmoothing === "function") {
+      gsap.ticker.lagSmoothing(0);
+    }
+
+    let hzSampleCount = 0;
+    let hzSampleAccumSec = 0;
 
     gsap.ticker.add(() => {
       if (document.hidden || window.__isHeroStageVisible === false) {
@@ -3456,10 +3474,33 @@
         return;
       }
 
-      const delta = Math.min(clock.getDelta(), 1 / 30) * 100;
+      const rawDt = clock.getDelta();
+      // Live Display Refresh Rate (Hz) Detector (measures native VSync: 60Hz, 90Hz, 120Hz, 144Hz, 240Hz)
+      if (rawDt > 0.002 && rawDt < 0.05) {
+        hzSampleAccumSec += rawDt;
+        hzSampleCount++;
+        if (hzSampleCount >= 45) {
+          const avgFps = hzSampleCount / hzSampleAccumSec;
+          const standardHz = [60, 90, 120, 144, 165, 240];
+          let closestHz = 60;
+          let minDiff = 999;
+          for (let i = 0; i < standardHz.length; i++) {
+            const diff = Math.abs(avgFps - standardHz[i]);
+            if (diff < minDiff) {
+              minDiff = diff;
+              closestHz = standardHz[i];
+            }
+          }
+          window.__displayHz = closestHz;
+          document.documentElement.setAttribute("data-display-hz", String(closestHz));
+          hzSampleCount = 0;
+          hzSampleAccumSec = 0;
+        }
+      }
+
+      const delta = Math.min(rawDt, 1 / 30) * 100;
       const elapsed = clock.getElapsedTime();
 
-      backgroundNoise.update(elapsed, delta);
       idleState.update();
       fluidCursor.update();
       heroScene.update(elapsed, delta);
