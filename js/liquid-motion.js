@@ -1613,10 +1613,10 @@
       secondaryHex: "#FF2E93",
       frameHex: "#272E3F",
       pillFg: "#00E5FF",
-      faceTop: "#1F364D",
-      faceMid: "#132232",
-      faceBot: "#09111A",
-      letterStroke: "#0E7490",
+      gtaStops: ["#1E1038", "#6B1D7A", "#D91C70", "#FF5E3A", "#FFA600"],
+      bevelTop: "#00E5FF",
+      bevelBot: "#FF2E93",
+      sideTint: "#2A1245",
       waveHex: "#161A24",
       outlineHex: "#00E5FF",
       suitHex: "#1E2430",
@@ -1625,13 +1625,13 @@
     red: {
       name: "RANGER VERMELHO",
       accentHex: "#FF2A54",
-      secondaryHex: "#00E5FF",
+      secondaryHex: "#FFB800",
       frameHex: "#FF2A54",
       pillFg: "#FF2A54",
-      faceTop: "#B81435",
-      faceMid: "#7A0C22",
-      faceBot: "#380510",
-      letterStroke: "#D91C42",
+      gtaStops: ["#3B0828", "#9E0E40", "#FF1E4D", "#FF5E1A", "#FFC400"],
+      bevelTop: "#FF2A54",
+      bevelBot: "#FFB800",
+      sideTint: "#3D0A24",
       waveHex: "#1C141B",
       outlineHex: "#FF2A54",
       suitHex: "#FF1E38",
@@ -1643,10 +1643,10 @@
       secondaryHex: "#FF2E93",
       frameHex: "#00B4FF",
       pillFg: "#00E5FF",
-      faceTop: "#0B5ED7",
-      faceMid: "#073B8A",
-      faceBot: "#041C44",
-      letterStroke: "#0D74F2",
+      gtaStops: ["#0A1E5E", "#0066CC", "#00B4FF", "#7B2CBF", "#FF2E93"],
+      bevelTop: "#00F0FF",
+      bevelBot: "#FF2E93",
+      sideTint: "#102052",
       waveHex: "#121B2A",
       outlineHex: "#00E5FF",
       suitHex: "#0088FF",
@@ -1658,10 +1658,10 @@
       secondaryHex: "#00E5FF",
       frameHex: "#00F59B",
       pillFg: "#00F59B",
-      faceTop: "#098754",
-      faceMid: "#065937",
-      faceBot: "#032B1A",
-      letterStroke: "#0CA668",
+      gtaStops: ["#072E33", "#097A5E", "#00D68F", "#00E5FF", "#A8FF3E"],
+      bevelTop: "#00F59B",
+      bevelBot: "#00E5FF",
+      sideTint: "#09332C",
       waveHex: "#111F1D",
       outlineHex: "#00F59B",
       suitHex: "#00E676",
@@ -1673,10 +1673,10 @@
       secondaryHex: "#FF2E93",
       frameHex: "#FFC800",
       pillFg: "#FFC800",
-      faceTop: "#B8860B",
-      faceMid: "#7A5806",
-      faceBot: "#3B2A03",
-      letterStroke: "#D49B0E",
+      gtaStops: ["#4A0E4E", "#B5176E", "#FF4D2A", "#FF9500", "#FFE000"],
+      bevelTop: "#FFE000",
+      bevelBot: "#FF2E93",
+      sideTint: "#3D123A",
       waveHex: "#201D14",
       outlineHex: "#FFC800",
       suitHex: "#FFC400",
@@ -1688,10 +1688,10 @@
       secondaryHex: "#00E5FF",
       frameHex: "#FF2E93",
       pillFg: "#FF2E93",
-      faceTop: "#AD1463",
-      faceMid: "#700C40",
-      faceBot: "#36051E",
-      letterStroke: "#C91A74",
+      gtaStops: ["#300B54", "#8A1478", "#FF1E8A", "#FF6633", "#FFC837"],
+      bevelTop: "#00F0FF",
+      bevelBot: "#FF2E93",
+      sideTint: "#330D4A",
       waveHex: "#201320",
       outlineHex: "#FF2E93",
       suitHex: "#FF207E",
@@ -1703,10 +1703,12 @@
       secondaryHex: "#FF2E93",
       frameHex: "#00E5FF",
       pillFg: "#00E5FF",
-      faceTop: "#0E6B8A",
-      faceMid: "#11425C",
-      faceBot: "#0A2032",
-      letterStroke: "#0099B8",
+      // Iconic GTA VI Vice City Sunset Gradient (Deep Twilight Violet -> Hot Neon Magenta -> Sunset Orange -> Horizon Gold)
+      // framed by Electric Cyan & Chrome chiseled 3D bevels
+      gtaStops: ["#3B1066", "#9E1982", "#FF247F", "#FF662A", "#FFB800"],
+      bevelTop: "#00F0FF",
+      bevelBot: "#FF2E93",
+      sideTint: "#280D42",
       waveHex: "#161C28",
       outlineHex: "#00E5FF",
       suitHex: "#D0DCE8",
@@ -1848,8 +1850,8 @@
       };
 
       const planeGeo = new THREE.PlaneGeometry(0.19, 0.23);
-      const totalDepth = 0.026;
-      const sliceCount = 8;
+      const totalDepth = 0.045;
+      const sliceCount = 12;
 
       rows.forEach((row) => {
         const chars = row.text.split("");
@@ -1965,14 +1967,16 @@
 
     updateLetterTextures(rangerKey = this.activeRangerKey) {
       const profile = RANGER_PROFILES[rangerKey] || RANGER_PROFILES.silver;
-      const faceTop = profile.faceTop || "#0E6B8A";
-      const faceMid = profile.faceMid || "#11425C";
-      const faceBot = profile.faceBot || "#0A2032";
-      const rimTone = profile.letterStroke || "#0099B8";
-      const secondaryTone = profile.secondaryHex || "#FF2E93";
+      const stops = profile.gtaStops || ["#3B1066", "#9E1982", "#FF247F", "#FF662A", "#FFB800"];
+      const bevelTop = profile.bevelTop || "#00F0FF";
+      const bevelBot = profile.bevelBot || "#FF2E93";
+      const sideTint = profile.sideTint || "#280D42";
 
-      this.letterItems.forEach((item) => {
-        // 1. Deeply Saturated, Naturally Shaded Matte-Anodized 3D Letter Face (Zero excess brightness!)
+      this.letterItems.forEach((item, idx) => {
+        // 1. GTA VI ("VI") Inspired Realistic 3D Emblem Face:
+        //    - Chiseled 3D metallic outer rim (Cyan -> Chrome Slate -> Magenta)
+        //    - Dark recessed 3D inner groove (#0B0414) for physical badge realism
+        //    - Ultra-saturated Vice City Sunset Gradient Face with palm/horizon silhouette & glossy acrylic reflection
         const ctx = item.ctx;
         ctx.clearRect(0, 0, 256, 256);
         ctx.save();
@@ -1980,30 +1984,105 @@
         ctx.textAlign = "center";
         ctx.textBaseline = "middle";
         ctx.lineJoin = "miter";
-        ctx.miterLimit = 2;
-        ctx.font = '700 206px "Bebas Neue", "Mona Sans Variable", sans-serif';
+        ctx.miterLimit = 2.5;
+        ctx.font = '700 202px "Bebas Neue", "Mona Sans Variable", sans-serif';
 
-        // Rich, saturated vertical studio shading (deep top-to-bottom pigment without pale grey or white)
-        const faceGrad = ctx.createLinearGradient(0, -92, 0, 92);
-        faceGrad.addColorStop(0, faceTop);
-        faceGrad.addColorStop(0.5, faceMid);
-        faceGrad.addColorStop(1, faceBot);
-        ctx.fillStyle = faceGrad;
+        // Step 1: Fill Inner Glyph with Iconic GTA VI Vice City Sunset Gradient
+        const sunsetGrad = ctx.createLinearGradient(0, -88, 0, 88);
+        sunsetGrad.addColorStop(0.0, stops[0]);
+        sunsetGrad.addColorStop(0.26, stops[1]);
+        sunsetGrad.addColorStop(0.52, stops[2]);
+        sunsetGrad.addColorStop(0.78, stops[3]);
+        sunsetGrad.addColorStop(1.0, stops[4]);
+        ctx.fillStyle = sunsetGrad;
         ctx.fillText(item.char, 0, 0);
 
-        // Subtle natural bevel edge (1.5px, low brightness, high saturation)
-        const rimGrad = ctx.createLinearGradient(-70, -88, 70, 88);
-        rimGrad.addColorStop(0, rimTone);
-        rimGrad.addColorStop(0.55, faceMid);
-        rimGrad.addColorStop(1, secondaryTone);
-        ctx.lineWidth = 1.6;
-        ctx.strokeStyle = rimGrad;
+        // Step 2: Internal GTA VI Vice Horizon Glow, Palm/Skyline Silhouette & Glossy Enamel Coat
+        // (Clipped 100% strictly to the inner sunset face before outer bevels are drawn!)
+        ctx.save();
+        ctx.globalCompositeOperation = "source-atop";
+
+        // Warm horizon sun-glow band across lower-middle of the glyph
+        const horizonGlow = ctx.createRadialGradient(0, 26, 4, 0, 26, 92);
+        horizonGlow.addColorStop(0, "rgba(255, 215, 90, 0.38)");
+        horizonGlow.addColorStop(0.5, "rgba(255, 46, 147, 0.16)");
+        horizonGlow.addColorStop(1, "rgba(0, 0, 0, 0)");
+        ctx.fillStyle = horizonGlow;
+        ctx.fillRect(-120, -95, 240, 190);
+
+        // Subtle GTA VI tropical horizon wave silhouettes at the bottom of the letter
+        ctx.fillStyle = "rgba(14, 5, 28, 0.55)";
+        for (let w = 0; w < 5; w++) {
+          const wy = 48 + w * 9;
+          ctx.fillRect(-110, wy, 220, 2.5 + w * 0.6);
+        }
+
+        // Stylized Vice City palm silhouette arch inside the sunset horizon
+        const palmX = idx % 2 === 0 ? -16 : 16;
+        const palmY = 42;
+        ctx.strokeStyle = "rgba(14, 5, 28, 0.65)";
+        ctx.lineWidth = 3.2;
+        ctx.beginPath();
+        ctx.moveTo(palmX, 92);
+        ctx.quadraticCurveTo(palmX + (idx % 2 === 0 ? 7 : -7), 66, palmX + (idx % 2 === 0 ? 11 : -11), palmY);
+        ctx.stroke();
+
+        const fronds = [
+          [-26, -6], [-18, -15], [-4, -18], [14, -15], [24, -5], [-16, 4], [18, 4]
+        ];
+        ctx.lineWidth = 2.4;
+        fronds.forEach(([fx, fy]) => {
+          const topX = palmX + (idx % 2 === 0 ? 11 : -11);
+          ctx.beginPath();
+          ctx.moveTo(topX, palmY);
+          ctx.quadraticCurveTo(topX + fx * 0.55, palmY + fy - 5, topX + fx, palmY + fy + 4);
+          ctx.stroke();
+        });
+
+        // Crisp Diagonal Glossy Enamel / Studio Softbox Reflection across top-left of letter
+        const glossGrad = ctx.createLinearGradient(-70, -92, 20, -10);
+        glossGrad.addColorStop(0, "rgba(0, 240, 255, 0.34)");
+        glossGrad.addColorStop(0.45, "rgba(255, 255, 255, 0.15)");
+        glossGrad.addColorStop(0.52, "rgba(255, 255, 255, 0.0)");
+        glossGrad.addColorStop(1, "rgba(0, 0, 0, 0.0)");
+        ctx.fillStyle = glossGrad;
+        ctx.fillRect(-120, -100, 240, 120);
+        ctx.restore();
+
+        // Step 3: Fine Inner Specular Rim along the edge of the sunset face
+        const innerRim = ctx.createLinearGradient(-65, -88, 65, 88);
+        innerRim.addColorStop(0, bevelTop);
+        innerRim.addColorStop(0.5, stops[2]);
+        innerRim.addColorStop(1, stops[4]);
+        ctx.lineWidth = 1.8;
+        ctx.strokeStyle = innerRim;
         ctx.strokeText(item.char, 0, 0);
+
+        // Step 4: Draw Dark 3D Recessed Groove & Outer Chiseled Metallic Bevel Frame BEHIND the inner face (destination-over)
+        ctx.save();
+        ctx.globalCompositeOperation = "destination-over";
+
+        // Dark 3D recessed inset channel between inner sunset face and outer metallic frame
+        ctx.lineWidth = 6.0;
+        ctx.strokeStyle = "#080310";
+        ctx.strokeText(item.char, 0, 0);
+
+        // Outer Chiseled Metallic Bevel Frame (3D Chrome + Cyan/Magenta Neon Reflection)
+        const outerBevel = ctx.createLinearGradient(-75, -94, 75, 94);
+        outerBevel.addColorStop(0, bevelTop);
+        outerBevel.addColorStop(0.28, "#8A99AD");
+        outerBevel.addColorStop(0.52, "#1E162B");
+        outerBevel.addColorStop(0.76, bevelBot);
+        outerBevel.addColorStop(1, stops[4]);
+        ctx.lineWidth = 14.5;
+        ctx.strokeStyle = outerBevel;
+        ctx.strokeText(item.char, 0, 0);
+        ctx.restore();
 
         ctx.restore();
         item.tex.needsUpdate = true;
 
-        // 2. Natural Deep Shadowed 3D Extruded Side Wall Volume
+        // 2. Realistic Chiseled 3D Extruded Block Walls (Deep Glossy Anodized Violet-Obsidian + Neon Edge Specular)
         if (item.sideCtx && item.sideTex) {
           const sCtx = item.sideCtx;
           sCtx.clearRect(0, 0, 256, 256);
@@ -2012,17 +2091,19 @@
           sCtx.textAlign = "center";
           sCtx.textBaseline = "middle";
           sCtx.lineJoin = "miter";
-          sCtx.miterLimit = 2;
-          sCtx.font = '700 206px "Bebas Neue", "Mona Sans Variable", sans-serif';
+          sCtx.miterLimit = 2.5;
+          sCtx.font = '700 202px "Bebas Neue", "Mona Sans Variable", sans-serif';
 
-          const sideGrad = sCtx.createLinearGradient(-70, -90, 70, 90);
-          sideGrad.addColorStop(0, faceMid);
-          sideGrad.addColorStop(1, "#070B12");
+          const sideEdgeGrad = ctx.createLinearGradient(-80, -94, 80, 94);
+          sideEdgeGrad.addColorStop(0, "#096B7A");
+          sideEdgeGrad.addColorStop(0.35, sideTint);
+          sideEdgeGrad.addColorStop(0.7, "#11071C");
+          sideEdgeGrad.addColorStop(1, "#7A1248");
 
-          sCtx.lineWidth = 3.0;
-          sCtx.strokeStyle = faceBot;
+          sCtx.lineWidth = 14;
+          sCtx.strokeStyle = sideEdgeGrad;
           sCtx.strokeText(item.char, 0, 0);
-          sCtx.fillStyle = sideGrad;
+          sCtx.fillStyle = "#0D0617";
           sCtx.fillText(item.char, 0, 0);
           sCtx.restore();
           item.sideTex.needsUpdate = true;
@@ -2501,13 +2582,13 @@
             const nz = Math.cos(item.rotX) * Math.cos(item.rotY);
 
             const ndotl = Math.max(0, (nx * lx + ny * ly + nz * lz) / lLen);
-            // Grounded, natural studio shading (no over-exposed >1.0 multiplier, preserves deep pigment saturation)
-            const spec = Math.pow(ndotl, 10) * 0.08 + item.hoverGlow * 0.09;
-            const faceLight = Math.min(0.82, 0.54 + ndotl * 0.18 + spec);
-            const sideLight = Math.min(0.64, 0.32 + (1 - Math.abs(nz)) * 0.18 + ndotl * 0.10 + item.hoverGlow * 0.08);
+            // Realistic Glossy Enamel & Anodized 3D Studio Lighting (preserves vibrant GTA VI saturation & physical depth contrast)
+            const spec = Math.pow(ndotl, 9) * 0.14 + item.hoverGlow * 0.16;
+            const faceLight = Math.min(1.06, 0.78 + ndotl * 0.18 + spec);
+            const sideLight = Math.min(0.82, 0.42 + (1 - Math.abs(nz)) * 0.26 + ndotl * 0.12 + item.hoverGlow * 0.14);
 
             item.faceMat.color.setRGB(faceLight, faceLight, faceLight);
-            item.sideMat.color.setRGB(sideLight, sideLight, sideLight);
+            item.sideMat.color.setRGB(sideLight, sideLight * 0.92, sideLight * 1.05);
           }
         });
       }
@@ -2802,7 +2883,7 @@
       }, 280);
     }
 
-      window.addEventListener("resize", () => {
+    window.addEventListener("resize", () => {
       const next = computeSizes();
       sizes.width = next.width;
       sizes.height = next.height;
