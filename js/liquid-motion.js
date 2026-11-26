@@ -90,6 +90,7 @@
       noise: {
         texture: `${GL_ROOT}/textures/noise/noise-03.webp`,
       },
+      retrowaveBg: `${GL_ROOT}/textures/retrowave-bg.avif`,
     },
   };
 
@@ -560,6 +561,8 @@
     uniform sampler2D tBackgroundNoise;
     uniform sampler2D tNoise;
     uniform sampler2D tTitleText;
+    uniform sampler2D tRetrowaveBg;
+    uniform vec2 uMouseParallax;
 
     uniform vec3 uRangerColor;
     uniform float uRangerTintMix;
@@ -591,16 +594,48 @@
       textureCursorEffect.rgb = 1.0 - textureCursorEffect.rgb;
       float cursorEffect = smoothstep(0.08, 0.16, textureCursorEffect.r);
 
-      // Deep High-Contrast Carbon & Slate Studio Stage (Linear space values so <colorspace_fragment> never washes out / gets milky!)
+      // Animated Retrowave / Synthwave Cityscape & Sunset Background:
+      // 1. Aspect-correct cover mapping + smooth floating camera drift + mouse parallax
+      float imgAspect = 1.777;
+      vec2 coverScale = uAspect > imgAspect
+        ? vec2(1.0, imgAspect / max(uAspect, 0.1))
+        : vec2(uAspect / imgAspect, 1.0);
+      vec2 bgUv = (vUv - 0.5) * coverScale * 0.92 + 0.5;
+
+      vec2 camDrift = vec2(sin(uTime * 0.42) * 0.014, cos(uTime * 0.32) * 0.009);
+      bgUv += camDrift - uMouseParallax * 0.018;
+
+      // 2. Animated Synthwave Horizon Heat-Haze & Reflection Wave in the lower cityscape
+      float horizonWaveMask = smoothstep(0.48, 0.04, bgUv.y);
+      bgUv.x += sin(bgUv.y * 85.0 - uTime * 3.6) * 0.0022 * horizonWaveMask;
+      bgUv.y += cos(bgUv.x * 38.0 + uTime * 2.4) * 0.0012 * horizonWaveMask;
+      bgUv = clamp(bgUv, 0.002, 0.998);
+
+      vec3 retroScene = texture2D(tRetrowaveBg, bgUv).rgb;
+
+      // 3. Pulsing Neon Sunset & City Lights + Subtle CRT Scanlines
+      vec3 cyberCyan = vec3(0.0, 0.75, 1.0);
+      vec3 cyberMagenta = vec3(0.95, 0.02, 0.38);
+      vec3 dualAccent = mix(cyberCyan, cyberMagenta, clamp(vUv.x * 0.55 + (1.0 - vUv.y) * 0.45, 0.0, 1.0));
+
+      float sunRegion = smoothstep(0.58, 0.0, length((bgUv - vec2(0.5, 0.52)) * vec2(1.15, 1.0)));
+      float sunPulse = 1.0 + 0.16 * sin(uTime * 2.2);
+      float neonIntensity = max(retroScene.r, retroScene.b);
+      float neonShimmer = 0.5 + 0.5 * sin(bgUv.x * 16.0 - bgUv.y * 12.0 + uTime * 3.4);
+
+      retroScene *= 0.88 + 0.22 * sunPulse * smoothstep(0.18, 0.82, neonIntensity);
+      retroScene += cyberMagenta * (sunRegion * (0.045 + 0.035 * sin(uTime * 2.2)));
+      retroScene += cyberCyan * (horizonWaveMask * neonShimmer * 0.035);
+
+      // Authentic Retrowave horizontal CRT scanline texture
+      float crtScan = 0.95 + 0.05 * sin(vUv.y * 420.0 + uTime * 3.5);
+      retroScene *= crtScan;
+
+      // Subtle vignette & active Ranger theme aura blend
       vec2 stageDelta = (vUv - vec2(0.5, 0.48)) * vec2(max(uAspect, 0.65), 1.0);
-      float studioSpot = clamp(1.0 - dot(stageDelta, stageDelta) * 1.2, 0.0, 1.0);
-
-      vec3 cyberCyan = vec3(0.0, 0.65, 0.95);
-      vec3 cyberMagenta = vec3(0.85, 0.04, 0.28);
-      vec3 dualAccent = mix(cyberCyan, cyberMagenta, clamp(vUv.x * 0.6 + (1.0 - vUv.y) * 0.4, 0.0, 1.0));
-
-      vec3 studioCenterColor = mix(vec3(0.024, 0.030, 0.044), uRangerColor * 0.35, 0.08);
-      vec3 studioBaseBg = mix(COLOR_BACKGROUND, studioCenterColor, studioSpot * 0.82);
+      float edgeVignette = clamp(1.0 - dot(stageDelta, stageDelta) * 0.38, 0.55, 1.0);
+      retroScene = mix(retroScene, retroScene * (0.72 + uRangerColor * 0.65), uRangerTintMix * 0.22);
+      vec3 studioBaseBg = retroScene * edgeVignette;
       vec3 background = studioBaseBg;
 
       if (OUTLINE) {
@@ -617,9 +652,9 @@
           edge = 1.0;
         }
 
-        // Crisp 1px topographic tech lines
+        // Subtle synthwave contour energy lines appearing along the liquid cursor trail
         vec3 contourTint = mix(dualAccent, uRangerColor, 0.35);
-        float lineStrength = (0.14 + cursorEffect * 0.24) * uReveal;
+        float lineStrength = (0.06 + cursorEffect * 0.28) * uReveal;
         background = mix(studioBaseBg, contourTint, edge * lineStrength);
       }
 
@@ -1781,6 +1816,8 @@
             tBackgroundNoise: new THREE.Uniform(null),
             tNoise: new THREE.Uniform(assets.textures.noise.texture),
             tTitleText: new THREE.Uniform(this.titleTexture),
+            tRetrowaveBg: new THREE.Uniform(assets.textures.retrowaveBg || assets.textures.noise.texture),
+            uMouseParallax: new THREE.Uniform(new THREE.Vector2(0, 0)),
             uRangerColor: new THREE.Uniform(toSRGBColor("#1C2018")),
             uRangerTintMix: new THREE.Uniform(0.0),
             OUTLINE: new THREE.Uniform(cfg.OUTLINE),
@@ -2612,6 +2649,9 @@
       // Feed composite shader uniforms
       const u = this.compositionMesh.material.uniforms;
       u.uTime.value = elapsed;
+      if (u.uMouseParallax) {
+        u.uMouseParallax.value.copy(this.easedMouse.normalized.value);
+      }
       u.tDefaultDiffuse.value = this.defaultRenderTarget.texture;
       u.tHelmet.value = this.helmet.renderTarget.texture;
       u.tCursorEffect.value = fluidTexture;
@@ -2646,6 +2686,7 @@
       ASSETS.textures.rangerVariants.silver.alpha,
       ASSETS.textures.ranger.normal,
       ASSETS.textures.noise.texture,
+      ASSETS.textures.retrowaveBg,
     ];
     let loadedCount = 0;
     const totalCount = essentialUrls.length;
@@ -2680,6 +2721,7 @@
         silverAlpha,
         rangerNormal,
         noiseTex,
+        retrowaveBgTex,
       ]) => {
         headDiffuse.minFilter = THREE.LinearFilter;
         headDiffuse.magFilter = THREE.LinearFilter;
@@ -2698,6 +2740,14 @@
         rangerDepth.colorSpace = THREE.SRGBColorSpace;
 
         configureNonHeadTexture(noiseTex);
+
+        if (retrowaveBgTex) {
+          retrowaveBgTex.minFilter = THREE.LinearFilter;
+          retrowaveBgTex.magFilter = THREE.LinearFilter;
+          retrowaveBgTex.colorSpace = THREE.SRGBColorSpace;
+          retrowaveBgTex.wrapS = THREE.ClampToEdgeWrapping;
+          retrowaveBgTex.wrapT = THREE.ClampToEdgeWrapping;
+        }
 
         const variantSources = {
           red: ASSETS.textures.rangerVariants.red,
@@ -2772,6 +2822,7 @@
             },
             rangerVariants,
             noise: { texture: noiseTex },
+            retrowaveBg: retrowaveBgTex,
           },
           ensureRangerVariantLoaded,
           preloadAllRangerVariants: (onEachLoaded) => {
