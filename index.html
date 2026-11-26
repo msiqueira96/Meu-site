@@ -13,9 +13,9 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="css/liquid-motion.css?v=59" />
-  <script defer src="js/three-vendor.min.js?v=59"></script>
-  <script defer src="js/liquid-motion.js?v=59"></script>
+  <link rel="stylesheet" href="css/liquid-motion.css?v=60" />
+  <script defer src="js/three-vendor.min.js?v=60"></script>
+  <script defer src="js/liquid-motion.js?v=60"></script>
 </head>
 
 <body>
@@ -72,8 +72,8 @@
     </div>
   </header>
 
-  <!-- Minimal Flat White Gear Icon & Direct Quality/Hz Menu (Fraco / Normal / Forte + 30 / 60 / 90 / 120 Hz) -->
-  <aside class="quality-gear-widget" id="quality-gear-widget" aria-label="Qualidade e Hz">
+  <!-- Minimal Flat White Gear Icon & 4 Complete Hz Configuration Presets (30Hz / 60Hz / 90Hz / 120Hz) -->
+  <aside class="quality-gear-widget" id="quality-gear-widget" aria-label="Configuração de Hz e Qualidade">
     <button type="button" class="quality-gear-btn" id="quality-gear-btn" aria-expanded="false"
       aria-controls="quality-gear-panel" title="Qualidade e Hz">
       <svg class="quality-gear-svg" viewBox="0 0 24 24" width="26" height="26" fill="#FFFFFF" aria-hidden="true">
@@ -82,12 +82,7 @@
     </button>
 
     <div class="quality-gear-panel" id="quality-gear-panel" hidden>
-      <div class="quality-options-row" role="radiogroup" aria-label="Qualidade">
-        <button type="button" class="quality-option-btn" data-quality-tier="low" role="radio" aria-checked="false">Fraco</button>
-        <button type="button" class="quality-option-btn" data-quality-tier="medium" role="radio" aria-checked="false">Normal</button>
-        <button type="button" class="quality-option-btn" data-quality-tier="high" role="radio" aria-checked="false">Forte</button>
-      </div>
-      <div class="quality-hz-row" role="radiogroup" aria-label="Taxa de Atualização">
+      <div class="quality-hz-row" role="radiogroup" aria-label="Configuração do Site">
         <button type="button" class="quality-hz-btn" data-hz-option="30" role="radio" aria-checked="false">30Hz</button>
         <button type="button" class="quality-hz-btn" data-hz-option="60" role="radio" aria-checked="false">60Hz</button>
         <button type="button" class="quality-hz-btn" data-hz-option="90" role="radio" aria-checked="false">90Hz</button>

@@ -2581,19 +2581,12 @@ body.is-header-visible .quality-gear-widget {
   display: none !important;
 }
 
-.quality-options-row {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 0.35rem;
-}
-
 .quality-hz-row {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
   gap: 0.35rem;
 }
 
-.quality-option-btn,
 .quality-hz-btn {
   padding: 0.42rem 0.65rem;
   border-radius: 0.55rem;
@@ -2609,13 +2602,11 @@ body.is-header-visible .quality-gear-widget {
   transition: all 0.18s ease;
 }
 
-.quality-option-btn:hover,
 .quality-hz-btn:hover {
   background: rgba(255, 255, 255, 0.16);
   color: #FFFFFF;
 }
 
-.quality-option-btn.is-active,
 .quality-hz-btn.is-active {
   background: #FFFFFF;
   border-color: #FFFFFF;

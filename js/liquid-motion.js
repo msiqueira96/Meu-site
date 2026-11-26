@@ -95,27 +95,24 @@
   };
 
   // =========================================================================
-  // Specific Processor / GPU Hardware Detection & 3 Quality Presets
-  // (1. Fraco / low | 2. Médio / medium | 3. Avançado / high)
+  // Specific Processor / GPU Hardware Detection & 4 Unified Hz Quality Presets
+  // (30Hz = Fraco/Leve | 60Hz = Normal/HD | 90Hz = Forte | 120Hz = Ultra)
   // =========================================================================
 
   const IS_MOBILE_DEVICE =
     window.innerWidth <= 768 || /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent || "");
 
   const QUALITY_PRESETS = {
-    low: {
-      key: "low",
-      label: "Fraco",
-      shortLabel: "FRACO",
-      desc: "Desempenho Máximo • Zero Travamentos",
+    "30": {
+      key: "30",
+      hz: 30,
+      cssTier: "low",
       mobileMaxDpr: 1.15,
       desktopMaxDpr: 1.0,
       maxTotalPixels: 850000,
       portraitSegs: 40,
       letterSlices: 6,
       letterTexRes: 256,
-      palmsWidth: 1024,
-      palmsHeight: 384,
       fluidRes: 0.05,
       fluidPoisson: 1,
       fluidBfecc: false,
@@ -123,19 +120,16 @@
       fluidTargetH: 144,
       shaderQuality: 0.0,
     },
-    medium: {
-      key: "medium",
-      label: "Médio",
-      shortLabel: "MÉDIO",
-      desc: "Equilibrado HD • Nitidez & Fluidez",
+    "60": {
+      key: "60",
+      hz: 60,
+      cssTier: "medium",
       mobileMaxDpr: 1.75,
       desktopMaxDpr: 1.25,
       maxTotalPixels: 1850000,
       portraitSegs: 64,
       letterSlices: 12,
       letterTexRes: 512,
-      palmsWidth: 2048,
-      palmsHeight: 768,
       fluidRes: 0.075,
       fluidPoisson: 2,
       fluidBfecc: false,
@@ -143,19 +137,33 @@
       fluidTargetH: 288,
       shaderQuality: 1.0,
     },
-    high: {
-      key: "high",
-      label: "Avançado",
-      shortLabel: "AVANÇADO",
-      desc: "Ultra 3D Retina • 90/120Hz Sem Pixelado",
+    "90": {
+      key: "90",
+      hz: 90,
+      cssTier: "high",
+      mobileMaxDpr: 2.35,
+      desktopMaxDpr: 1.50,
+      maxTotalPixels: 2650000,
+      portraitSegs: 96,
+      letterSlices: 18,
+      letterTexRes: 640,
+      fluidRes: 0.09,
+      fluidPoisson: 3,
+      fluidBfecc: true,
+      fluidTargetW: 640,
+      fluidTargetH: 360,
+      shaderQuality: 1.5,
+    },
+    "120": {
+      key: "120",
+      hz: 120,
+      cssTier: "high",
       mobileMaxDpr: 2.75,
       desktopMaxDpr: 1.65,
       maxTotalPixels: 3400000,
       portraitSegs: 112,
       letterSlices: 22,
       letterTexRes: 768,
-      palmsWidth: 2560,
-      palmsHeight: 960,
       fluidRes: 0.10,
       fluidPoisson: 4,
       fluidBfecc: true,
@@ -164,6 +172,9 @@
       shaderQuality: 2.0,
     },
   };
+  QUALITY_PRESETS.low = QUALITY_PRESETS["30"];
+  QUALITY_PRESETS.medium = QUALITY_PRESETS["60"];
+  QUALITY_PRESETS.high = QUALITY_PRESETS["90"];
 
   function detectHardwareProfile() {
     const cores = typeof navigator.hardwareConcurrency === "number" ? navigator.hardwareConcurrency : 4;
@@ -194,127 +205,96 @@
       // Ignore WebGL probe errors
     }
 
-    // Extract clean GPU/SoC model name from ANGLE or mobile WebGL strings
-    let cleanGpu = rawRenderer
-      .replace(/ANGLE\s*\(([^,]+),\s*([^,]+?)(?:,\s*OpenGL.*|\s*Direct3D.*|\))/i, "$2")
-      .replace(/OpenGL\s*ES.*$/i, "")
-      .replace(/Direct3D.*$/i, "")
-      .replace(/vs_\d+_\d+.*$/i, "")
-      .replace(/\/PCIe\/SSE2/i, "")
-      .replace(/\s+/g, " ")
-      .trim();
-
-    if (!cleanGpu || /^WebKit WebGL$|^Mozilla$|^Google Inc\.$/i.test(cleanGpu)) {
-      if (/iPhone|iPad|iPod/i.test(ua)) {
-        cleanGpu = "Apple A-Series / Bionic GPU";
-      } else if (/Macintosh/i.test(ua)) {
-        cleanGpu = "Apple Silicon / Mac GPU";
-      } else if (/Android/i.test(ua)) {
-        cleanGpu = `Processador Mobile (${cores} Núcleos)`;
-      } else {
-        cleanGpu = `Processador (${cores} Núcleos)`;
-      }
-    }
-
     const rUpper = `${rawRenderer} ${rawVendor}`.toUpperCase();
-    let tier = null;
-    let explicitLow = false;
+    let recHz = null;
 
     // 1. Qualcomm Snapdragon / Adreno GPU Specific Detection
     const adrenoMatch = rUpper.match(/ADRENO[^\d]*(\d{3,4})/);
     if (adrenoMatch) {
       const model = parseInt(adrenoMatch[1], 10);
-      if (model >= 710 || (model >= 640 && model < 700)) {
-        tier = "high"; // Snapdragon 855/865/870/888, 778G, 7+ Gen 2, 8 Gen 1/2/3
+      if (model >= 730 || (model >= 660 && model < 700)) {
+        recHz = "120";
+      } else if (model >= 710 || (model >= 640 && model < 700)) {
+        recHz = "90";
       } else if (model >= 612 && model <= 639) {
-        tier = "medium"; // Snapdragon 665/680/695/720G/732G/750G/765G
+        recHz = "60";
       } else {
-        tier = "low"; // Adreno 610, 5xx, 4xx, 3xx
-        explicitLow = true;
+        recHz = "30";
       }
     }
 
-    // 2. ARM Mali / Immortalis / Samsung Xclipse (Exynos, MediaTek Dimensity, Google Tensor)
-    if (!tier) {
-      if (/IMMORTALIS|XCLIPSE|MALI-G710|MALI-G715|MALI-G720|MALI-G610|MALI-G615|MALI-G78|MALI-G77|MALI-G76/.test(rUpper)) {
-        tier = "high";
+    // 2. ARM Mali / Immortalis / Samsung Xclipse
+    if (!recHz) {
+      if (/IMMORTALIS|XCLIPSE|MALI-G710|MALI-G715|MALI-G720/.test(rUpper)) {
+        recHz = "120";
+      } else if (/MALI-G610|MALI-G615|MALI-G78|MALI-G77|MALI-G76/.test(rUpper)) {
+        recHz = "90";
       } else if (/MALI-G68|MALI-G57|MALI-G72|MALI-G71/.test(rUpper)) {
-        tier = "medium";
+        recHz = "60";
       } else if (/MALI-G52|MALI-G51|MALI-G31|MALI-T|MALI-4|POWERVR|SGX|GE8320|GE8300/.test(rUpper)) {
-        tier = "low";
-        explicitLow = true;
+        recHz = "30";
       }
     }
 
     // 3. Apple GPU (iPhone / iPad / Apple Silicon M1/M2/M3/M4)
-    if (!tier && (/APPLE/.test(rUpper) || /iPhone|iPad|iPod/i.test(ua))) {
-      if (/M1|M2|M3|M4|A15|A16|A17|A18/.test(rUpper) || dpr >= 2.8 || cores >= 6) {
-        tier = "high";
+    if (!recHz && (/APPLE/.test(rUpper) || /iPhone|iPad|iPod/i.test(ua))) {
+      if (/M1|M2|M3|M4|A16|A17|A18/.test(rUpper)) {
+        recHz = "120";
+      } else if (/A14|A15/.test(rUpper) || dpr >= 2.8 || cores >= 6) {
+        recHz = "90";
       } else {
-        tier = "medium";
+        recHz = "60";
       }
     }
 
     // 4. Desktop & Laptop GPUs (NVIDIA GeForce, AMD Radeon, Intel Arc / Iris / UHD / HD)
-    if (!tier) {
+    if (!recHz) {
       if (/SWIFTSHADER|LLVMPIPE|BASIC RENDER|GMA|INTEL\(R\)\s*HD GRAPHICS\s*(2000|2500|3000|4000|4400|4600|500|505|510|515|520|530|610)|GEFORCE\s*(210|GT\s*6|GT\s*710|GT\s*720|GT\s*730)/.test(rUpper)) {
-        tier = "low";
-        explicitLow = true;
-      } else if (/RTX|GTX\s*(105|106|107|108|165|166|970|980)|RADEON\s*RX|RADEON\s*PRO|INTEL.*ARC|IRIS\s*XE/.test(rUpper)) {
-        tier = "high";
+        recHz = "30";
+      } else if (/RTX|RADEON\s*RX\s*(6|7|8|9)|INTEL.*ARC/.test(rUpper)) {
+        recHz = "120";
+      } else if (/GTX\s*(105|106|107|108|165|166|970|980)|RADEON\s*RX|RADEON\s*PRO|IRIS\s*XE/.test(rUpper)) {
+        recHz = "90";
       } else if (/UHD\s*GRAPHICS|IRIS|RADEON|GEFORCE\s*MX|GTX/.test(rUpper)) {
-        tier = cores >= 8 && (!ram || ram >= 8) ? "high" : "medium";
+        recHz = cores >= 8 && (!ram || ram >= 8) ? "90" : "60";
       }
     }
 
-    // 5. Fallback Heuristic using Processor Cores, RAM & Retina DPR when browser masks GPU name
-    if (!tier) {
-      if (cores <= 2 || (ram > 0 && ram <= 2)) {
-        tier = "low";
-        explicitLow = true;
-      } else if (cores <= 4 && ram > 0 && ram <= 3) {
-        tier = "low";
-        explicitLow = true;
+    // 5. Fallback Heuristic using Processor Cores, RAM & Retina DPR
+    if (!recHz) {
+      if (cores <= 2 || (ram > 0 && ram <= 2) || (cores <= 4 && ram > 0 && ram <= 3)) {
+        recHz = "30";
       } else if (
         (cores >= 8 && (ram >= 6 || (!ram && dpr >= 2.0))) ||
         (IS_MOBILE_DEVICE && cores >= 6 && dpr >= 2.0 && (!ram || ram >= 4))
       ) {
-        tier = "high";
+        recHz = "90";
       } else {
-        tier = "medium";
+        recHz = "60";
       }
     }
 
-    const ramTag = ram >= 1 ? ` • ${ram}GB RAM` : "";
-    const coresTag = cores ? ` • ${cores} Núcleos` : "";
-    const summary = `${cleanGpu}${coresTag}${ramTag}`;
-
     return {
-      recommendedTier: tier,
-      explicitLow,
-      gpuName: cleanGpu,
-      rawRenderer,
-      cores,
-      ram,
-      dpr,
-      summary,
+      recommendedHz: recHz,
     };
   }
 
   const HARDWARE_PROFILE = detectHardwareProfile();
-  let savedQualityPref = null;
+  let savedHzPreset = null;
   try {
-    savedQualityPref = localStorage.getItem("ms_quality_tier_override");
+    savedHzPreset = localStorage.getItem("ms_hz_preset_override");
   } catch (_e) {
-    savedQualityPref = null;
+    savedHzPreset = null;
   }
 
-  let IS_QUALITY_AUTO = !savedQualityPref || savedQualityPref === "auto" || !QUALITY_PRESETS[savedQualityPref];
-  let ACTIVE_QUALITY_TIER = IS_QUALITY_AUTO ? HARDWARE_PROFILE.recommendedTier : savedQualityPref;
-  let CURRENT_QUALITY_PRESET = QUALITY_PRESETS[ACTIVE_QUALITY_TIER] || QUALITY_PRESETS.medium;
-  let IS_LOW_END = ACTIVE_QUALITY_TIER === "low";
+  let ACTIVE_QUALITY_TIER = savedHzPreset && QUALITY_PRESETS[savedHzPreset]
+    ? savedHzPreset
+    : HARDWARE_PROFILE.recommendedHz;
+  let CURRENT_QUALITY_PRESET = QUALITY_PRESETS[ACTIVE_QUALITY_TIER] || QUALITY_PRESETS["60"];
+  let IS_LOW_END = CURRENT_QUALITY_PRESET.cssTier === "low";
 
-  document.documentElement.setAttribute("data-quality-tier", ACTIVE_QUALITY_TIER);
+  document.documentElement.setAttribute("data-quality-tier", CURRENT_QUALITY_PRESET.cssTier);
+  document.documentElement.setAttribute("data-display-hz", String(CURRENT_QUALITY_PRESET.hz));
   document.documentElement.classList.toggle("is-low-end", IS_LOW_END);
 
   const SUPPORTS_COLOR_MIX =
@@ -917,14 +897,9 @@
       // Map screen Y [0.43..0.81] to palms canvas Y [0.0..1.0]
       float palmLocalY = (palmBaseUv.y - 0.43) / 0.38;
       if (palmLocalY > 0.0 && palmLocalY < 1.0) {
-        // 6 palm trees positioned across X: 0.08, 0.235, 0.395, 0.595, 0.750, 0.905
+        // 2 palm trees positioned at left (0.365) and right (0.635) of the background sun
         float px = palmBaseUv.x;
-        float palmCenter = px < 0.157 ? 0.080
-                         : px < 0.315 ? 0.235
-                         : px < 0.495 ? 0.395
-                         : px < 0.672 ? 0.595
-                         : px < 0.827 ? 0.750
-                                      : 0.905;
+        float palmCenter = px < 0.50 ? 0.365 : 0.635;
         float palmId = floor(palmCenter * 10.0 + 0.5);
 
         // Cantilever height from trunk base (0.0) to crown top (1.0)
@@ -2972,15 +2947,10 @@
       const H = canvas.height;
       ctx.clearRect(0, 0, W, H);
 
-      // 6 Palm Trees matching the Retrowave horizon layout:
-      // 3 on the left (0.080, 0.235, 0.395) and 3 on the right (0.595, 0.750, 0.905)
+      // Only 2 Palm Trees in the background framing the left and right sides of the sun
       const palms = [
-        { x: 0.080, lean: -0.018, crownY: 0.32, scale: 0.92 },
-        { x: 0.235, lean: 0.014, crownY: 0.28, scale: 0.98 },
-        { x: 0.395, lean: 0.022, crownY: 0.26, scale: 1.04 },
-        { x: 0.595, lean: -0.022, crownY: 0.26, scale: 1.04 },
-        { x: 0.750, lean: -0.014, crownY: 0.29, scale: 0.97 },
-        { x: 0.905, lean: 0.018, crownY: 0.33, scale: 0.91 },
+        { x: 0.365, lean: 0.022, crownY: 0.26, scale: 1.04 },
+        { x: 0.635, lean: -0.022, crownY: 0.26, scale: 1.04 },
       ];
 
       palms.forEach((p) => {
@@ -3795,99 +3765,61 @@
     window.addEventListener("resize", syncSizesAndRenderer);
 
     // =======================================================================
-    // Minimal Gear Menu: Fraco / Normal / Forte + 30Hz / 60Hz / 90Hz / 120Hz
+    // Minimal Gear Menu: 4 Complete Hz & Quality Presets (30Hz / 60Hz / 90Hz / 120Hz)
     // =======================================================================
     const gearBtn = document.getElementById("quality-gear-btn");
     const gearPanel = document.getElementById("quality-gear-panel");
-    const tierButtons = document.querySelectorAll(".quality-option-btn[data-quality-tier]");
     const hzButtons = document.querySelectorAll(".quality-hz-btn[data-hz-option]");
 
-    let savedHzPref = null;
-    try {
-      savedHzPref = parseInt(localStorage.getItem("ms_target_hz_override") || "", 10);
-    } catch (_e) {
-      savedHzPref = null;
-    }
-
-    const defaultHzForTier = (tierKey) => {
-      if (tierKey === "low") return 30;
-      if (tierKey === "high") return 90;
-      return 60;
-    };
-
-    let hasManualHz = [30, 60, 90, 120].includes(savedHzPref);
-    let activeTargetHz = hasManualHz ? savedHzPref : defaultHzForTier(ACTIVE_QUALITY_TIER);
+    let activeTargetHz = CURRENT_QUALITY_PRESET.hz || 60;
     window.__displayHz = activeTargetHz;
 
-    const applyTargetHz = (hzVal, { persist = true } = {}) => {
-      const target = [30, 60, 90, 120].includes(Number(hzVal)) ? Number(hzVal) : 60;
-      activeTargetHz = target;
-      window.__displayHz = target;
-      document.documentElement.setAttribute("data-display-hz", String(target));
+    const updateGearMenuUI = () => {
+      hzButtons.forEach((btn) => {
+        const isSelected = String(btn.getAttribute("data-hz-option")) === String(ACTIVE_QUALITY_TIER);
+        btn.classList.toggle("is-active", isSelected);
+        btn.setAttribute("aria-checked", isSelected ? "true" : "false");
+      });
+    };
+
+    const applyHzPreset = (hzOption, { persist = true, rebuildScene = true } = {}) => {
+      const key = String(hzOption);
+      const preset = QUALITY_PRESETS[key];
+      if (!preset) return;
+
+      ACTIVE_QUALITY_TIER = preset.key;
+      CURRENT_QUALITY_PRESET = preset;
+      IS_LOW_END = preset.cssTier === "low";
+      activeTargetHz = preset.hz;
+      window.__displayHz = activeTargetHz;
+
+      document.documentElement.setAttribute("data-quality-tier", preset.cssTier);
+      document.documentElement.setAttribute("data-display-hz", String(activeTargetHz));
+      document.documentElement.classList.toggle("is-low-end", IS_LOW_END);
 
       if (persist) {
-        hasManualHz = true;
         try {
-          localStorage.setItem("ms_target_hz_override", String(target));
+          localStorage.setItem("ms_hz_preset_override", preset.key);
         } catch (_e) {}
       }
 
       if (typeof gsap.ticker.fps === "function") {
-        // 30Hz and 60Hz cap the ticker FPS; 90Hz and 120Hz unlock high-frequency ticker updates
-        gsap.ticker.fps(target >= 120 ? -1 : target);
+        gsap.ticker.fps(activeTargetHz >= 120 ? -1 : activeTargetHz);
       }
       if (typeof gsap.ticker.lagSmoothing === "function") {
         gsap.ticker.lagSmoothing(0);
       }
 
-      hzButtons.forEach((btn) => {
-        const isSelected = Number(btn.getAttribute("data-hz-option")) === activeTargetHz;
-        btn.classList.toggle("is-active", isSelected);
-        btn.setAttribute("aria-checked", isSelected ? "true" : "false");
-      });
-    };
-
-    const updateGearMenuUI = () => {
-      tierButtons.forEach((btn) => {
-        const isSelected = btn.getAttribute("data-quality-tier") === ACTIVE_QUALITY_TIER;
-        btn.classList.toggle("is-active", isSelected);
-        btn.setAttribute("aria-checked", isSelected ? "true" : "false");
-      });
-
-      hzButtons.forEach((btn) => {
-        const isSelected = Number(btn.getAttribute("data-hz-option")) === activeTargetHz;
-        btn.classList.toggle("is-active", isSelected);
-        btn.setAttribute("aria-checked", isSelected ? "true" : "false");
-      });
-    };
-
-    const applyQualityTier = (tierKey, { persist = true } = {}) => {
-      if (!QUALITY_PRESETS[tierKey]) return;
-      IS_QUALITY_AUTO = !persist;
-      ACTIVE_QUALITY_TIER = tierKey;
-      if (persist) {
-        try {
-          localStorage.setItem("ms_quality_tier_override", tierKey);
-        } catch (_e) {}
+      if (rebuildScene) {
+        syncSizesAndRenderer();
+        fluidCursor.applyQualityPreset(CURRENT_QUALITY_PRESET);
+        heroScene.rebuildForQualityPreset(CURRENT_QUALITY_PRESET);
       }
-
-      CURRENT_QUALITY_PRESET = QUALITY_PRESETS[ACTIVE_QUALITY_TIER] || QUALITY_PRESETS.medium;
-      IS_LOW_END = ACTIVE_QUALITY_TIER === "low";
-      document.documentElement.setAttribute("data-quality-tier", ACTIVE_QUALITY_TIER);
-      document.documentElement.classList.toggle("is-low-end", IS_LOW_END);
-
-      if (!hasManualHz) {
-        applyTargetHz(defaultHzForTier(ACTIVE_QUALITY_TIER), { persist: false });
-      }
-
-      syncSizesAndRenderer();
-      fluidCursor.applyQualityPreset(CURRENT_QUALITY_PRESET);
-      heroScene.rebuildForQualityPreset(CURRENT_QUALITY_PRESET);
       updateGearMenuUI();
     };
 
-    window.__applyQualityTier = applyQualityTier;
-    window.__applyTargetHz = applyTargetHz;
+    window.__applyQualityTier = applyHzPreset;
+    window.__applyTargetHz = applyHzPreset;
 
     if (gearBtn && gearPanel) {
       const toggleGearPanel = (forceOpen) => {
@@ -3907,23 +3839,15 @@
         }
       });
 
-      tierButtons.forEach((btn) => {
-        btn.addEventListener("click", () => {
-          const targetTier = btn.getAttribute("data-quality-tier");
-          applyQualityTier(targetTier, { persist: true });
-        });
-      });
-
       hzButtons.forEach((btn) => {
         btn.addEventListener("click", () => {
-          const targetHz = Number(btn.getAttribute("data-hz-option"));
-          applyTargetHz(targetHz, { persist: true });
+          const targetHz = btn.getAttribute("data-hz-option");
+          applyHzPreset(targetHz, { persist: true, rebuildScene: true });
         });
       });
     }
 
-    applyTargetHz(activeTargetHz, { persist: false });
-    updateGearMenuUI();
+    applyHzPreset(ACTIVE_QUALITY_TIER, { persist: false, rebuildScene: false });
 
     window.__isHeroStageVisible = true;
 
