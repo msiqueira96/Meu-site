@@ -586,21 +586,21 @@
 
       vec4 textureBackgroundNoise = texture2D(tBackgroundNoise, vUv);
 
-      // Liquid cursor mask
+      // Liquid cursor mask (smoothstep prevents pixelated stair-step edges on the liquid reveal)
       vec4 textureCursorEffect = texture2D(tCursorEffect, vec2(0.025 + vUv.x * 0.95, 0.025 + vUv.y * 0.95));
       textureCursorEffect.rgb = 1.0 - textureCursorEffect.rgb;
-      float cursorEffect = step(0.1, textureCursorEffect.r);
+      float cursorEffect = smoothstep(0.08, 0.16, textureCursorEffect.r);
 
-      // Clean Architectural Titanium Grey Studio Stage (Ultra-lightweight shader, zero background blobs!)
+      // Deep High-Contrast Carbon & Slate Studio Stage (Linear space values so <colorspace_fragment> never washes out / gets milky!)
       vec2 stageDelta = (vUv - vec2(0.5, 0.48)) * vec2(max(uAspect, 0.65), 1.0);
-      float studioSpot = clamp(1.0 - dot(stageDelta, stageDelta) * 1.15, 0.0, 1.0);
+      float studioSpot = clamp(1.0 - dot(stageDelta, stageDelta) * 1.2, 0.0, 1.0);
 
-      vec3 cyberCyan = vec3(0.0, 0.898, 1.0);
-      vec3 cyberMagenta = vec3(1.0, 0.180, 0.576);
+      vec3 cyberCyan = vec3(0.0, 0.65, 0.95);
+      vec3 cyberMagenta = vec3(0.85, 0.04, 0.28);
       vec3 dualAccent = mix(cyberCyan, cyberMagenta, clamp(vUv.x * 0.6 + (1.0 - vUv.y) * 0.4, 0.0, 1.0));
 
-      vec3 studioCenterColor = mix(vec3(0.17, 0.20, 0.26), uRangerColor, 0.08);
-      vec3 studioBaseBg = mix(COLOR_BACKGROUND, studioCenterColor, studioSpot * 0.85);
+      vec3 studioCenterColor = mix(vec3(0.024, 0.030, 0.044), uRangerColor * 0.35, 0.08);
+      vec3 studioBaseBg = mix(COLOR_BACKGROUND, studioCenterColor, studioSpot * 0.82);
       vec3 background = studioBaseBg;
 
       if (OUTLINE) {
@@ -617,9 +617,9 @@
           edge = 1.0;
         }
 
-        // Subtle 1px topographic tech lines (brightens slightly inside cursor trail without creating background blobs)
+        // Crisp 1px topographic tech lines
         vec3 contourTint = mix(dualAccent, uRangerColor, 0.35);
-        float lineStrength = (0.18 + cursorEffect * 0.28) * uReveal;
+        float lineStrength = (0.14 + cursorEffect * 0.24) * uReveal;
         background = mix(studioBaseBg, contourTint, edge * lineStrength);
       }
 
@@ -628,17 +628,20 @@
 
       // Wave hover transition mask
       float hoverTransition = vUv.y + sin(vUv.x * PI) * sin(uHelmetHover * PI) * 0.2;
-      cursorEffect += step(1.0 - hoverTransition, uHelmetHover);
+      cursorEffect += smoothstep(0.98 - hoverTransition, 1.02 - hoverTransition, uHelmetHover);
       cursorEffect = clamp(cursorEffect * uCursorIntensity, 0.0, 1.0);
 
-      // Clean composition: character & 3D letters on top of studio background
-      vec3 base = mix(background, textureDefaultDiffuse.rgb, textureDefaultDiffuse.a);
+      // Clean composition with deep blacks (removes milky / washed-out veil on portrait & letters)
+      vec3 portraitRgb = pow(max(textureDefaultDiffuse.rgb, vec3(0.0)), vec3(1.16));
+      vec3 helmetRgb = pow(max(textureHelmet.rgb, vec3(0.0)), vec3(1.12));
 
-      // Inside the liquid cursor / Ranger reveal, keep the 3D letters sleek and metallic (no blinding white blowout!)
-      vec3 hoverLetterRgb = mix(textureDefaultDiffuse.rgb, mix(uRangerColor, dualAccent, 0.4), 0.32);
+      vec3 base = mix(background, portraitRgb, textureDefaultDiffuse.a);
+
+      // Inside the liquid cursor / Ranger reveal, keep the 3D letters sleek and metallic
+      vec3 hoverLetterRgb = mix(portraitRgb, mix(uRangerColor, dualAccent, 0.4), 0.28);
       vec3 rangerBgWithLetters = mix(background, hoverLetterRgb, textureDefaultDiffuse.a);
 
-      vec3 rangerLayer = mix(rangerBgWithLetters, textureHelmet.rgb, textureHelmet.a);
+      vec3 rangerLayer = mix(rangerBgWithLetters, helmetRgb, textureHelmet.a);
       vec3 finalColor = mix(base, rangerLayer, cursorEffect);
 
       if (SHOW_HELMET_PERMANENTLY) {
@@ -681,11 +684,12 @@
 
   function computeSizes() {
     syncViewportZoomCompensation();
-    const width = window.innerWidth || 1280;
-    const height = window.innerHeight || 720;
-    // Cap internal WebGL render resolution to 1024x576 (800x450 on low-end) even if browser is zoomed out to 4K/5K
-    const maxW = IS_LOW_END ? 800 : 1024;
-    const maxH = IS_LOW_END ? 450 : 576;
+    const width = window.innerWidth || 1366;
+    const height = window.innerHeight || 768;
+    // Render at native 1:1 physical monitor resolution (up to 1600x900) so it is 100% sharp and never pixelated,
+    // while still preventing 4K/5K zoomed-out tabs from overloading the GPU
+    const maxW = IS_LOW_END ? 1280 : 1600;
+    const maxH = IS_LOW_END ? 720 : 900;
     const pixelRatio = Math.min(
       window.devicePixelRatio || 1,
       1.0,
@@ -698,7 +702,9 @@
   }
 
   function toSRGBColor(hex) {
-    return new THREE.Color(hex).convertLinearToSRGB();
+    // Keep in Linear working space because COMPOSITION_FRAG runs #include <colorspace_fragment> at the end!
+    // Converting Linear->sRGB here caused double-gamma encoding (washed-out "milky" brightness).
+    return new THREE.Color(hex);
   }
 
   function mapClientToCanvasNDC(clientX, clientY, fallbackSizes) {
@@ -1311,8 +1317,8 @@
       );
       this.scene.add(this.output);
 
-      // Fluid velocity output target only needs low resolution (256x144, 0 MSAA) — 500x lighter on GPU!
-      this.sourceTarget = new THREE.WebGLRenderTarget(256, 144, { samples: 0 });
+      // Smooth medium-res fluid mask target (512x288, 0 MSAA) — sharp edges with negligible GPU load
+      this.sourceTarget = new THREE.WebGLRenderTarget(512, 288, { samples: 0 });
       this.clock = new THREE.Clock();
       this.delta = 0;
       this.interval = 1 / 60;
@@ -1375,15 +1381,15 @@
         })
       );
       this.scene.add(this.mesh);
-      const noiseW = Math.max(1, Math.round((this.sizes.renderWidth || 960) * 0.65));
-      const noiseH = Math.max(1, Math.round((this.sizes.renderHeight || 540) * 0.65));
+      const noiseW = Math.max(1, this.sizes.renderWidth || 1366);
+      const noiseH = Math.max(1, this.sizes.renderHeight || 768);
       this.renderTarget = new THREE.WebGLRenderTarget(noiseW, noiseH, { samples: 0 });
       this.frameSkip = 0;
     }
 
     resize() {
-      const noiseW = Math.max(1, Math.round((this.sizes.renderWidth || 960) * 0.65));
-      const noiseH = Math.max(1, Math.round((this.sizes.renderHeight || 540) * 0.65));
+      const noiseW = Math.max(1, this.sizes.renderWidth || 1366);
+      const noiseH = Math.max(1, this.sizes.renderHeight || 768);
       this.renderTarget.setSize(noiseW, noiseH);
     }
 
@@ -1555,8 +1561,8 @@
       this.scene = new THREE.Scene();
       this.scene.add(this.instance);
 
-      this.hemisphereLight = new THREE.HemisphereLight(0xffffff, 0x000000, 2.6);
-      this.pointLight = new THREE.PointLight(0xffffff, 2.6);
+      this.hemisphereLight = new THREE.HemisphereLight(0xffffff, 0x000000, 1.9);
+      this.pointLight = new THREE.PointLight(0xffffff, 1.95);
       this.pointLight.position.set(-0.75, 0.2, 0.4);
       this.scene.add(this.hemisphereLight, this.pointLight);
 
@@ -1794,8 +1800,8 @@
 
       this.helmet = new RangerCharacter(renderer, sizes, assets);
 
-      this.hemisphereLight = new THREE.HemisphereLight(0xffffff, 0x000000, 2.5);
-      this.pointLight = new THREE.PointLight(0xffffff, 2.5);
+      this.hemisphereLight = new THREE.HemisphereLight(0xffffff, 0x000000, 1.85);
+      this.pointLight = new THREE.PointLight(0xffffff, 1.9);
       this.pointLight.position.set(-0.75, 0.2, 0.4);
       this.defaultScene.add(this.hemisphereLight, this.pointLight);
 
@@ -1858,6 +1864,7 @@
           const tex = new TextureCtor(canvas);
           tex.minFilter = THREE.LinearFilter;
           tex.magFilter = THREE.LinearFilter;
+          tex.colorSpace = THREE.SRGBColorSpace;
           tex.needsUpdate = true;
 
           // 2. Solid 3D Extrusion Wall Texture (Depth volume between front and back faces)
@@ -1868,6 +1875,7 @@
           const sideTex = new TextureCtor(sideCanvas);
           sideTex.minFilter = THREE.LinearFilter;
           sideTex.magFilter = THREE.LinearFilter;
+          sideTex.colorSpace = THREE.SRGBColorSpace;
           sideTex.needsUpdate = true;
 
           const faceMat = new THREE.MeshBasicMaterial({
