@@ -21,41 +21,40 @@
   --font-display: "Bebas Neue", system-ui, sans-serif;
   --font-sans: "Mona Sans Variable", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
 
-  /* Arquitetura Gamificada High-Tech 50-30-10:
-     - 50-60% Cor Dominante (Base Deep Cyber Obsidian & Midnight Console)
-     - 30% Cor Secundária Estrutural (Cards Cyber Indigo-Navy, Painéis HUD & Molduras Tech Cyan)
-     - 10% Cor de Quebra de Padrão (--accent: Neon de Alta Voltagem para CTAs, Lasers, Badges Ativos e Destaques) */
-  --bg-page: #060916;          /* 50-60% Base Dominante: Deep Cyber Obsidian */
-  --bg-section-alt: #090E22;   /* 50-60% Variação Midnight Console */
-  --bg-well: #040610;          /* 50-60% Fundo profundo de terminal para simuladores */
+  /* Arquitetura UI/UX High-Tech 60-30-10 (Padrão Awwwards / Nothing OS / Razer Dark):
+     - 60% Cor Dominante: Matte Carbon Obsidian (#090B10) — base neutra profunda que nunca briga com as cores
+     - 30% Cor Secundária: Smoked Titanium Graphite (#12151E / #181C28) & Vidro Fumê Escuro nos painéis HUD
+     - 10% Cor de Quebra (--accent): Um único ponto focal neon de alta energia por seção para CTAs e elementos ativos */
+  --bg-page: #090B10;          /* 60% Base Dominante: Matte Carbon Obsidian */
+  --bg-section-alt: #0C0F17;   /* 60% Variação Carbon Console */
+  --bg-well: #06070B;          /* 60% Fundo recessed para simuladores/terminais */
 
-  --bg-card: #0F1631;          /* 30% Superfície Secundária: Cyber Navy-Indigo Card */
-  --bg-card-alt: #151F42;      /* 30% Superfície Elevada: Módulo HUD */
-  --bg-card-hover: #1C2954;    /* 30% Estado Hover de Módulo HUD */
-  --tech-secondary: #38BDF8;   /* 30% Acento Estrutural High-Tech (Molduras e HUD) */
-  --tech-indigo: #6366F1;      /* 30% Brilho Estrutural Secundário */
+  --bg-card: #12151E;          /* 30% Superfície Secundária: Smoked Titanium Graphite */
+  --bg-card-alt: #171B26;      /* 30% Superfície Elevada: Módulo HUD */
+  --bg-card-hover: #1D2230;    /* 30% Estado Hover de Módulo HUD */
+  --tech-secondary: rgba(255, 255, 255, 0.16);
 
-  /* 10% Cor de Quebra de Padrão (Contraste Explosivo Neon sincronizado via JS) */
-  --accent: #00FFA3;
-  --frame-accent: #38BDF8;
-  --pill-fg: #00FFA3;
+  /* 10% Cor de Quebra de Padrão (Um único acento cromático vibrante por vez) */
+  --accent: #00E5FF;
+  --frame-accent: #00E5FF;
+  --pill-fg: #00E5FF;
   /* Fallbacks rgba() para navegadores antigos (iOS Safari < 16.2 / Android WebView antigo) */
-  --accent-soft: rgba(0, 255, 163, 0.14);
-  --accent-border: rgba(0, 255, 163, 0.45);
-  --accent-glow: rgba(0, 255, 163, 0.35);
-  --accent-soft: color-mix(in srgb, var(--accent) 14%, transparent);
-  --accent-border: color-mix(in srgb, var(--accent) 45%, transparent);
-  --accent-glow: color-mix(in srgb, var(--accent) 35%, transparent);
+  --accent-soft: rgba(0, 229, 255, 0.12);
+  --accent-border: rgba(0, 229, 255, 0.38);
+  --accent-glow: rgba(0, 229, 255, 0.28);
+  --accent-soft: color-mix(in srgb, var(--accent) 12%, transparent);
+  --accent-border: color-mix(in srgb, var(--accent) 38%, transparent);
+  --accent-glow: color-mix(in srgb, var(--accent) 28%, transparent);
 
-  /* Contraste Tipográfico High-Tech (Acessibilidade WCAG AAA) */
-  --ink-light: #F4F7FF;        /* Títulos e textos principais em branco holográfico */
-  --ink-secondary: #C8D4F0;    /* Subtítulos e listas em azul-gelo nítido */
-  --ink-muted: #8E9EC4;        /* Textos técnicos de apoio */
-  --ink-dark: #050814;         /* Texto escuro de alto contraste sobre botões neon 10% */
+  /* Contraste Tipográfico Editorial (Acessibilidade WCAG AAA) */
+  --ink-light: #F8FAFC;        /* Títulos e textos principais em branco puro */
+  --ink-secondary: #CBD5E1;    /* Subtítulos e listas em prata-titânio nítido */
+  --ink-muted: #94A3B8;        /* Textos técnicos de apoio */
+  --ink-dark: #07090E;         /* Texto escuro de alto contraste sobre botões 10% */
 
-  /* Bordas HUD, Sombras & Espaçamentos Padronizados */
-  --border-subtle: rgba(99, 125, 215, 0.24);
-  --border-strong: rgba(56, 189, 248, 0.42);
+  /* Bordas Arquitetônicas, Sombras & Espaçamentos */
+  --border-subtle: rgba(255, 255, 255, 0.09);
+  --border-strong: rgba(255, 255, 255, 0.18);
   --radius-sm: 0.85rem;
   --radius-md: 1.25rem;
   --radius-lg: 1.65rem;
@@ -325,20 +324,19 @@ textarea:focus-visible {
   gap: 1rem;
   padding: 0.6rem 1.3rem;
   border-radius: 999px;
-  /* 30% Secundária: Painel HUD Cyber Indigo Translúcido */
+  /* 30% Secundária: Vidro Fumê Titanium Translúcido (Monolítico e Sofisticado) */
   background: linear-gradient(
     135deg,
-    rgba(10, 15, 34, 0.88) 0%,
-    rgba(17, 26, 58, 0.80) 50%,
-    rgba(10, 15, 34, 0.90) 100%
+    rgba(16, 19, 27, 0.82) 0%,
+    rgba(22, 27, 38, 0.72) 50%,
+    rgba(14, 17, 24, 0.86) 100%
   );
-  backdrop-filter: blur(32px) saturate(200%);
-  -webkit-backdrop-filter: blur(32px) saturate(200%);
-  border: 1px solid rgba(56, 189, 248, 0.38);
+  backdrop-filter: blur(28px) saturate(180%);
+  -webkit-backdrop-filter: blur(28px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, 0.14);
   box-shadow:
-    0 18px 44px rgba(2, 4, 14, 0.55),
-    0 0 24px rgba(56, 189, 248, 0.12),
-    inset 0 1px 1px rgba(148, 197, 255, 0.28);
+    0 18px 44px rgba(0, 0, 0, 0.5),
+    inset 0 1px 1px rgba(255, 255, 255, 0.16);
   will-change: transform, opacity;
   transition:
     transform 0.55s var(--ease-out-expo),
@@ -352,7 +350,6 @@ textarea:focus-visible {
   gap: 0.55rem;
   text-decoration: none;
   color: var(--ink-light);
-  text-shadow: 0 0 14px rgba(56, 189, 248, 0.32);
   transition: transform var(--transition-fast);
 }
 
@@ -365,7 +362,7 @@ textarea:focus-visible {
   height: 12px;
   border-radius: 50%;
   background: var(--accent);
-  border: 2px solid var(--frame-accent, var(--tech-secondary));
+  border: 2px solid rgba(255, 255, 255, 0.85);
   box-shadow: 0 0 12px var(--accent);
   transition: background-color 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
 }
@@ -415,10 +412,10 @@ textarea:focus-visible {
 
 .nav-link:hover,
 .nav-link.is-active {
-  background: rgba(21, 31, 66, 0.88);
+  background: rgba(255, 255, 255, 0.09);
   color: var(--ink-light);
-  border-color: var(--accent);
-  box-shadow: 0 0 16px var(--accent-soft), inset 0 1px 0 rgba(255, 255, 255, 0.22);
+  border-color: var(--accent-border);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.14);
   transform: translateY(-1px);
 }
 
@@ -437,7 +434,7 @@ textarea:focus-visible {
   padding: 0.5rem 1.2rem;
   border-radius: 999px;
   border: 1px solid var(--accent);
-  box-shadow: 0 0 22px var(--accent-glow);
+  box-shadow: 0 6px 20px var(--accent-glow);
   transition:
     transform var(--transition-fast),
     background-color var(--transition-fast),
@@ -450,7 +447,7 @@ textarea:focus-visible {
   background: #FFFFFF;
   color: var(--ink-dark);
   border-color: #FFFFFF;
-  box-shadow: 0 0 28px var(--accent);
+  box-shadow: 0 10px 26px var(--accent-glow);
 }
 
 /* =========================================================================
@@ -486,14 +483,14 @@ textarea:focus-visible {
   position: relative;
   width: 100%;
   height: 100%;
-  background: #060916;
+  background: #0A0C12;
   color: var(--ink-light);
   overflow: hidden;
   pointer-events: auto;
   transform-origin: center top;
   will-change: border-radius, border-width, box-shadow, transform, filter;
-  box-shadow: 0 30px 90px rgba(2, 4, 14, 0.85), 0 0 36px rgba(56, 189, 248, 0.18);
-  border: 0px solid var(--frame-accent, var(--tech-secondary));
+  box-shadow: 0 30px 90px rgba(0, 0, 0, 0.85);
+  border: 0px solid var(--frame-accent, var(--accent));
   transition:
     border-radius 0.8s cubic-bezier(0.16, 1, 0.3, 1),
     border-width 0.65s ease,
@@ -582,11 +579,11 @@ canvas.gl {
   gap: 0.5rem;
   padding: 0.42rem 0.95rem;
   border-radius: 999px;
-  background: rgba(10, 15, 34, 0.88);
+  background: rgba(16, 19, 27, 0.82);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
-  border: 1px solid rgba(56, 189, 248, 0.45);
-  box-shadow: 0 10px 28px rgba(2, 4, 14, 0.5), 0 0 16px rgba(56, 189, 248, 0.15);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.45);
   color: var(--ink-light);
   font-family: var(--font-display);
   font-size: 0.92rem;
@@ -622,7 +619,7 @@ canvas.gl {
   height: 0.92em;
   margin-left: 1px;
   vertical-align: -0.08em;
-  background: var(--ink-dark);
+  background: var(--accent);
   box-shadow: 0 0 6px var(--accent);
   animation: typeCaretBlink 0.55s steps(2, start) infinite;
 }
@@ -663,23 +660,22 @@ canvas.gl {
   pointer-events: none !important;
 }
 
-/* 30% Secundária: Painel HUD Gamificado Cyber Indigo + 10% Destaques Neon */
+/* 30% Secundária: Painel HUD Smoked Titanium + 10% Destaques Neon */
 .hero-intro-box {
   background: linear-gradient(
     145deg,
-    rgba(10, 15, 34, 0.88) 0%,
-    rgba(17, 26, 58, 0.78) 55%,
-    rgba(9, 14, 32, 0.92) 100%
+    rgba(16, 19, 27, 0.84) 0%,
+    rgba(22, 26, 37, 0.74) 55%,
+    rgba(14, 17, 24, 0.88) 100%
   );
-  backdrop-filter: blur(32px) saturate(200%);
-  -webkit-backdrop-filter: blur(32px) saturate(200%);
-  border: 1px solid rgba(56, 189, 248, 0.42);
+  backdrop-filter: blur(28px) saturate(180%);
+  -webkit-backdrop-filter: blur(28px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, 0.14);
   border-radius: 1.5rem;
   padding: 1.25rem 1.4rem;
   box-shadow:
-    0 24px 52px rgba(2, 4, 14, 0.55),
-    0 0 26px rgba(56, 189, 248, 0.12),
-    inset 0 1px 1px rgba(148, 197, 255, 0.28);
+    0 24px 52px rgba(0, 0, 0, 0.52),
+    inset 0 1px 1px rgba(255, 255, 255, 0.16);
 }
 
 .status-pill {
@@ -695,7 +691,6 @@ canvas.gl {
   font-weight: 800;
   letter-spacing: 0.11em;
   margin-bottom: 0.6rem;
-  box-shadow: 0 0 14px var(--accent-soft);
 }
 
 .status-pulse {
@@ -723,7 +718,6 @@ canvas.gl {
   padding: 0.04em 0.28em;
   border-radius: 0.28rem;
   display: inline-block;
-  box-shadow: 0 0 18px var(--accent-glow);
 }
 
 .hero-short-bio {
@@ -758,7 +752,7 @@ canvas.gl {
   justify-content: center;
   gap: 0.45rem;
   cursor: pointer;
-  box-shadow: 0 8px 24px var(--accent-glow);
+  box-shadow: 0 8px 22px var(--accent-glow);
   transition:
     transform var(--transition-fast),
     background-color var(--transition-fast),
@@ -772,7 +766,7 @@ canvas.gl {
   color: var(--ink-dark);
   border-color: #FFFFFF;
   transform: translateY(-2px);
-  box-shadow: 0 12px 30px var(--accent);
+  box-shadow: 0 12px 28px var(--accent-glow);
 }
 
 .btn-primary:active {
@@ -785,8 +779,8 @@ canvas.gl {
 
 .btn-outline {
   appearance: none;
-  border: 1px solid rgba(56, 189, 248, 0.42);
-  background: rgba(21, 31, 66, 0.68);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  background: rgba(255, 255, 255, 0.06);
   backdrop-filter: blur(12px);
   color: var(--ink-light);
   font-family: var(--font-display);
@@ -807,9 +801,8 @@ canvas.gl {
 .btn-outline:hover {
   background: var(--accent-soft);
   color: var(--accent);
-  border-color: var(--accent);
+  border-color: var(--accent-border);
   transform: translateY(-2px);
-  box-shadow: 0 0 20px var(--accent-soft);
 }
 
 .btn-outline:active {
@@ -819,11 +812,11 @@ canvas.gl {
 /* Center subtle Cyber HUD hint pill at the bottom of the character */
 .hero-center-hint {
   justify-self: center;
-  background: linear-gradient(135deg, rgba(10, 15, 34, 0.88), rgba(18, 27, 58, 0.78));
-  backdrop-filter: blur(24px) saturate(190%);
-  -webkit-backdrop-filter: blur(24px) saturate(190%);
-  border: 1px solid rgba(56, 189, 248, 0.42);
-  box-shadow: 0 10px 28px rgba(2, 4, 14, 0.45), inset 0 1px 1px rgba(148, 197, 255, 0.25);
+  background: linear-gradient(135deg, rgba(16, 19, 27, 0.84), rgba(22, 26, 37, 0.74));
+  backdrop-filter: blur(24px) saturate(180%);
+  -webkit-backdrop-filter: blur(24px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.45), inset 0 1px 1px rgba(255, 255, 255, 0.15);
   color: var(--ink-light);
   font-size: 0.68rem;
   font-weight: 800;
@@ -834,27 +827,26 @@ canvas.gl {
   margin-bottom: 0.35rem;
 }
 
-/* 30% Secundária: Painel HUD Gamificado ("Seletor de Bolas Morphin") */
+/* 30% Secundária: Painel HUD Smoked Titanium ("Seletor de Bolas Morphin") */
 .morphin-dock {
   background: linear-gradient(
     145deg,
-    rgba(10, 15, 34, 0.88) 0%,
-    rgba(17, 26, 58, 0.78) 55%,
-    rgba(9, 14, 32, 0.92) 100%
+    rgba(16, 19, 27, 0.84) 0%,
+    rgba(22, 26, 37, 0.74) 55%,
+    rgba(14, 17, 24, 0.88) 100%
   );
   color: var(--ink-light);
-  backdrop-filter: blur(32px) saturate(200%);
-  -webkit-backdrop-filter: blur(32px) saturate(200%);
-  border: 1px solid rgba(56, 189, 248, 0.42);
+  backdrop-filter: blur(28px) saturate(180%);
+  -webkit-backdrop-filter: blur(28px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, 0.14);
   border-radius: 1.65rem;
   padding: 1.25rem 1.35rem;
   display: flex;
   flex-direction: column;
   gap: 0.9rem;
   box-shadow:
-    0 24px 52px rgba(2, 4, 14, 0.55),
-    0 0 26px rgba(56, 189, 248, 0.12),
-    inset 0 1px 1px rgba(148, 197, 255, 0.28);
+    0 24px 52px rgba(0, 0, 0, 0.52),
+    inset 0 1px 1px rgba(255, 255, 255, 0.16);
   transition: border-color 0.3s ease;
 }
 
@@ -881,7 +873,6 @@ canvas.gl {
   background: var(--accent-soft);
   border: 1px solid var(--accent-border);
   color: var(--accent);
-  box-shadow: 0 0 14px var(--accent-soft);
   transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
 }
 
@@ -896,9 +887,9 @@ canvas.gl {
   width: 35px;
   height: 35px;
   border-radius: 50%;
-  border: 2px solid rgba(148, 197, 255, 0.35);
-  background: rgba(15, 22, 49, 0.75);
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.35), inset 0 1px 1px rgba(255, 255, 255, 0.25);
+  border: 2px solid rgba(255, 255, 255, 0.22);
+  background: rgba(255, 255, 255, 0.06);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.35), inset 0 1px 1px rgba(255, 255, 255, 0.2);
   padding: 3px;
   cursor: pointer;
   display: flex;
@@ -931,8 +922,8 @@ canvas.gl {
 .morphin-lock-btn {
   flex: 1 1 auto;
   appearance: none;
-  border: 1px solid rgba(56, 189, 248, 0.38);
-  background: rgba(21, 31, 66, 0.68);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  background: rgba(255, 255, 255, 0.06);
   color: var(--ink-light);
   font-family: var(--font-display);
   font-size: 0.95rem;
@@ -941,7 +932,7 @@ canvas.gl {
   padding: 0.48rem 0.9rem;
   border-radius: 999px;
   cursor: pointer;
-  box-shadow: inset 0 1px 0 rgba(148, 197, 255, 0.22);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.14);
   transition: all 0.2s ease;
   white-space: nowrap;
 }
@@ -957,8 +948,8 @@ canvas.gl {
 .morphin-ghost-btn {
   flex: 1 1 auto;
   appearance: none;
-  border: 1px solid rgba(56, 189, 248, 0.38);
-  background: rgba(21, 31, 66, 0.68);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  background: rgba(255, 255, 255, 0.06);
   color: var(--ink-light);
   font-family: var(--font-display);
   font-size: 0.95rem;
@@ -967,7 +958,7 @@ canvas.gl {
   padding: 0.48rem 0.9rem;
   border-radius: 999px;
   cursor: pointer;
-  box-shadow: inset 0 1px 0 rgba(148, 197, 255, 0.22);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.14);
   transition: all 0.2s ease;
   white-space: nowrap;
 }
@@ -1047,13 +1038,11 @@ canvas.gl {
   margin: 0 76px;
   border-radius: 26px;
   background: var(--bg-page);
-  /* 30% Moldura Estrutural High-Tech (--frame-accent), deixando os 10% (--accent) para quebrar o padrão nos elementos focais */
-  border: 2px solid var(--frame-accent, var(--tech-secondary));
+  border: 1.5px solid var(--accent-border);
   box-shadow:
-    0 -34px 95px rgba(2, 4, 14, 0.92),
-    0 24px 70px rgba(2, 4, 14, 0.82),
-    0 0 32px rgba(56, 189, 248, 0.12),
-    inset 0 1px 0 rgba(148, 197, 255, 0.18);
+    0 -34px 95px rgba(0, 0, 0, 0.92),
+    0 24px 70px rgba(0, 0, 0, 0.85),
+    inset 0 1px 0 rgba(255, 255, 255, 0.14);
   overflow: hidden;
   scroll-margin-top: 5.5rem;
   transform-origin: center top;
@@ -1081,14 +1070,12 @@ canvas.gl {
 .content-section {
   position: relative;
   padding: clamp(4.2rem, 6.5vw, 6.2rem) clamp(1.5rem, 3.2vw, 2.75rem) clamp(5.5rem, 8vw, 7.8rem);
-  /* 50-60% Base Dominante High-Tech com Grid Cyber Sutil */
   background-color: var(--bg-page);
   background-image:
-    radial-gradient(circle at 85% 12%, rgba(99, 102, 241, 0.10) 0%, transparent 45%),
-    radial-gradient(circle at 15% 88%, rgba(56, 189, 248, 0.08) 0%, transparent 45%),
-    linear-gradient(rgba(56, 189, 248, 0.028) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(56, 189, 248, 0.028) 1px, transparent 1px);
-  background-size: 100% 100%, 100% 100%, 38px 38px, 38px 38px;
+    radial-gradient(circle at 82% 8%, var(--accent-soft) 0%, transparent 42%),
+    linear-gradient(rgba(255, 255, 255, 0.018) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.018) 1px, transparent 1px);
+  background-size: 100% 100%, 44px 44px, 44px 44px;
 }
 
 .content-section--alt {

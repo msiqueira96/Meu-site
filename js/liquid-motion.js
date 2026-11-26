@@ -119,13 +119,13 @@
 
   const LIQUID_CONFIG = {
     headScene: {
-      COLOR_OUTLINE: "#2563EB",
-      COLOR_FOREGROUND: "#0E1738",
-      COLOR_BACKGROUND: "#060916",
-      COLOR_CURSOR_FOREGROUND: "#1E3A7A",
-      COLOR_CURSOR_BACKGROUND: "#111D42",
-      COLOR_CURSOR_OUTLINE: "#00FFA3",
-      COLOR_FILTER: "#1E3A8A",
+      COLOR_OUTLINE: "#263042",
+      COLOR_FOREGROUND: "#141923",
+      COLOR_BACKGROUND: "#0A0C12",
+      COLOR_CURSOR_FOREGROUND: "#1C2436",
+      COLOR_CURSOR_BACKGROUND: "#121722",
+      COLOR_CURSOR_OUTLINE: "#00E5FF",
+      COLOR_FILTER: "#1E293B",
       SCALE: 1,
       SPEED: 0.1,
       THICKNESS: 0.000005,
@@ -592,8 +592,15 @@
       float cursorEffect = step(0.1, textureCursorEffect.r);
 
       float noiseBase = textureBackgroundNoise.r;
-      vec3 background = mix(COLOR_BACKGROUND, mix(COLOR_BACKGROUND, COLOR_FOREGROUND, uReveal), noiseBase);
-      vec3 cursorBackground = mix(COLOR_CURSOR_BACKGROUND, COLOR_CURSOR_FOREGROUND, noiseBase);
+      // Studio Radial Backlight (AAA Character Stage):
+      // Deep carbon-obsidian outer vignette with a soft volumetric studio spotlight behind the portrait & 3D sign
+      vec2 stageDelta = (vUv - vec2(0.5, 0.48)) * vec2(max(uAspect, 0.65), 1.0);
+      float studioSpot = smoothstep(0.92, 0.0, length(stageDelta));
+      vec3 studioCenterColor = mix(vec3(0.16, 0.19, 0.25), uRangerColor, 0.16);
+      vec3 studioBaseBg = mix(COLOR_BACKGROUND, studioCenterColor, studioSpot * 0.85);
+
+      vec3 background = studioBaseBg;
+      vec3 cursorBackground = mix(COLOR_CURSOR_BACKGROUND, mix(COLOR_CURSOR_FOREGROUND, uRangerColor, 0.22), noiseBase * 0.35 + 0.35);
 
       if (OUTLINE) {
         float edge = 0.0;
@@ -609,8 +616,10 @@
           edge = 1.0;
         }
 
-        background = mix(background, mix(COLOR_BACKGROUND, COLOR_OUTLINE, uReveal), edge * 0.72);
-        cursorBackground = mix(cursorBackground, COLOR_CURSOR_OUTLINE, edge * 0.85);
+        // Ultra-clean 1px topographic tech contour lines over the smooth studio spotlight (no binary blobs!)
+        vec3 contourTint = mix(COLOR_OUTLINE, uRangerColor, 0.28);
+        background = mix(studioBaseBg, contourTint, edge * 0.28 * uReveal);
+        cursorBackground = mix(cursorBackground, COLOR_CURSOR_OUTLINE, edge * 0.55);
       }
 
       background = mix(background, uColorHover, step(textureBackgroundNoise.g, -0.1 + uHover * 1.1));
@@ -626,9 +635,6 @@
 
       background = mix(background, cursorBackground, step(1.0 - hoverTransition, uHelmetHover));
 
-      // Background remains pure reactive white base; 3D letters render in defaultScene
-      vec3 base = mix(background, textureDefaultDiffuse.rgb, textureDefaultDiffuse.a);
-
       // Inside the liquid hover / Ranger reveal (rangerLayer), keep the 3D letters visible
       // behind the Ranger and supercharge them with flashy Morphin Grid energy & glowing rim effects!
       vec2 glowStep = vec2(0.0022, 0.0022 * uAspect);
@@ -639,6 +645,11 @@
       float letterNeighborMax = max(max(aR, aL), max(aU, aD));
       float letterEdge = clamp(abs(aR - aL) + abs(aU - aD), 0.0, 1.0);
       float letterOuterHalo = clamp((letterNeighborMax - textureDefaultDiffuse.a) * 1.6, 0.0, 1.0);
+
+      // Subtle studio rim-backlight around the character & 3D letters so dark hair/blazer separate cleanly from the dark stage
+      vec3 studioBackRim = mix(vec3(0.45, 0.52, 0.65), uRangerColor, 0.35);
+      vec3 litStageBg = mix(background, studioBackRim, letterOuterHalo * 0.26);
+      vec3 base = mix(litStageBg, textureDefaultDiffuse.rgb, textureDefaultDiffuse.a);
 
       float energySweep = 0.5 + 0.5 * sin(vUv.x * 26.0 - vUv.y * 16.0 - uTime * 7.2);
       float shimmerBand = pow(0.5 + 0.5 * sin(vUv.x * 42.0 + vUv.y * 24.0 - uTime * 9.5), 4.0);
@@ -1576,86 +1587,86 @@
   const RANGER_PROFILES = {
     black: {
       name: "RANGER PRETO",
-      accentHex: "#00FFA3",
-      frameHex: "#11130E",
-      pillFg: "#00FFA3",
+      accentHex: "#FFFFFF",
+      frameHex: "#272B36",
+      pillFg: "#FFFFFF",
       letterFill: "#FFFFFF",
       letterStroke: "#11130E",
-      waveHex: "#141E3C",
-      outlineHex: "#38BDF8",
-      suitHex: "#161F33",
+      waveHex: "#161922",
+      outlineHex: "#475569",
+      suitHex: "#1E2430",
       tintMix: 0.0,
     },
     red: {
       name: "RANGER VERMELHO",
-      accentHex: "#FF2A54",
-      frameHex: "#FF2A54",
-      pillFg: "#FF2A54",
-      letterFill: "#F4F7FF",
-      letterStroke: "#FF2A54",
-      waveHex: "#241028",
-      outlineHex: "#FF2A54",
+      accentHex: "#FF2A4B",
+      frameHex: "#FF2A4B",
+      pillFg: "#FF2A4B",
+      letterFill: "#F8FAFC",
+      letterStroke: "#FF2A4B",
+      waveHex: "#1C141B",
+      outlineHex: "#FF2A4B",
       suitHex: "#FF1E38",
       tintMix: 0.94,
     },
     blue: {
       name: "RANGER AZUL",
-      accentHex: "#00F5D4",
-      frameHex: "#0088FF",
-      pillFg: "#00F5D4",
-      letterFill: "#F4F7FF",
-      letterStroke: "#00A8FF",
-      waveHex: "#0E2048",
-      outlineHex: "#00F5D4",
-      suitHex: "#0077FF",
+      accentHex: "#00B4FF",
+      frameHex: "#00B4FF",
+      pillFg: "#00B4FF",
+      letterFill: "#F8FAFC",
+      letterStroke: "#00B4FF",
+      waveHex: "#121B2A",
+      outlineHex: "#00B4FF",
+      suitHex: "#0088FF",
       tintMix: 0.94,
     },
     green: {
       name: "RANGER VERDE",
-      accentHex: "#00FF88",
-      frameHex: "#10B981",
-      pillFg: "#00FF88",
-      letterFill: "#F4F7FF",
-      letterStroke: "#00FF88",
-      waveHex: "#0C262C",
-      outlineHex: "#00FF88",
-      suitHex: "#00D66C",
+      accentHex: "#00F59B",
+      frameHex: "#00F59B",
+      pillFg: "#00F59B",
+      letterFill: "#F8FAFC",
+      letterStroke: "#00F59B",
+      waveHex: "#111F1D",
+      outlineHex: "#00F59B",
+      suitHex: "#00E676",
       tintMix: 0.94,
     },
     yellow: {
       name: "RANGER AMARELO",
-      accentHex: "#FFD000",
-      frameHex: "#F59E0B",
-      pillFg: "#FFD000",
-      letterFill: "#F4F7FF",
-      letterStroke: "#FFD000",
-      waveHex: "#262012",
-      outlineHex: "#FFD000",
+      accentHex: "#FFC800",
+      frameHex: "#FFC800",
+      pillFg: "#FFC800",
+      letterFill: "#F8FAFC",
+      letterStroke: "#FFC800",
+      waveHex: "#201D14",
+      outlineHex: "#FFC800",
       suitHex: "#FFC400",
       tintMix: 0.94,
     },
     pink: {
       name: "RANGER ROSA",
-      accentHex: "#FF2A9D",
-      frameHex: "#EC4899",
-      pillFg: "#FF2A9D",
-      letterFill: "#F4F7FF",
-      letterStroke: "#FF2A9D",
-      waveHex: "#261030",
-      outlineHex: "#FF2A9D",
+      accentHex: "#FF2E93",
+      frameHex: "#FF2E93",
+      pillFg: "#FF2E93",
+      letterFill: "#F8FAFC",
+      letterStroke: "#FF2E93",
+      waveHex: "#201320",
+      outlineHex: "#FF2E93",
       suitHex: "#FF207E",
       tintMix: 0.94,
     },
     silver: {
       name: "RANGER PRATA",
-      accentHex: "#00FFA3",
-      frameHex: "#38BDF8",
-      pillFg: "#00FFA3",
-      letterFill: "#F4F7FF",
+      accentHex: "#00E5FF",
+      frameHex: "#00E5FF",
+      pillFg: "#00E5FF",
+      letterFill: "#F8FAFC",
       letterStroke: "#38BDF8",
-      waveHex: "#101B3E",
-      outlineHex: "#38BDF8",
-      suitHex: "#C8D6E5",
+      waveHex: "#141A26",
+      outlineHex: "#00E5FF",
+      suitHex: "#D0DCE8",
       tintMix: 0.0,
     },
   };
