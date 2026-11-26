@@ -637,8 +637,9 @@
 
       vec3 base = mix(background, portraitRgb, textureDefaultDiffuse.a);
 
-      // Inside the liquid cursor / Ranger reveal, keep the 3D letters sleek and metallic
-      vec3 hoverLetterRgb = mix(portraitRgb, mix(uRangerColor, dualAccent, 0.4), 0.28);
+      // Inside the liquid cursor / Ranger reveal, deepen letter saturation naturally (multiplicative tint, zero whitening!)
+      vec3 saturatedTint = mix(uRangerColor, dualAccent, 0.4);
+      vec3 hoverLetterRgb = mix(portraitRgb, portraitRgb * (0.65 + saturatedTint * 0.85), 0.45);
       vec3 rangerBgWithLetters = mix(background, hoverLetterRgb, textureDefaultDiffuse.a);
 
       vec3 rangerLayer = mix(rangerBgWithLetters, helmetRgb, textureHelmet.a);
@@ -1612,8 +1613,10 @@
       secondaryHex: "#FF2E93",
       frameHex: "#272E3F",
       pillFg: "#00E5FF",
-      letterFill: "#1A202C",
-      letterStroke: "#00E5FF",
+      faceTop: "#1F364D",
+      faceMid: "#132232",
+      faceBot: "#09111A",
+      letterStroke: "#0E7490",
       waveHex: "#161A24",
       outlineHex: "#00E5FF",
       suitHex: "#1E2430",
@@ -1625,8 +1628,10 @@
       secondaryHex: "#00E5FF",
       frameHex: "#FF2A54",
       pillFg: "#FF2A54",
-      letterFill: "#1C212E",
-      letterStroke: "#FF2A54",
+      faceTop: "#B81435",
+      faceMid: "#7A0C22",
+      faceBot: "#380510",
+      letterStroke: "#D91C42",
       waveHex: "#1C141B",
       outlineHex: "#FF2A54",
       suitHex: "#FF1E38",
@@ -1638,8 +1643,10 @@
       secondaryHex: "#FF2E93",
       frameHex: "#00B4FF",
       pillFg: "#00E5FF",
-      letterFill: "#192130",
-      letterStroke: "#00E5FF",
+      faceTop: "#0B5ED7",
+      faceMid: "#073B8A",
+      faceBot: "#041C44",
+      letterStroke: "#0D74F2",
       waveHex: "#121B2A",
       outlineHex: "#00E5FF",
       suitHex: "#0088FF",
@@ -1651,8 +1658,10 @@
       secondaryHex: "#00E5FF",
       frameHex: "#00F59B",
       pillFg: "#00F59B",
-      letterFill: "#18222B",
-      letterStroke: "#00F59B",
+      faceTop: "#098754",
+      faceMid: "#065937",
+      faceBot: "#032B1A",
+      letterStroke: "#0CA668",
       waveHex: "#111F1D",
       outlineHex: "#00F59B",
       suitHex: "#00E676",
@@ -1664,8 +1673,10 @@
       secondaryHex: "#FF2E93",
       frameHex: "#FFC800",
       pillFg: "#FFC800",
-      letterFill: "#212028",
-      letterStroke: "#FFC800",
+      faceTop: "#B8860B",
+      faceMid: "#7A5806",
+      faceBot: "#3B2A03",
+      letterStroke: "#D49B0E",
       waveHex: "#201D14",
       outlineHex: "#FFC800",
       suitHex: "#FFC400",
@@ -1677,8 +1688,10 @@
       secondaryHex: "#00E5FF",
       frameHex: "#FF2E93",
       pillFg: "#FF2E93",
-      letterFill: "#201A2B",
-      letterStroke: "#FF2E93",
+      faceTop: "#AD1463",
+      faceMid: "#700C40",
+      faceBot: "#36051E",
+      letterStroke: "#C91A74",
       waveHex: "#201320",
       outlineHex: "#FF2E93",
       suitHex: "#FF207E",
@@ -1690,8 +1703,10 @@
       secondaryHex: "#FF2E93",
       frameHex: "#00E5FF",
       pillFg: "#00E5FF",
-      letterFill: "#1E2433",
-      letterStroke: "#00E5FF",
+      faceTop: "#0E6B8A",
+      faceMid: "#11425C",
+      faceBot: "#0A2032",
+      letterStroke: "#0099B8",
       waveHex: "#161C28",
       outlineHex: "#00E5FF",
       suitHex: "#D0DCE8",
@@ -1950,11 +1965,14 @@
 
     updateLetterTextures(rangerKey = this.activeRangerKey) {
       const profile = RANGER_PROFILES[rangerKey] || RANGER_PROFILES.silver;
-      const primaryNeon = profile.letterStroke || profile.accentHex || "#00E5FF";
-      const secondaryNeon = profile.secondaryHex || "#FF2E93";
+      const faceTop = profile.faceTop || "#0E6B8A";
+      const faceMid = profile.faceMid || "#11425C";
+      const faceBot = profile.faceBot || "#0A2032";
+      const rimTone = profile.letterStroke || "#0099B8";
+      const secondaryTone = profile.secondaryHex || "#FF2E93";
 
       this.letterItems.forEach((item) => {
-        // 1. Clean Architectural Metallic Face (Lando Norris / Awwwards editorial style: brushed titanium grey, subtle 1.5px rim, zero cartoon border, zero white!)
+        // 1. Deeply Saturated, Naturally Shaded Matte-Anodized 3D Letter Face (Zero excess brightness!)
         const ctx = item.ctx;
         ctx.clearRect(0, 0, 256, 256);
         ctx.save();
@@ -1965,27 +1983,27 @@
         ctx.miterLimit = 2;
         ctx.font = '700 206px "Bebas Neue", "Mona Sans Variable", sans-serif';
 
-        // Brushed Titanium Slate Face Gradient (No white, no garish stripes)
+        // Rich, saturated vertical studio shading (deep top-to-bottom pigment without pale grey or white)
         const faceGrad = ctx.createLinearGradient(0, -92, 0, 92);
-        faceGrad.addColorStop(0, "#76859B");
-        faceGrad.addColorStop(0.45, "#4E5B6E");
-        faceGrad.addColorStop(1, "#2A3240");
+        faceGrad.addColorStop(0, faceTop);
+        faceGrad.addColorStop(0.5, faceMid);
+        faceGrad.addColorStop(1, faceBot);
         ctx.fillStyle = faceGrad;
         ctx.fillText(item.char, 0, 0);
 
-        // Ultra-subtle 1.5px precision metallic edge catching Cyan (top-left) and Magenta (bottom-right)
+        // Subtle natural bevel edge (1.5px, low brightness, high saturation)
         const rimGrad = ctx.createLinearGradient(-70, -88, 70, 88);
-        rimGrad.addColorStop(0, primaryNeon);
-        rimGrad.addColorStop(0.5, "rgba(148, 163, 184, 0.35)");
-        rimGrad.addColorStop(1, secondaryNeon);
-        ctx.lineWidth = 2.0;
+        rimGrad.addColorStop(0, rimTone);
+        rimGrad.addColorStop(0.55, faceMid);
+        rimGrad.addColorStop(1, secondaryTone);
+        ctx.lineWidth = 1.6;
         ctx.strokeStyle = rimGrad;
         ctx.strokeText(item.char, 0, 0);
 
         ctx.restore();
         item.tex.needsUpdate = true;
 
-        // 2. Sleek Dark Anodized 3D Extruded Side Wall Volume
+        // 2. Natural Deep Shadowed 3D Extruded Side Wall Volume
         if (item.sideCtx && item.sideTex) {
           const sCtx = item.sideCtx;
           sCtx.clearRect(0, 0, 256, 256);
@@ -1998,11 +2016,11 @@
           sCtx.font = '700 206px "Bebas Neue", "Mona Sans Variable", sans-serif';
 
           const sideGrad = sCtx.createLinearGradient(-70, -90, 70, 90);
-          sideGrad.addColorStop(0, "#1E2634");
-          sideGrad.addColorStop(1, "#0E121A");
+          sideGrad.addColorStop(0, faceMid);
+          sideGrad.addColorStop(1, "#070B12");
 
-          sCtx.lineWidth = 3.5;
-          sCtx.strokeStyle = "#18202C";
+          sCtx.lineWidth = 3.0;
+          sCtx.strokeStyle = faceBot;
           sCtx.strokeText(item.char, 0, 0);
           sCtx.fillStyle = sideGrad;
           sCtx.fillText(item.char, 0, 0);
@@ -2483,11 +2501,12 @@
             const nz = Math.cos(item.rotX) * Math.cos(item.rotY);
 
             const ndotl = Math.max(0, (nx * lx + ny * ly + nz * lz) / lLen);
-            const spec = Math.pow(ndotl, 8) * 0.16 + item.hoverGlow * 0.22;
-            const faceLight = Math.min(1.18, 0.86 + ndotl * 0.16 + spec);
-            const sideLight = Math.min(1.16, 0.68 + (1 - Math.abs(nz)) * 0.34 + ndotl * 0.16 + item.hoverGlow * 0.25);
+            // Grounded, natural studio shading (no over-exposed >1.0 multiplier, preserves deep pigment saturation)
+            const spec = Math.pow(ndotl, 10) * 0.08 + item.hoverGlow * 0.09;
+            const faceLight = Math.min(0.82, 0.54 + ndotl * 0.18 + spec);
+            const sideLight = Math.min(0.64, 0.32 + (1 - Math.abs(nz)) * 0.18 + ndotl * 0.10 + item.hoverGlow * 0.08);
 
-            item.faceMat.color.setRGB(faceLight, faceLight, faceLight * 0.99);
+            item.faceMat.color.setRGB(faceLight, faceLight, faceLight);
             item.sideMat.color.setRGB(sideLight, sideLight, sideLight);
           }
         });
