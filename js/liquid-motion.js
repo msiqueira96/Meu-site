@@ -2067,18 +2067,18 @@
       this.lettersGroup.position.set(0, 0, -0.18);
       this.defaultScene.add(this.lettersGroup);
 
-      // Clean Architectural 3D Display Typography ("Bebas Neue" / "Mona Sans Variable")
-      // Lightweight 8-slice metallic relief, zero cartoon outlines, zero white fill
+      // GTA VI "grand theft auto" (Pricedown) Custom 3D Block Lockup
+      // Tight, touching heavy-outline letter spacing matching the official GTA logo
       const rows = [
-        { text: "MARCOS", y: 0.23, spacing: 0.125 },
-        { text: "SIQUEIRA", y: 0.04, spacing: 0.114 },
+        { text: "MARCOS", y: 0.22, spacing: 0.108 },
+        { text: "SIQUEIRA", y: 0.04, spacing: 0.098 },
       ];
 
       const getGlyphAdvanceFactor = (ch) => {
-        if (ch === "I") return 0.52;
-        if (ch === "M") return 1.06;
-        if (ch === "Q" || ch === "U" || ch === "R" || ch === "A" || ch === "O") return 0.92;
-        return 0.86;
+        if (ch === "I") return 0.56;
+        if (ch === "M") return 1.24;
+        if (ch === "R") return 0.90;
+        return 0.96;
       };
 
       const planeGeo = new THREE.PlaneGeometry(0.19, 0.23);
@@ -2197,146 +2197,315 @@
       this.bindLetterInteraction();
     }
 
+    drawGtaPricedownGlyph(ctx, rawChar) {
+      const ch = String(rawChar || "").toUpperCase();
+
+      // Helper: adds a rounded rectangle sub-path (clockwise or counter-clockwise for evenodd cutouts)
+      const addRoundRect = (x, y, w, h, radii, ccw = false) => {
+        const [rTL, rTR, rBR, rBL] = Array.isArray(radii)
+          ? radii
+          : [radii, radii, radii, radii];
+        if (!ccw) {
+          ctx.moveTo(x + rTL, y);
+          ctx.lineTo(x + w - rTR, y);
+          ctx.quadraticCurveTo(x + w, y, x + w, y + rTR);
+          ctx.lineTo(x + w, y + h - rBR);
+          ctx.quadraticCurveTo(x + w, y + h, x + w - rBR, y + h);
+          ctx.lineTo(x + rBL, y + h);
+          ctx.quadraticCurveTo(x, y + h, x, y + h - rBL);
+          ctx.lineTo(x, y + rTL);
+          ctx.quadraticCurveTo(x, y, x + rTL, y);
+        } else {
+          ctx.moveTo(x + rTL, y);
+          ctx.quadraticCurveTo(x, y, x, y + rTL);
+          ctx.lineTo(x, y + h - rBL);
+          ctx.quadraticCurveTo(x, y + h, x + rBL, y + h);
+          ctx.lineTo(x + w - rBR, y + h);
+          ctx.quadraticCurveTo(x + w, y + h, x + w, y + h - rBR);
+          ctx.lineTo(x + w, y + rTR);
+          ctx.quadraticCurveTo(x + w, y, x + w - rTR, y);
+          ctx.lineTo(x + rTL, y);
+        }
+        ctx.closePath();
+      };
+
+      ctx.beginPath();
+
+      if (ch === "O") {
+        // GTA "o" in "auto": chunky rounded block with narrow vertical capsule slit
+        addRoundRect(-56, -68, 112, 142, 34, false);
+        addRoundRect(-8, -32, 16, 70, 7, true);
+      } else if (ch === "I") {
+        // GTA "i": thick vertical stem + chunky rounded top dot
+        addRoundRect(-27, -44, 54, 118, 13, false);
+        addRoundRect(-27, -90, 54, 36, 13, false);
+      } else if (ch === "U") {
+        // GTA "u" in "auto": chunky rounded base with narrow vertical top-entry slot
+        ctx.moveTo(-44, -68);
+        ctx.lineTo(-18, -68);
+        ctx.quadraticCurveTo(-8, -68, -8, -58);
+        ctx.lineTo(-8, 30);
+        ctx.quadraticCurveTo(-8, 38, 0, 38);
+        ctx.quadraticCurveTo(8, 38, 8, 30);
+        ctx.lineTo(8, -58);
+        ctx.quadraticCurveTo(8, -68, 18, -68);
+        ctx.lineTo(44, -68);
+        ctx.quadraticCurveTo(56, -68, 56, -56);
+        ctx.lineTo(56, 42);
+        ctx.quadraticCurveTo(56, 74, 24, 74);
+        ctx.lineTo(-24, 74);
+        ctx.quadraticCurveTo(-56, 74, -56, 42);
+        ctx.lineTo(-56, -56);
+        ctx.quadraticCurveTo(-56, -68, -44, -68);
+        ctx.closePath();
+      } else if (ch === "M") {
+        // GTA "m" (based on "n" in "grand"): 3 thick pillars with rounded top shoulders & 2 narrow vertical bottom slots
+        ctx.moveTo(-64, -68);
+        ctx.lineTo(46, -68);
+        ctx.quadraticCurveTo(78, -68, 78, -36);
+        ctx.lineTo(78, 62);
+        ctx.quadraticCurveTo(78, 74, 66, 74);
+        ctx.lineTo(42, 74);
+        ctx.quadraticCurveTo(32, 74, 32, 64);
+        ctx.lineTo(32, -22);
+        ctx.quadraticCurveTo(32, -30, 25, -30);
+        ctx.quadraticCurveTo(18, -30, 18, -22);
+        ctx.lineTo(18, 64);
+        ctx.quadraticCurveTo(18, 74, 8, 74);
+        ctx.lineTo(-8, 74);
+        ctx.quadraticCurveTo(-18, 74, -18, 64);
+        ctx.lineTo(-18, -22);
+        ctx.quadraticCurveTo(-18, -30, -25, -30);
+        ctx.quadraticCurveTo(-32, -30, -32, -22);
+        ctx.lineTo(-32, 64);
+        ctx.quadraticCurveTo(-32, 74, -42, 74);
+        ctx.lineTo(-66, 74);
+        ctx.quadraticCurveTo(-78, 74, -78, 62);
+        ctx.lineTo(-78, -54);
+        ctx.quadraticCurveTo(-78, -68, -64, -68);
+        ctx.closePath();
+      } else if (ch === "R") {
+        // GTA "r" in "grand": thick left pillar + rounded top-right overhang cap
+        ctx.moveTo(-38, -68);
+        ctx.lineTo(22, -68);
+        ctx.quadraticCurveTo(54, -68, 54, -36);
+        ctx.lineTo(54, -18);
+        ctx.quadraticCurveTo(54, -6, 42, -6);
+        ctx.lineTo(16, -6);
+        ctx.quadraticCurveTo(6, -6, 6, 4);
+        ctx.lineTo(6, 62);
+        ctx.quadraticCurveTo(6, 74, -6, 74);
+        ctx.lineTo(-40, 74);
+        ctx.quadraticCurveTo(-52, 74, -52, 62);
+        ctx.lineTo(-52, -54);
+        ctx.quadraticCurveTo(-52, -68, -38, -68);
+        ctx.closePath();
+      } else if (ch === "C") {
+        // GTA "c": chunky rounded block with narrow vertical center slot opening to the right
+        ctx.moveTo(-22, -68);
+        ctx.lineTo(24, -68);
+        ctx.quadraticCurveTo(56, -68, 56, -36);
+        ctx.lineTo(56, -16);
+        ctx.quadraticCurveTo(56, -6, 46, -6);
+        ctx.lineTo(16, -6);
+        ctx.quadraticCurveTo(8, -6, 8, -14);
+        ctx.lineTo(8, -26);
+        ctx.quadraticCurveTo(8, -34, 0, -34);
+        ctx.quadraticCurveTo(-8, -34, -8, -26);
+        ctx.lineTo(-8, 30);
+        ctx.quadraticCurveTo(-8, 38, 0, 38);
+        ctx.quadraticCurveTo(8, 38, 8, 30);
+        ctx.lineTo(8, 16);
+        ctx.quadraticCurveTo(8, 8, 16, 8);
+        ctx.lineTo(46, 8);
+        ctx.quadraticCurveTo(56, 8, 56, 18);
+        ctx.lineTo(56, 42);
+        ctx.quadraticCurveTo(56, 74, 24, 74);
+        ctx.lineTo(-22, 74);
+        ctx.quadraticCurveTo(-56, 74, -56, 40);
+        ctx.lineTo(-56, -34);
+        ctx.quadraticCurveTo(-56, -68, -22, -68);
+        ctx.closePath();
+      } else if (ch === "A") {
+        // GTA "a" in "grand" / "auto": top overhang arch + lower-left belly loop + inner vertical slit
+        ctx.moveTo(-24, -68);
+        ctx.lineTo(24, -68);
+        ctx.quadraticCurveTo(56, -68, 56, -36);
+        ctx.lineTo(56, 62);
+        ctx.quadraticCurveTo(56, 74, 44, 74);
+        ctx.lineTo(-24, 74);
+        ctx.quadraticCurveTo(-56, 74, -56, 42);
+        ctx.lineTo(-56, 14);
+        ctx.quadraticCurveTo(-56, -12, -30, -12);
+        ctx.lineTo(-2, -12);
+        ctx.quadraticCurveTo(6, -12, 6, -20);
+        ctx.lineTo(6, -28);
+        ctx.quadraticCurveTo(6, -35, -1, -35);
+        ctx.quadraticCurveTo(-8, -35, -8, -28);
+        ctx.lineTo(-8, -26);
+        ctx.quadraticCurveTo(-8, -18, -18, -18);
+        ctx.lineTo(-44, -18);
+        ctx.quadraticCurveTo(-54, -18, -54, -28);
+        ctx.lineTo(-54, -38);
+        ctx.quadraticCurveTo(-54, -68, -24, -68);
+        ctx.closePath();
+        // Inner vertical slit inside the bottom belly of "a"
+        addRoundRect(-10, 18, 16, 26, 5, true);
+      } else if (ch === "E") {
+        // GTA "e" in "theft": chunky rounded block with upper enclosed slit + lower-right horizontal slot opening
+        ctx.moveTo(-24, -68);
+        ctx.lineTo(24, -68);
+        ctx.quadraticCurveTo(56, -68, 56, -36);
+        ctx.lineTo(56, 4);
+        ctx.quadraticCurveTo(56, 14, 46, 14);
+        ctx.lineTo(-2, 14);
+        ctx.quadraticCurveTo(-8, 14, -8, 20);
+        ctx.lineTo(-8, 32);
+        ctx.quadraticCurveTo(-8, 39, 0, 39);
+        ctx.quadraticCurveTo(8, 39, 8, 32);
+        ctx.lineTo(8, 28);
+        ctx.quadraticCurveTo(8, 22, 16, 22);
+        ctx.lineTo(46, 22);
+        ctx.quadraticCurveTo(56, 22, 56, 32);
+        ctx.lineTo(56, 44);
+        ctx.quadraticCurveTo(56, 74, 24, 74);
+        ctx.lineTo(-24, 74);
+        ctx.quadraticCurveTo(-56, 74, -56, 42);
+        ctx.lineTo(-56, -36);
+        ctx.quadraticCurveTo(-56, -68, -24, -68);
+        ctx.closePath();
+        // Upper enclosed slit counter inside "e"
+        addRoundRect(-8, -36, 16, 26, 5, true);
+      } else if (ch === "S") {
+        // GTA "s": heavy rounded S-block with narrow upper-right and lower-left horizontal slot cutouts
+        ctx.moveTo(-24, -68);
+        ctx.lineTo(24, -68);
+        ctx.quadraticCurveTo(56, -68, 56, -36);
+        ctx.lineTo(56, -24);
+        ctx.quadraticCurveTo(56, -16, 46, -16);
+        ctx.lineTo(-4, -16);
+        ctx.quadraticCurveTo(-10, -16, -10, -23);
+        ctx.quadraticCurveTo(-10, -30, -4, -30);
+        ctx.lineTo(46, -30);
+        // Actually build S as one continuous closed contour with upper-right & lower-left slots:
+        ctx.beginPath();
+        ctx.moveTo(-24, -68);
+        ctx.lineTo(26, -68);
+        ctx.quadraticCurveTo(56, -68, 56, -38);
+        ctx.lineTo(56, -32);
+        ctx.quadraticCurveTo(56, -24, 46, -24);
+        ctx.lineTo(-2, -24);
+        ctx.quadraticCurveTo(-9, -24, -9, -17);
+        ctx.quadraticCurveTo(-9, -10, -2, -10);
+        ctx.lineTo(26, -10);
+        ctx.quadraticCurveTo(56, -10, 56, 20);
+        ctx.lineTo(56, 44);
+        ctx.quadraticCurveTo(56, 74, 26, 74);
+        ctx.lineTo(-26, 74);
+        ctx.quadraticCurveTo(-56, 74, -56, 44);
+        ctx.lineTo(-56, 36);
+        ctx.quadraticCurveTo(-56, 28, -46, 28);
+        ctx.lineTo(2, 28);
+        ctx.quadraticCurveTo(9, 28, 9, 21);
+        ctx.quadraticCurveTo(9, 14, 2, 14);
+        ctx.lineTo(-26, 14);
+        ctx.quadraticCurveTo(-56, 14, -56, -16);
+        ctx.lineTo(-56, -38);
+        ctx.quadraticCurveTo(-56, -68, -24, -68);
+        ctx.closePath();
+      } else if (ch === "Q") {
+        // GTA "q" (paired with "g" in "grand"): chunky rounded loop with inner vertical slit + lower-right descender stem
+        ctx.moveTo(-24, -68);
+        ctx.lineTo(24, -68);
+        ctx.quadraticCurveTo(56, -68, 56, -36);
+        ctx.lineTo(56, 82);
+        ctx.quadraticCurveTo(56, 94, 44, 94);
+        ctx.lineTo(18, 94);
+        ctx.quadraticCurveTo(6, 94, 6, 82);
+        ctx.lineTo(6, 66);
+        ctx.lineTo(-24, 66);
+        ctx.quadraticCurveTo(-56, 66, -56, 34);
+        ctx.lineTo(-56, -36);
+        ctx.quadraticCurveTo(-56, -68, -24, -68);
+        ctx.closePath();
+        // Inner vertical slit counter inside "q"
+        addRoundRect(-8, -34, 16, 64, 6, true);
+      }
+    }
+
     updateLetterTextures(rangerKey = this.activeRangerKey) {
       const profile = RANGER_PROFILES[rangerKey] || RANGER_PROFILES.silver;
       const stops = profile.gtaStops || ["#3B1066", "#9E1982", "#FF247F", "#FF662A", "#FFB800"];
-      const bevelTop = profile.bevelTop || "#00F0FF";
-      const bevelBot = profile.bevelBot || "#FF2E93";
-      const sideTint = profile.sideTint || "#280D42";
+      const bevelTop = profile.bevelTop || "#FFB800";
+      const bevelBot = profile.bevelBot || "#FF1E88";
 
-      this.letterItems.forEach((item, idx) => {
-        // 1. GTA VI ("VI") Inspired Realistic 3D Emblem Face:
-        //    - Chiseled 3D metallic outer rim (Cyan -> Chrome Slate -> Magenta)
-        //    - Dark recessed 3D inner groove (#0B0414) for physical badge realism
-        //    - Ultra-saturated Vice City Sunset Gradient Face with palm/horizon silhouette & glossy acrylic reflection
+      this.letterItems.forEach((item) => {
+        // Authentic GTA VI "grand theft auto" (Pricedown) 3D Sticker/Block Lettering:
+        // - Clean Satin Off-White / Silver-Ice face (#F6F7FB -> #DFE3EC)
+        // - Thick Rounded Jet-Black GTA Outline (#07030E) filling the narrow inner counters
+        // - Thin Outer GTA VI Sunset Neon Rim (Gold #FFB800 -> Hot Pink #FF1E88 -> Violet #7B1FA2)
         const ctx = item.ctx;
         ctx.clearRect(0, 0, 256, 256);
         ctx.save();
-        ctx.translate(128, 130);
-        ctx.textAlign = "center";
-        ctx.textBaseline = "middle";
-        ctx.lineJoin = "miter";
-        ctx.miterLimit = 2.5;
-        ctx.font = '700 202px "Bebas Neue", "Mona Sans Variable", sans-serif';
+        ctx.translate(128, 126);
+        ctx.lineJoin = "round";
+        ctx.lineCap = "round";
+        ctx.miterLimit = 2;
 
-        // Step 1: Fill Inner Glyph with Iconic GTA VI Vice City Sunset Gradient
-        const sunsetGrad = ctx.createLinearGradient(0, -88, 0, 88);
-        sunsetGrad.addColorStop(0.0, stops[0]);
-        sunsetGrad.addColorStop(0.26, stops[1]);
-        sunsetGrad.addColorStop(0.52, stops[2]);
-        sunsetGrad.addColorStop(0.78, stops[3]);
-        sunsetGrad.addColorStop(1.0, stops[4]);
-        ctx.fillStyle = sunsetGrad;
-        ctx.fillText(item.char, 0, 0);
+        // Build exact GTA Pricedown vector path for this letter
+        this.drawGtaPricedownGlyph(ctx, item.char);
 
-        // Step 2: Internal GTA VI Vice Horizon Glow, Palm/Skyline Silhouette & Glossy Enamel Coat
-        // (Clipped 100% strictly to the inner sunset face before outer bevels are drawn!)
-        ctx.save();
-        ctx.globalCompositeOperation = "source-atop";
-
-        // Warm horizon sun-glow band across lower-middle of the glyph
-        const horizonGlow = ctx.createRadialGradient(0, 26, 4, 0, 26, 92);
-        horizonGlow.addColorStop(0, "rgba(255, 215, 90, 0.38)");
-        horizonGlow.addColorStop(0.5, "rgba(255, 46, 147, 0.16)");
-        horizonGlow.addColorStop(1, "rgba(0, 0, 0, 0)");
-        ctx.fillStyle = horizonGlow;
-        ctx.fillRect(-120, -95, 240, 190);
-
-        // Subtle GTA VI tropical horizon wave silhouettes at the bottom of the letter
-        ctx.fillStyle = "rgba(14, 5, 28, 0.55)";
-        for (let w = 0; w < 5; w++) {
-          const wy = 48 + w * 9;
-          ctx.fillRect(-110, wy, 220, 2.5 + w * 0.6);
-        }
-
-        // Stylized Vice City palm silhouette arch inside the sunset horizon
-        const palmX = idx % 2 === 0 ? -16 : 16;
-        const palmY = 42;
-        ctx.strokeStyle = "rgba(14, 5, 28, 0.65)";
-        ctx.lineWidth = 3.2;
-        ctx.beginPath();
-        ctx.moveTo(palmX, 92);
-        ctx.quadraticCurveTo(palmX + (idx % 2 === 0 ? 7 : -7), 66, palmX + (idx % 2 === 0 ? 11 : -11), palmY);
+        // 1. Outer GTA VI Neon Rim (Gold-Orange top -> Hot Magenta mid -> Deep Purple bottom)
+        const neonRimGrad = ctx.createLinearGradient(-65, -88, 65, 92);
+        neonRimGrad.addColorStop(0.0, "#FFB800");
+        neonRimGrad.addColorStop(0.45, bevelBot);
+        neonRimGrad.addColorStop(1.0, stops[1] || "#7B1FA2");
+        ctx.lineWidth = 30;
+        ctx.strokeStyle = neonRimGrad;
         ctx.stroke();
 
-        const fronds = [
-          [-26, -6], [-18, -15], [-4, -18], [14, -15], [24, -5], [-16, 4], [18, 4]
-        ];
-        ctx.lineWidth = 2.4;
-        fronds.forEach(([fx, fy]) => {
-          const topX = palmX + (idx % 2 === 0 ? 11 : -11);
-          ctx.beginPath();
-          ctx.moveTo(topX, palmY);
-          ctx.quadraticCurveTo(topX + fx * 0.55, palmY + fy - 5, topX + fx, palmY + fy + 4);
-          ctx.stroke();
-        });
+        // 2. Heavy Rounded Jet-Black GTA Sticker Outline (#07030E)
+        ctx.lineWidth = 23;
+        ctx.strokeStyle = "#07030E";
+        ctx.stroke();
 
-        // Crisp Diagonal Glossy Enamel / Studio Softbox Reflection across top-left of letter
-        const glossGrad = ctx.createLinearGradient(-70, -92, 20, -10);
-        glossGrad.addColorStop(0, "rgba(0, 240, 255, 0.34)");
-        glossGrad.addColorStop(0.45, "rgba(255, 255, 255, 0.15)");
-        glossGrad.addColorStop(0.52, "rgba(255, 255, 255, 0.0)");
-        glossGrad.addColorStop(1, "rgba(0, 0, 0, 0.0)");
-        ctx.fillStyle = glossGrad;
-        ctx.fillRect(-120, -100, 240, 120);
-        ctx.restore();
-
-        // Step 3: Fine Inner Specular Rim along the edge of the sunset face
-        const innerRim = ctx.createLinearGradient(-65, -88, 65, 88);
-        innerRim.addColorStop(0, bevelTop);
-        innerRim.addColorStop(0.5, stops[2]);
-        innerRim.addColorStop(1, stops[4]);
-        ctx.lineWidth = 1.8;
-        ctx.strokeStyle = innerRim;
-        ctx.strokeText(item.char, 0, 0);
-
-        // Step 4: Draw Dark 3D Recessed Groove & Outer Chiseled Metallic Bevel Frame BEHIND the inner face (destination-over)
-        ctx.save();
-        ctx.globalCompositeOperation = "destination-over";
-
-        // Dark 3D recessed inset channel between inner sunset face and outer metallic frame
-        ctx.lineWidth = 6.0;
-        ctx.strokeStyle = "#080310";
-        ctx.strokeText(item.char, 0, 0);
-
-        // Outer Chiseled Metallic Bevel Frame (3D Chrome + Cyan/Magenta Neon Reflection)
-        const outerBevel = ctx.createLinearGradient(-75, -94, 75, 94);
-        outerBevel.addColorStop(0, bevelTop);
-        outerBevel.addColorStop(0.28, "#8A99AD");
-        outerBevel.addColorStop(0.52, "#1E162B");
-        outerBevel.addColorStop(0.76, bevelBot);
-        outerBevel.addColorStop(1, stops[4]);
-        ctx.lineWidth = 14.5;
-        ctx.strokeStyle = outerBevel;
-        ctx.strokeText(item.char, 0, 0);
-        ctx.restore();
+        // 3. Crisp GTA "grand theft auto" Off-White / Satin Silver Letter Face (with evenodd inner slit cutouts!)
+        const faceGrad = ctx.createLinearGradient(0, -72, 0, 78);
+        faceGrad.addColorStop(0.0, "#FFFFFF");
+        faceGrad.addColorStop(0.55, "#F1F3F8");
+        faceGrad.addColorStop(1.0, "#D8DEE9");
+        ctx.fillStyle = faceGrad;
+        ctx.fill("evenodd");
 
         ctx.restore();
         item.tex.needsUpdate = true;
 
-        // 2. Realistic Chiseled 3D Extruded Block Walls (Deep Glossy Anodized Violet-Obsidian + Neon Edge Specular)
+        // 2. Solid 3D Extruded Block Side Walls (Heavy Black GTA 3D Block + Outer Neon Rim)
         if (item.sideCtx && item.sideTex) {
           const sCtx = item.sideCtx;
           sCtx.clearRect(0, 0, 256, 256);
           sCtx.save();
-          sCtx.translate(128, 130);
-          sCtx.textAlign = "center";
-          sCtx.textBaseline = "middle";
-          sCtx.lineJoin = "miter";
-          sCtx.miterLimit = 2.5;
-          sCtx.font = '700 202px "Bebas Neue", "Mona Sans Variable", sans-serif';
+          sCtx.translate(128, 126);
+          sCtx.lineJoin = "round";
+          sCtx.lineCap = "round";
 
-          const sideEdgeGrad = ctx.createLinearGradient(-80, -94, 80, 94);
-          sideEdgeGrad.addColorStop(0, "#096B7A");
-          sideEdgeGrad.addColorStop(0.35, sideTint);
-          sideEdgeGrad.addColorStop(0.7, "#11071C");
-          sideEdgeGrad.addColorStop(1, "#7A1248");
+          this.drawGtaPricedownGlyph(sCtx, item.char);
 
-          sCtx.lineWidth = 14;
-          sCtx.strokeStyle = sideEdgeGrad;
-          sCtx.strokeText(item.char, 0, 0);
-          sCtx.fillStyle = "#0D0617";
-          sCtx.fillText(item.char, 0, 0);
+          const sideRimGrad = sCtx.createLinearGradient(-65, -88, 65, 92);
+          sideRimGrad.addColorStop(0.0, "#D99B00");
+          sideRimGrad.addColorStop(0.5, "#B81462");
+          sideRimGrad.addColorStop(1.0, "#3B0D54");
+
+          sCtx.lineWidth = 28;
+          sCtx.strokeStyle = sideRimGrad;
+          sCtx.stroke();
+
+          sCtx.lineWidth = 22;
+          sCtx.strokeStyle = "#07030E";
+          sCtx.stroke();
+          sCtx.fillStyle = "#07030E";
+          sCtx.fill("evenodd");
+
           sCtx.restore();
           item.sideTex.needsUpdate = true;
         }
