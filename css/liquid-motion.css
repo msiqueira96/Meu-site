@@ -2581,20 +2581,20 @@ body.is-header-visible .quality-gear-widget {
   display: none !important;
 }
 
-.quality-hz-row {
+.quality-options-row {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(3, 1fr);
   gap: 0.35rem;
 }
 
-.quality-hz-btn {
-  padding: 0.42rem 0.65rem;
+.quality-option-btn {
+  padding: 0.44rem 0.72rem;
   border-radius: 0.55rem;
   background: rgba(255, 255, 255, 0.07);
   border: 1px solid rgba(255, 255, 255, 0.14);
   color: rgba(255, 255, 255, 0.82);
   font-family: var(--font-display);
-  font-size: 0.95rem;
+  font-size: 0.96rem;
   letter-spacing: 0.05em;
   text-transform: uppercase;
   text-align: center;
@@ -2602,12 +2602,12 @@ body.is-header-visible .quality-gear-widget {
   transition: all 0.18s ease;
 }
 
-.quality-hz-btn:hover {
+.quality-option-btn:hover {
   background: rgba(255, 255, 255, 0.16);
   color: #FFFFFF;
 }
 
-.quality-hz-btn.is-active {
+.quality-option-btn.is-active {
   background: #FFFFFF;
   border-color: #FFFFFF;
   color: #090314;

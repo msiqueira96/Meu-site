@@ -13,9 +13,9 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="css/liquid-motion.css?v=60" />
-  <script defer src="js/three-vendor.min.js?v=60"></script>
-  <script defer src="js/liquid-motion.js?v=60"></script>
+  <link rel="stylesheet" href="css/liquid-motion.css?v=61" />
+  <script defer src="js/three-vendor.min.js?v=61"></script>
+  <script defer src="js/liquid-motion.js?v=61"></script>
 </head>
 
 <body>
@@ -72,21 +72,20 @@
     </div>
   </header>
 
-  <!-- Minimal Flat White Gear Icon & 4 Complete Hz Configuration Presets (30Hz / 60Hz / 90Hz / 120Hz) -->
-  <aside class="quality-gear-widget" id="quality-gear-widget" aria-label="Configuração de Hz e Qualidade">
+  <!-- Minimal Flat White Gear Icon & 3 Complete Quality Presets (Fraco / Normal / Forte) -->
+  <aside class="quality-gear-widget" id="quality-gear-widget" aria-label="Qualidade do Site">
     <button type="button" class="quality-gear-btn" id="quality-gear-btn" aria-expanded="false"
-      aria-controls="quality-gear-panel" title="Qualidade e Hz">
+      aria-controls="quality-gear-panel" title="Qualidade">
       <svg class="quality-gear-svg" viewBox="0 0 24 24" width="26" height="26" fill="#FFFFFF" aria-hidden="true">
         <path d="M19.14 12.94c.04-.31.06-.63.06-.94 0-.31-.02-.63-.06-.94l2.03-1.58a.49.49 0 0 0 .12-.61l-1.92-3.32a.49.49 0 0 0-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54a.484.484 0 0 0-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96a.49.49 0 0 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.04.31-.06.63-.06.94s.02.63.06.94l-2.03 1.58a.49.49 0 0 0-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6A3.6 3.6 0 1 1 12 8.4a3.6 3.6 0 0 1 0 7.2z"/>
       </svg>
     </button>
 
     <div class="quality-gear-panel" id="quality-gear-panel" hidden>
-      <div class="quality-hz-row" role="radiogroup" aria-label="Configuração do Site">
-        <button type="button" class="quality-hz-btn" data-hz-option="30" role="radio" aria-checked="false">30Hz</button>
-        <button type="button" class="quality-hz-btn" data-hz-option="60" role="radio" aria-checked="false">60Hz</button>
-        <button type="button" class="quality-hz-btn" data-hz-option="90" role="radio" aria-checked="false">90Hz</button>
-        <button type="button" class="quality-hz-btn" data-hz-option="120" role="radio" aria-checked="false">120Hz</button>
+      <div class="quality-options-row" role="radiogroup" aria-label="Qualidade do Site">
+        <button type="button" class="quality-option-btn" data-quality-tier="low" role="radio" aria-checked="false">Fraco</button>
+        <button type="button" class="quality-option-btn" data-quality-tier="medium" role="radio" aria-checked="false">Normal</button>
+        <button type="button" class="quality-option-btn" data-quality-tier="high" role="radio" aria-checked="false">Forte</button>
       </div>
     </div>
   </aside>
