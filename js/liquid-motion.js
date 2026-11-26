@@ -94,16 +94,228 @@
     },
   };
 
-  // Adaptive Hardware Tier Detection (Only throttle genuinely legacy 2-core / <=2GB devices;
-  // modern 90Hz/120Hz phones with 4GB+ RAM get full high-DPI and native refresh rate!)
+  // =========================================================================
+  // Specific Processor / GPU Hardware Detection & 3 Quality Presets
+  // (1. Fraco / low | 2. Médio / medium | 3. Avançado / high)
+  // =========================================================================
+
   const IS_MOBILE_DEVICE =
     window.innerWidth <= 768 || /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent || "");
-  const IS_LOW_END =
-    (typeof navigator.hardwareConcurrency === "number" && navigator.hardwareConcurrency <= 2) ||
-    (typeof navigator.deviceMemory === "number" && navigator.deviceMemory <= 2);
-  if (IS_LOW_END) {
-    document.documentElement.classList.add("is-low-end");
+
+  const QUALITY_PRESETS = {
+    low: {
+      key: "low",
+      label: "Fraco",
+      shortLabel: "FRACO",
+      desc: "Desempenho Máximo • Zero Travamentos",
+      mobileMaxDpr: 1.15,
+      desktopMaxDpr: 1.0,
+      maxTotalPixels: 850000,
+      portraitSegs: 40,
+      letterSlices: 6,
+      letterTexRes: 256,
+      palmsWidth: 1024,
+      palmsHeight: 384,
+      fluidRes: 0.05,
+      fluidPoisson: 1,
+      fluidBfecc: false,
+      fluidTargetW: 256,
+      fluidTargetH: 144,
+      shaderQuality: 0.0,
+    },
+    medium: {
+      key: "medium",
+      label: "Médio",
+      shortLabel: "MÉDIO",
+      desc: "Equilibrado HD • Nitidez & Fluidez",
+      mobileMaxDpr: 1.75,
+      desktopMaxDpr: 1.25,
+      maxTotalPixels: 1850000,
+      portraitSegs: 64,
+      letterSlices: 12,
+      letterTexRes: 512,
+      palmsWidth: 2048,
+      palmsHeight: 768,
+      fluidRes: 0.075,
+      fluidPoisson: 2,
+      fluidBfecc: false,
+      fluidTargetW: 512,
+      fluidTargetH: 288,
+      shaderQuality: 1.0,
+    },
+    high: {
+      key: "high",
+      label: "Avançado",
+      shortLabel: "AVANÇADO",
+      desc: "Ultra 3D Retina • 90/120Hz Sem Pixelado",
+      mobileMaxDpr: 2.75,
+      desktopMaxDpr: 1.65,
+      maxTotalPixels: 3400000,
+      portraitSegs: 112,
+      letterSlices: 22,
+      letterTexRes: 768,
+      palmsWidth: 2560,
+      palmsHeight: 960,
+      fluidRes: 0.10,
+      fluidPoisson: 4,
+      fluidBfecc: true,
+      fluidTargetW: 768,
+      fluidTargetH: 432,
+      shaderQuality: 2.0,
+    },
+  };
+
+  function detectHardwareProfile() {
+    const cores = typeof navigator.hardwareConcurrency === "number" ? navigator.hardwareConcurrency : 4;
+    const ram = typeof navigator.deviceMemory === "number" ? navigator.deviceMemory : 0;
+    const dpr = window.devicePixelRatio || 1;
+    const ua = navigator.userAgent || "";
+
+    let rawRenderer = "";
+    let rawVendor = "";
+    try {
+      const probeCanvas = document.createElement("canvas");
+      const gl =
+        probeCanvas.getContext("webgl", { powerPreference: "high-performance" }) ||
+        probeCanvas.getContext("experimental-webgl");
+      if (gl) {
+        const dbg = gl.getExtension("WEBGL_debug_renderer_info");
+        if (dbg) {
+          rawRenderer = String(gl.getParameter(dbg.UNMASKED_RENDERER_WEBGL) || "");
+          rawVendor = String(gl.getParameter(dbg.UNMASKED_VENDOR_WEBGL) || "");
+        } else {
+          rawRenderer = String(gl.getParameter(gl.RENDERER) || "");
+          rawVendor = String(gl.getParameter(gl.VENDOR) || "");
+        }
+        const loseExt = gl.getExtension("WEBGL_lose_context");
+        if (loseExt) loseExt.loseContext();
+      }
+    } catch (_e) {
+      // Ignore WebGL probe errors
+    }
+
+    // Extract clean GPU/SoC model name from ANGLE or mobile WebGL strings
+    let cleanGpu = rawRenderer
+      .replace(/ANGLE\s*\(([^,]+),\s*([^,]+?)(?:,\s*OpenGL.*|\s*Direct3D.*|\))/i, "$2")
+      .replace(/OpenGL\s*ES.*$/i, "")
+      .replace(/Direct3D.*$/i, "")
+      .replace(/vs_\d+_\d+.*$/i, "")
+      .replace(/\/PCIe\/SSE2/i, "")
+      .replace(/\s+/g, " ")
+      .trim();
+
+    if (!cleanGpu || /^WebKit WebGL$|^Mozilla$|^Google Inc\.$/i.test(cleanGpu)) {
+      if (/iPhone|iPad|iPod/i.test(ua)) {
+        cleanGpu = "Apple A-Series / Bionic GPU";
+      } else if (/Macintosh/i.test(ua)) {
+        cleanGpu = "Apple Silicon / Mac GPU";
+      } else if (/Android/i.test(ua)) {
+        cleanGpu = `Processador Mobile (${cores} Núcleos)`;
+      } else {
+        cleanGpu = `Processador (${cores} Núcleos)`;
+      }
+    }
+
+    const rUpper = `${rawRenderer} ${rawVendor}`.toUpperCase();
+    let tier = null;
+    let explicitLow = false;
+
+    // 1. Qualcomm Snapdragon / Adreno GPU Specific Detection
+    const adrenoMatch = rUpper.match(/ADRENO[^\d]*(\d{3,4})/);
+    if (adrenoMatch) {
+      const model = parseInt(adrenoMatch[1], 10);
+      if (model >= 710 || (model >= 640 && model < 700)) {
+        tier = "high"; // Snapdragon 855/865/870/888, 778G, 7+ Gen 2, 8 Gen 1/2/3
+      } else if (model >= 612 && model <= 639) {
+        tier = "medium"; // Snapdragon 665/680/695/720G/732G/750G/765G
+      } else {
+        tier = "low"; // Adreno 610, 5xx, 4xx, 3xx
+        explicitLow = true;
+      }
+    }
+
+    // 2. ARM Mali / Immortalis / Samsung Xclipse (Exynos, MediaTek Dimensity, Google Tensor)
+    if (!tier) {
+      if (/IMMORTALIS|XCLIPSE|MALI-G710|MALI-G715|MALI-G720|MALI-G610|MALI-G615|MALI-G78|MALI-G77|MALI-G76/.test(rUpper)) {
+        tier = "high";
+      } else if (/MALI-G68|MALI-G57|MALI-G72|MALI-G71/.test(rUpper)) {
+        tier = "medium";
+      } else if (/MALI-G52|MALI-G51|MALI-G31|MALI-T|MALI-4|POWERVR|SGX|GE8320|GE8300/.test(rUpper)) {
+        tier = "low";
+        explicitLow = true;
+      }
+    }
+
+    // 3. Apple GPU (iPhone / iPad / Apple Silicon M1/M2/M3/M4)
+    if (!tier && (/APPLE/.test(rUpper) || /iPhone|iPad|iPod/i.test(ua))) {
+      if (/M1|M2|M3|M4|A15|A16|A17|A18/.test(rUpper) || dpr >= 2.8 || cores >= 6) {
+        tier = "high";
+      } else {
+        tier = "medium";
+      }
+    }
+
+    // 4. Desktop & Laptop GPUs (NVIDIA GeForce, AMD Radeon, Intel Arc / Iris / UHD / HD)
+    if (!tier) {
+      if (/SWIFTSHADER|LLVMPIPE|BASIC RENDER|GMA|INTEL\(R\)\s*HD GRAPHICS\s*(2000|2500|3000|4000|4400|4600|500|505|510|515|520|530|610)|GEFORCE\s*(210|GT\s*6|GT\s*710|GT\s*720|GT\s*730)/.test(rUpper)) {
+        tier = "low";
+        explicitLow = true;
+      } else if (/RTX|GTX\s*(105|106|107|108|165|166|970|980)|RADEON\s*RX|RADEON\s*PRO|INTEL.*ARC|IRIS\s*XE/.test(rUpper)) {
+        tier = "high";
+      } else if (/UHD\s*GRAPHICS|IRIS|RADEON|GEFORCE\s*MX|GTX/.test(rUpper)) {
+        tier = cores >= 8 && (!ram || ram >= 8) ? "high" : "medium";
+      }
+    }
+
+    // 5. Fallback Heuristic using Processor Cores, RAM & Retina DPR when browser masks GPU name
+    if (!tier) {
+      if (cores <= 2 || (ram > 0 && ram <= 2)) {
+        tier = "low";
+        explicitLow = true;
+      } else if (cores <= 4 && ram > 0 && ram <= 3) {
+        tier = "low";
+        explicitLow = true;
+      } else if (
+        (cores >= 8 && (ram >= 6 || (!ram && dpr >= 2.0))) ||
+        (IS_MOBILE_DEVICE && cores >= 6 && dpr >= 2.0 && (!ram || ram >= 4))
+      ) {
+        tier = "high";
+      } else {
+        tier = "medium";
+      }
+    }
+
+    const ramTag = ram >= 1 ? ` • ${ram}GB RAM` : "";
+    const coresTag = cores ? ` • ${cores} Núcleos` : "";
+    const summary = `${cleanGpu}${coresTag}${ramTag}`;
+
+    return {
+      recommendedTier: tier,
+      explicitLow,
+      gpuName: cleanGpu,
+      rawRenderer,
+      cores,
+      ram,
+      dpr,
+      summary,
+    };
   }
+
+  const HARDWARE_PROFILE = detectHardwareProfile();
+  let savedQualityPref = null;
+  try {
+    savedQualityPref = localStorage.getItem("ms_quality_tier_override");
+  } catch (_e) {
+    savedQualityPref = null;
+  }
+
+  let IS_QUALITY_AUTO = !savedQualityPref || savedQualityPref === "auto" || !QUALITY_PRESETS[savedQualityPref];
+  let ACTIVE_QUALITY_TIER = IS_QUALITY_AUTO ? HARDWARE_PROFILE.recommendedTier : savedQualityPref;
+  let CURRENT_QUALITY_PRESET = QUALITY_PRESETS[ACTIVE_QUALITY_TIER] || QUALITY_PRESETS.medium;
+  let IS_LOW_END = ACTIVE_QUALITY_TIER === "low";
+
+  document.documentElement.setAttribute("data-quality-tier", ACTIVE_QUALITY_TIER);
+  document.documentElement.classList.toggle("is-low-end", IS_LOW_END);
 
   const SUPPORTS_COLOR_MIX =
     typeof window.CSS !== "undefined" &&
@@ -569,6 +781,7 @@
 
     uniform vec3 uRangerColor;
     uniform float uRangerTintMix;
+    uniform float uQualityLevel;
 
     uniform bool OUTLINE;
     uniform bool SHOW_HELMET_PERMANENTLY;
@@ -631,17 +844,19 @@
       float horizonBloom = exp(-abs(skyUv.y - 0.465) * 14.0);
       plane5Sky += vec3(0.55, 0.02, 0.18) * horizonBloom;
 
-      // Procedural twinkling stars in the upper night sky (y > 0.58)
-      vec2 starGrid = skyUv * vec2(uAspect * 48.0, 48.0);
-      vec2 starId = floor(starGrid);
-      vec2 starLocal = fract(starGrid) - 0.5;
-      float starSeed = fract(sin(dot(starId, vec2(127.1, 311.7))) * 43758.5453);
-      if (starSeed > 0.92 && skyUv.y > 0.56) {
-        vec2 starOffset = vec2(fract(starSeed * 17.3) - 0.5, fract(starSeed * 29.7) - 0.5) * 0.55;
-        float starDist = length(starLocal - starOffset);
-        float twinkle = 0.55 + 0.45 * sin(uTime * (2.5 + fract(starSeed * 9.1) * 4.0) + starSeed * 60.0);
-        float starBrightness = smoothstep(0.085, 0.01, starDist) * twinkle * smoothstep(0.56, 0.72, skyUv.y);
-        plane5Sky += vec3(0.95, 0.80, 1.0) * starBrightness * 0.65;
+      // Procedural twinkling stars in the upper night sky (y > 0.58) — skipped on Fraco (uQualityLevel < 0.5) for ultra-fast mobile fill rate
+      if (uQualityLevel > 0.5 && skyUv.y > 0.56) {
+        vec2 starGrid = skyUv * vec2(uAspect * 48.0, 48.0);
+        vec2 starId = floor(starGrid);
+        vec2 starLocal = fract(starGrid) - 0.5;
+        float starSeed = fract(sin(dot(starId, vec2(127.1, 311.7))) * 43758.5453);
+        if (starSeed > 0.92) {
+          vec2 starOffset = vec2(fract(starSeed * 17.3) - 0.5, fract(starSeed * 29.7) - 0.5) * 0.55;
+          float starDist = length(starLocal - starOffset);
+          float twinkle = 0.55 + 0.45 * sin(uTime * (2.5 + fract(starSeed * 9.1) * 4.0) + starSeed * 60.0);
+          float starBrightness = smoothstep(0.085, 0.01, starDist) * twinkle * smoothstep(0.56, 0.72, skyUv.y);
+          plane5Sky += vec3(0.95, 0.80, 1.0) * starBrightness * 0.65;
+        }
       }
 
       vec3 sceneColor = plane5Sky;
@@ -727,11 +942,15 @@
         float cursorPush = clamp(mouseScreenUv.x - palmCenter, -0.09, 0.09) * -0.12 * hoverProximity;
 
         // Individual palm frond rustling in the upper crown (h > 0.38)
-        float crownZone = smoothstep(0.35, 0.62, h);
-        float frondFlutterX = sin(palmLocalY * 85.0 + px * 120.0 - uTime * (5.5 + hoverStrength * 8.5))
-                            * (0.0012 + 0.0045 * hoverStrength) * crownZone;
-        float frondFlutterY = cos(px * 130.0 - palmLocalY * 65.0 + uTime * (5.0 + hoverStrength * 7.5))
-                            * (0.0010 + 0.0035 * hoverStrength) * crownZone;
+        float frondFlutterX = 0.0;
+        float frondFlutterY = 0.0;
+        if (uQualityLevel > 0.5) {
+          float crownZone = smoothstep(0.35, 0.62, h);
+          frondFlutterX = sin(palmLocalY * 85.0 + px * 120.0 - uTime * (5.5 + hoverStrength * 8.5))
+                        * (0.0012 + 0.0045 * hoverStrength) * crownZone;
+          frondFlutterY = cos(px * 130.0 - palmLocalY * 65.0 + uTime * (5.0 + hoverStrength * 7.5))
+                        * (0.0010 + 0.0035 * hoverStrength) * crownZone;
+        }
 
         float swayX = (idleBreeze + hoverOsc + cursorPush) * trunkBend + frondFlutterX;
         float swayY = frondFlutterY * trunkBend;
@@ -911,13 +1130,12 @@
     const width = window.innerWidth || 1366;
     const height = window.innerHeight || 768;
     const isPortraitMobile = width <= 900;
-    // Allow High-DPI up to 2.25x on 90Hz/120Hz smartphones (~900x1950 physical pixels) for razor-sharp quality,
-    // and up to 1.35x on desktop within a 2.25M total pixel budget (protects against zoomed-out 5K tabs).
-    const maxDprCap = IS_LOW_END ? 1.25 : (isPortraitMobile ? 2.25 : 1.35);
+    const preset = CURRENT_QUALITY_PRESET || QUALITY_PRESETS.medium;
+    const maxDprCap = isPortraitMobile ? preset.mobileMaxDpr : preset.desktopMaxDpr;
     const rawDpr = Math.min(window.devicePixelRatio || 1, maxDprCap);
-    const maxTotalPixels = IS_LOW_END ? 1100000 : 2250000;
+    const maxTotalPixels = preset.maxTotalPixels;
     const budgetDpr = Math.sqrt(maxTotalPixels / Math.max(width * height, 1));
-    const pixelRatio = Math.min(rawDpr, budgetDpr);
+    const pixelRatio = Math.max(0.85, Math.min(rawDpr, budgetDpr));
     const renderWidth = Math.max(1, Math.round(width * pixelRatio));
     const renderHeight = Math.max(1, Math.round(height * pixelRatio));
     return { width, height, pixelRatio, renderWidth, renderHeight };
@@ -1382,7 +1600,13 @@
       this.renderer = renderer;
       this.sizes = sizes;
       this.mouseInput = mouseInput;
-      this.options = { ...LIQUID_CONFIG.fluid };
+      const preset = CURRENT_QUALITY_PRESET || QUALITY_PRESETS.medium;
+      this.options = {
+        ...LIQUID_CONFIG.fluid,
+        resolution: preset.fluidRes,
+        iterations_poisson: preset.fluidPoisson,
+        BFECC: preset.fluidBfecc,
+      };
 
       this.fbos = {
         vel_0: null,
@@ -1539,9 +1763,19 @@
       );
       this.scene.add(this.output);
 
-      // Smooth medium-res fluid mask target (512x288, 0 MSAA) — sharp edges with negligible GPU load
-      this.sourceTarget = new THREE.WebGLRenderTarget(512, 288, { samples: 0 });
+      // Adaptive fluid mask target sized by active processor quality preset
+      const preset = CURRENT_QUALITY_PRESET || QUALITY_PRESETS.medium;
+      this.sourceTarget = new THREE.WebGLRenderTarget(preset.fluidTargetW, preset.fluidTargetH, { samples: 0 });
       this.clock = new THREE.Clock();
+    }
+
+    applyQualityPreset(preset) {
+      if (!preset) return;
+      this.simulation.options.resolution = preset.fluidRes;
+      this.simulation.options.iterations_poisson = preset.fluidPoisson;
+      this.simulation.options.BFECC = preset.fluidBfecc;
+      this.simulation.resize();
+      this.sourceTarget.setSize(preset.fluidTargetW, preset.fluidTargetH);
     }
 
     resize() {
@@ -1663,7 +1897,8 @@
         normalized: mouse.createEasedNormalized(0.025),
       };
 
-      const portraitSegs = IS_LOW_END ? 48 : 64;
+      const portraitSegs = (CURRENT_QUALITY_PRESET || QUALITY_PRESETS.medium).portraitSegs;
+      this.currentSegs = portraitSegs;
       this.geometry = createExtendedCharacterGeometry(portraitSegs);
       this.material = new THREE.MeshStandardMaterial({
         displacementMap: assets.textures.head.depth,
@@ -1746,6 +1981,17 @@
       this.instance = new THREE.Mesh(this.geometry, this.material);
     }
 
+    setGeometrySegments(segs) {
+      if (!segs || this.currentSegs === segs) return;
+      this.currentSegs = segs;
+      const oldGeo = this.geometry;
+      this.geometry = createExtendedCharacterGeometry(segs);
+      this.instance.geometry = this.geometry;
+      if (oldGeo && typeof oldGeo.dispose === "function") {
+        oldGeo.dispose();
+      }
+    }
+
     update(delta, revealFactor, fluidTexture) {
       this.mouse.normalized.update(delta);
       this.instance.rotation.y = this.mouse.normalized.value.x * this.intensity * revealFactor;
@@ -1762,7 +2008,8 @@
     constructor(renderer, sizes, assets) {
       this.renderer = renderer;
       this.sizes = sizes;
-      const portraitSegs = IS_LOW_END ? 48 : 64;
+      const portraitSegs = (CURRENT_QUALITY_PRESET || QUALITY_PRESETS.medium).portraitSegs;
+      this.currentSegs = portraitSegs;
       this.geometry = createExtendedCharacterGeometry(portraitSegs);
       this.material = new THREE.MeshStandardMaterial({
         map: assets.textures.ranger.diffuse,
@@ -1797,6 +2044,17 @@
         this.sizes.width * this.sizes.pixelRatio,
         this.sizes.height * this.sizes.pixelRatio
       );
+    }
+
+    setGeometrySegments(segs) {
+      if (!segs || this.currentSegs === segs) return;
+      this.currentSegs = segs;
+      const oldGeo = this.geometry;
+      this.geometry = createExtendedCharacterGeometry(segs);
+      this.instance.geometry = this.geometry;
+      if (oldGeo && typeof oldGeo.dispose === "function") {
+        oldGeo.dispose();
+      }
     }
 
     setVariant(variant) {
@@ -1971,9 +2229,10 @@
       this.drawTitleSign();
 
       // 3º Plano: Dedicated Transparent Palm Trees Layer Texture (6 detailed realistic coconut palm trees)
+      const initialPreset = CURRENT_QUALITY_PRESET || QUALITY_PRESETS.medium;
       this.palmsCanvas = document.createElement("canvas");
-      this.palmsCanvas.width = 2048;
-      this.palmsCanvas.height = 768;
+      this.palmsCanvas.width = initialPreset.palmsWidth;
+      this.palmsCanvas.height = initialPreset.palmsHeight;
       this.palmsTexture = new TextureCtor(this.palmsCanvas);
       this.palmsTexture.minFilter = THREE.LinearFilter;
       this.palmsTexture.magFilter = THREE.LinearFilter;
@@ -2013,6 +2272,7 @@
             uMouseParallax: new THREE.Uniform(new THREE.Vector2(0, 0)),
             uRangerColor: new THREE.Uniform(toSRGBColor("#1C2018")),
             uRangerTintMix: new THREE.Uniform(0.0),
+            uQualityLevel: new THREE.Uniform((CURRENT_QUALITY_PRESET || QUALITY_PRESETS.medium).shaderQuality),
             OUTLINE: new THREE.Uniform(cfg.OUTLINE),
             SHOW_HELMET_PERMANENTLY: new THREE.Uniform(cfg.SHOW_HELMET_PERMANENTLY),
             THICKNESS: new THREE.Uniform(cfg.THICKNESS),
@@ -2059,6 +2319,22 @@
     }
 
     init3DLetters() {
+      if (this.lettersGroup) {
+        if (this.letterItems && this.letterItems.length) {
+          this.letterItems.forEach((item) => {
+            if (item.tex && typeof item.tex.dispose === "function") item.tex.dispose();
+            if (item.sideTex && typeof item.sideTex.dispose === "function") item.sideTex.dispose();
+            if (item.faceMat && typeof item.faceMat.dispose === "function") item.faceMat.dispose();
+            if (item.sideMat && typeof item.sideMat.dispose === "function") item.sideMat.dispose();
+          });
+        }
+        if (this.sharedLetterPlaneGeo && typeof this.sharedLetterPlaneGeo.dispose === "function") {
+          this.sharedLetterPlaneGeo.dispose();
+        }
+        this.defaultScene.remove(this.lettersGroup);
+      }
+
+      const preset = CURRENT_QUALITY_PRESET || QUALITY_PRESETS.medium;
       this.letterItems = [];
       this.lettersPauseUntil = 0;
       this.lettersGroup = new THREE.Group();
@@ -2080,8 +2356,10 @@
       };
 
       const planeGeo = new THREE.PlaneGeometry(0.19, 0.23);
+      this.sharedLetterPlaneGeo = planeGeo;
       const totalDepth = 0.045;
-      const sliceCount = 12;
+      const sliceCount = Math.max(4, preset.letterSlices || 12);
+      const texRes = preset.letterTexRes || 512;
 
       rows.forEach((row) => {
         const chars = row.text.split("");
@@ -2103,8 +2381,7 @@
             ? this.assets.textures.head.diffuse.constructor
             : (window.THREE.Texture || window.THREE.CanvasTexture);
 
-          // 1. Front & Back Face Texture (512x512 Retina resolution for razor-sharp quality on 90Hz/120Hz phones & monitors)
-          const texRes = IS_LOW_END ? 256 : 512;
+          // 1. Front & Back Face Texture (256px Fraco / 512px Médio / 768px Avançado)
           const canvas = document.createElement("canvas");
           canvas.width = texRes;
           canvas.height = texRes;
@@ -2115,7 +2392,7 @@
           tex.colorSpace = THREE.SRGBColorSpace;
           tex.needsUpdate = true;
 
-          // 2. Solid 3D Extrusion Wall Texture (512x512 Retina resolution)
+          // 2. Solid 3D Extrusion Wall Texture
           const sideCanvas = document.createElement("canvas");
           sideCanvas.width = texRes;
           sideCanvas.height = texRes;
@@ -2192,8 +2469,32 @@
         });
       });
 
-      this.updateLetterTextures();
-      this.bindLetterInteraction();
+      this.updateLetterTextures(this.activeRangerKey);
+      if (!this.letterBindingsAttached) {
+        this.letterBindingsAttached = true;
+        this.bindLetterInteraction();
+      }
+    }
+
+    rebuildForQualityPreset(preset) {
+      if (!preset) return;
+      if (this.compositionMesh && this.compositionMesh.material && this.compositionMesh.material.uniforms.uQualityLevel) {
+        this.compositionMesh.material.uniforms.uQualityLevel.value = preset.shaderQuality;
+      }
+      if (this.head && typeof this.head.setGeometrySegments === "function") {
+        this.head.setGeometrySegments(preset.portraitSegs);
+      }
+      if (this.helmet && typeof this.helmet.setGeometrySegments === "function") {
+        this.helmet.setGeometrySegments(preset.portraitSegs);
+      }
+      if (this.palmsCanvas && (this.palmsCanvas.width !== preset.palmsWidth || this.palmsCanvas.height !== preset.palmsHeight)) {
+        this.palmsCanvas.width = preset.palmsWidth;
+        this.palmsCanvas.height = preset.palmsHeight;
+        this.drawRetrowavePalmsLayer();
+        if (this.palmsTexture) this.palmsTexture.needsUpdate = true;
+      }
+      this.init3DLetters();
+      this.applyResponsive();
     }
 
     drawGtaPricedownGlyph(ctx, rawChar) {
@@ -3477,7 +3778,7 @@
       }, 280);
     }
 
-    window.addEventListener("resize", () => {
+    const syncSizesAndRenderer = () => {
       const next = computeSizes();
       sizes.width = next.width;
       sizes.height = next.height;
@@ -3495,7 +3796,137 @@
       fluidCursor.resize();
       backgroundNoise.resize();
       heroScene.resize();
-    });
+    };
+
+    window.addEventListener("resize", syncSizesAndRenderer);
+
+    // =======================================================================
+    // Gear Menu UI & Live Quality Preset Switcher (Fraco / Médio / Avançado)
+    // =======================================================================
+    const gearBtn = document.getElementById("quality-gear-btn");
+    const gearPanel = document.getElementById("quality-gear-panel");
+    const gearCloseBtn = document.getElementById("quality-panel-close");
+    const gearCurrentLabel = document.getElementById("quality-gear-current-label");
+    const gearHzBadge = document.getElementById("quality-gear-hz-badge");
+    const detectedCpuGpuEl = document.getElementById("detected-cpu-gpu");
+    const detectedTierBadgeEl = document.getElementById("detected-tier-badge");
+    const qualityModePillEl = document.getElementById("quality-mode-pill");
+    const qualityLiveTelemetryEl = document.getElementById("quality-live-telemetry");
+    const tierButtons = document.querySelectorAll(".quality-option-btn[data-quality-tier]");
+    const autoResetBtn = document.getElementById("quality-auto-reset-btn");
+
+    const updateGearMenuUI = (liveFps) => {
+      const preset = CURRENT_QUALITY_PRESET || QUALITY_PRESETS.medium;
+      const recPreset = QUALITY_PRESETS[HARDWARE_PROFILE.recommendedTier] || QUALITY_PRESETS.medium;
+      const hz = window.__displayHz || 60;
+
+      if (gearCurrentLabel) {
+        gearCurrentLabel.textContent = preset.shortLabel;
+      }
+      if (gearHzBadge) {
+        gearHzBadge.textContent = `${hz}Hz`;
+      }
+      if (detectedCpuGpuEl) {
+        detectedCpuGpuEl.textContent = HARDWARE_PROFILE.summary;
+      }
+      if (detectedTierBadgeEl) {
+        detectedTierBadgeEl.textContent = `Ideal para este processador: ${recPreset.label} (${recPreset.desc})`;
+      }
+      if (qualityModePillEl) {
+        qualityModePillEl.textContent = IS_QUALITY_AUTO ? "Automático" : "Manual";
+        qualityModePillEl.classList.toggle("is-manual", !IS_QUALITY_AUTO);
+      }
+
+      document.querySelectorAll("[data-rec-for]").forEach((badge) => {
+        badge.hidden = badge.getAttribute("data-rec-for") !== HARDWARE_PROFILE.recommendedTier;
+      });
+
+      tierButtons.forEach((btn) => {
+        const isSelected = btn.getAttribute("data-quality-tier") === ACTIVE_QUALITY_TIER;
+        btn.classList.toggle("is-active", isSelected);
+        btn.setAttribute("aria-checked", isSelected ? "true" : "false");
+      });
+
+      if (qualityLiveTelemetryEl) {
+        const fpsStr = liveFps ? `${Math.round(liveFps)} FPS` : `${hz}Hz VSync`;
+        qualityLiveTelemetryEl.textContent = `${fpsStr} • ${sizes.renderWidth}×${sizes.renderHeight}px (${sizes.pixelRatio.toFixed(2)}x DPR) • 3D ${preset.letterSlices} camadas`;
+      }
+    };
+
+    const applyQualityTier = (tierOrAuto, { persist = true } = {}) => {
+      if (tierOrAuto === "auto") {
+        IS_QUALITY_AUTO = true;
+        ACTIVE_QUALITY_TIER = HARDWARE_PROFILE.recommendedTier;
+        if (persist) {
+          try {
+            localStorage.removeItem("ms_quality_tier_override");
+          } catch (_e) {}
+        }
+      } else if (QUALITY_PRESETS[tierOrAuto]) {
+        IS_QUALITY_AUTO = !persist;
+        ACTIVE_QUALITY_TIER = tierOrAuto;
+        if (persist) {
+          try {
+            localStorage.setItem("ms_quality_tier_override", tierOrAuto);
+          } catch (_e) {}
+        }
+      } else {
+        return;
+      }
+
+      CURRENT_QUALITY_PRESET = QUALITY_PRESETS[ACTIVE_QUALITY_TIER] || QUALITY_PRESETS.medium;
+      IS_LOW_END = ACTIVE_QUALITY_TIER === "low";
+      document.documentElement.setAttribute("data-quality-tier", ACTIVE_QUALITY_TIER);
+      document.documentElement.classList.toggle("is-low-end", IS_LOW_END);
+
+      syncSizesAndRenderer();
+      fluidCursor.applyQualityPreset(CURRENT_QUALITY_PRESET);
+      heroScene.rebuildForQualityPreset(CURRENT_QUALITY_PRESET);
+      updateGearMenuUI();
+    };
+
+    window.__applyQualityTier = applyQualityTier;
+
+    if (gearBtn && gearPanel) {
+      const toggleGearPanel = (forceOpen) => {
+        const nextOpen = typeof forceOpen === "boolean" ? forceOpen : gearPanel.hidden;
+        gearPanel.hidden = !nextOpen;
+        gearBtn.setAttribute("aria-expanded", nextOpen ? "true" : "false");
+      };
+
+      gearBtn.addEventListener("click", (e) => {
+        e.stopPropagation();
+        toggleGearPanel();
+      });
+
+      if (gearCloseBtn) {
+        gearCloseBtn.addEventListener("click", (e) => {
+          e.stopPropagation();
+          toggleGearPanel(false);
+        });
+      }
+
+      document.addEventListener("click", (e) => {
+        if (!gearPanel.hidden && !gearPanel.contains(e.target) && !gearBtn.contains(e.target)) {
+          toggleGearPanel(false);
+        }
+      });
+
+      tierButtons.forEach((btn) => {
+        btn.addEventListener("click", () => {
+          const targetTier = btn.getAttribute("data-quality-tier");
+          applyQualityTier(targetTier, { persist: true });
+        });
+      });
+
+      if (autoResetBtn) {
+        autoResetBtn.addEventListener("click", () => {
+          applyQualityTier("auto", { persist: true });
+        });
+      }
+    }
+
+    updateGearMenuUI();
 
     window.__isHeroStageVisible = true;
     window.__displayHz = 90;
@@ -3510,6 +3941,8 @@
 
     let hzSampleCount = 0;
     let hzSampleAccumSec = 0;
+    let autoHzUpgraded = false;
+    let lowFpsWindows = 0;
 
     gsap.ticker.add(() => {
       if (document.hidden || window.__isHeroStageVisible === false) {
@@ -3519,7 +3952,7 @@
 
       const rawDt = clock.getDelta();
       // Live Display Refresh Rate (Hz) Detector (measures native VSync: 60Hz, 90Hz, 120Hz, 144Hz, 240Hz)
-      if (rawDt > 0.002 && rawDt < 0.05) {
+      if (rawDt > 0.002 && rawDt < 0.06) {
         hzSampleAccumSec += rawDt;
         hzSampleCount++;
         if (hzSampleCount >= 45) {
@@ -3536,6 +3969,37 @@
           }
           window.__displayHz = closestHz;
           document.documentElement.setAttribute("data-display-hz", String(closestHz));
+
+          // Smart Auto-Promotion / Protection when in Automatic Processor Mode:
+          // 1) If a 90Hz/120Hz+ smartphone or monitor is running smoothly (>= 75 FPS) and was initially classified as "medium"
+          //    (e.g. browser hid the exact GPU model), promote it to "high" (Avançado) so 90Hz/120Hz screens never look pixelated!
+          if (
+            IS_QUALITY_AUTO &&
+            !autoHzUpgraded &&
+            !HARDWARE_PROFILE.explicitLow &&
+            closestHz >= 90 &&
+            avgFps >= 75 &&
+            ACTIVE_QUALITY_TIER === "medium"
+          ) {
+            autoHzUpgraded = true;
+            HARDWARE_PROFILE.recommendedTier = "high";
+            applyQualityTier("high", { persist: false });
+          } else if (IS_QUALITY_AUTO && avgFps < 28) {
+            // 2) If a device in Automatic mode sustains < 28 FPS across 2 consecutive windows, step down one tier to prevent lag
+            lowFpsWindows++;
+            if (lowFpsWindows >= 2) {
+              lowFpsWindows = 0;
+              if (ACTIVE_QUALITY_TIER === "high") {
+                applyQualityTier("medium", { persist: false });
+              } else if (ACTIVE_QUALITY_TIER === "medium") {
+                applyQualityTier("low", { persist: false });
+              }
+            }
+          } else {
+            lowFpsWindows = 0;
+          }
+
+          updateGearMenuUI(avgFps);
           hzSampleCount = 0;
           hzSampleAccumSec = 0;
         }
@@ -4075,6 +4539,7 @@
         siteHeader.classList.toggle("is-entrance-hidden", pEnterR < 0.02);
         siteHeader.style.setProperty("--header-y", `${((1 - pEnterR) * -36).toFixed(1)}px`);
         siteHeader.style.setProperty("--header-opacity", pEnterR.toFixed(3));
+        document.body.classList.toggle("is-header-visible", pEnterR > 0.15);
       }
 
       // 2. Main Character Stage (#hero-frame-card):

@@ -13,9 +13,9 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="css/liquid-motion.css?v=57" />
-  <script defer src="js/three-vendor.min.js?v=57"></script>
-  <script defer src="js/liquid-motion.js?v=57"></script>
+  <link rel="stylesheet" href="css/liquid-motion.css?v=58" />
+  <script defer src="js/three-vendor.min.js?v=58"></script>
+  <script defer src="js/liquid-motion.js?v=58"></script>
 </head>
 
 <body>
@@ -71,6 +71,70 @@
       </a>
     </div>
   </header>
+
+  <!-- Floating Hardware Quality & Processor Gear Menu (Fraco / Médio / Avançado) -->
+  <aside class="quality-gear-widget" id="quality-gear-widget" aria-label="Configurações de Qualidade Gráfica 3D">
+    <button type="button" class="quality-gear-btn" id="quality-gear-btn" aria-expanded="false"
+      aria-controls="quality-gear-panel" title="Qualidade Gráfica 3D &amp; Processador Detectado">
+      <span class="quality-gear-icon" aria-hidden="true">⚙️</span>
+      <span class="quality-gear-label" id="quality-gear-current-label">AUTO</span>
+      <span class="quality-gear-hz" id="quality-gear-hz-badge">90Hz</span>
+    </button>
+
+    <div class="quality-gear-panel" id="quality-gear-panel" hidden>
+      <div class="quality-panel-header">
+        <div>
+          <span class="quality-panel-eyebrow">MOTOR 3D ADAPTATIVO</span>
+          <h3 class="quality-panel-title">Qualidade Gráfica</h3>
+        </div>
+        <button type="button" class="quality-panel-close" id="quality-panel-close" aria-label="Fechar menu de qualidade">✕</button>
+      </div>
+
+      <div class="quality-hardware-box">
+        <div class="quality-hw-row">
+          <span class="quality-hw-tag">PROCESSADOR / GPU</span>
+          <span class="quality-hw-auto-pill" id="quality-mode-pill">Automático</span>
+        </div>
+        <strong class="quality-hw-name" id="detected-cpu-gpu">Identificando processador...</strong>
+        <span class="quality-hw-rec" id="detected-tier-badge">Perfil recomendado: Analisando...</span>
+      </div>
+
+      <div class="quality-options-list" role="radiogroup" aria-label="Nível de qualidade 3D">
+        <button type="button" class="quality-option-btn" data-quality-tier="low" role="radio" aria-checked="false">
+          <div class="quality-opt-top">
+            <span class="quality-opt-name">1. Fraco <small>(Leve)</small></span>
+            <span class="quality-opt-badge" data-rec-for="low" hidden>Recomendado</span>
+          </div>
+          <span class="quality-opt-desc">Foco em zero travamentos • 3D simplificado • Resolução leve</span>
+        </button>
+
+        <button type="button" class="quality-option-btn" data-quality-tier="medium" role="radio" aria-checked="false">
+          <div class="quality-opt-top">
+            <span class="quality-opt-name">2. Médio <small>(Equilibrado)</small></span>
+            <span class="quality-opt-badge" data-rec-for="medium" hidden>Recomendado</span>
+          </div>
+          <span class="quality-opt-desc">Nitidez HD 512px • 12 camadas 3D • Fluidez estável</span>
+        </button>
+
+        <button type="button" class="quality-option-btn" data-quality-tier="high" role="radio" aria-checked="false">
+          <div class="quality-opt-top">
+            <span class="quality-opt-name">3. Avançado <small>(Ultra 3D)</small></span>
+            <span class="quality-opt-badge" data-rec-for="high" hidden>Recomendado</span>
+          </div>
+          <span class="quality-opt-desc">Zero pixelado • Retina 2.75x • 22 camadas 3D • 90/120Hz</span>
+        </button>
+      </div>
+
+      <div class="quality-panel-footer">
+        <button type="button" class="quality-auto-reset-btn" id="quality-auto-reset-btn" data-quality-tier="auto">
+          ⚡ Usar Automático do Processador
+        </button>
+        <div class="quality-live-telemetry" id="quality-live-telemetry">
+          60–120Hz VSync • Alta Precisão 3D
+        </div>
+      </div>
+    </div>
+  </aside>
 
   <main class="portfolio-main">
 
