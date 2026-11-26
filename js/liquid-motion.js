@@ -141,18 +141,18 @@
       IS_WIREFRAME_ANIMATING: true,
     },
     fluid: {
-      iterations_poisson: IS_LOW_END ? 2 : 4,
-      iterations_viscous: IS_LOW_END ? 2 : 4,
+      iterations_poisson: 2,
+      iterations_viscous: 2,
       dissipation: 0.96,
-      mouse_force: 50,
-      resolution: IS_LOW_END ? 0.075 : 0.1,
+      mouse_force: 45,
+      resolution: 0.075,
       cursor_size: 18,
       straightness: 1,
       viscous: 30,
       isBounce: false,
       dt: 0.014,
       isViscous: false,
-      BFECC: !IS_LOW_END,
+      BFECC: false,
     },
   };
 
@@ -591,24 +591,17 @@
       textureCursorEffect.rgb = 1.0 - textureCursorEffect.rgb;
       float cursorEffect = step(0.1, textureCursorEffect.r);
 
-      float noiseBase = textureBackgroundNoise.r;
-      // Harmonized Titanium Grey + Cyan (#00E5FF) + Magenta (#FF2E93) Studio Stage:
+      // Clean Architectural Titanium Grey Studio Stage (Ultra-lightweight shader, zero background blobs!)
       vec2 stageDelta = (vUv - vec2(0.5, 0.48)) * vec2(max(uAspect, 0.65), 1.0);
-      float studioSpot = smoothstep(0.95, 0.0, length(stageDelta));
-
-      float cyanSpot = smoothstep(0.95, 0.0, length((vUv - vec2(0.26, 0.68)) * vec2(max(uAspect, 0.65), 1.0)));
-      float magentaSpot = smoothstep(0.95, 0.0, length((vUv - vec2(0.74, 0.28)) * vec2(max(uAspect, 0.65), 1.0)));
+      float studioSpot = clamp(1.0 - dot(stageDelta, stageDelta) * 1.15, 0.0, 1.0);
 
       vec3 cyberCyan = vec3(0.0, 0.898, 1.0);
       vec3 cyberMagenta = vec3(1.0, 0.180, 0.576);
+      vec3 dualAccent = mix(cyberCyan, cyberMagenta, clamp(vUv.x * 0.6 + (1.0 - vUv.y) * 0.4, 0.0, 1.0));
 
-      vec3 studioCenterColor = mix(vec3(0.18, 0.21, 0.27), uRangerColor, 0.14);
-      vec3 studioBaseBg = mix(COLOR_BACKGROUND, studioCenterColor, studioSpot * 0.88);
-      studioBaseBg += cyberCyan * (cyanSpot * 0.055) + cyberMagenta * (magentaSpot * 0.055);
-
+      vec3 studioCenterColor = mix(vec3(0.17, 0.20, 0.26), uRangerColor, 0.08);
+      vec3 studioBaseBg = mix(COLOR_BACKGROUND, studioCenterColor, studioSpot * 0.85);
       vec3 background = studioBaseBg;
-      vec3 dualAccent = mix(cyberCyan, cyberMagenta, clamp(vUv.x * 0.65 + (1.0 - vUv.y) * 0.35, 0.0, 1.0));
-      vec3 cursorBackground = mix(COLOR_CURSOR_BACKGROUND, mix(COLOR_CURSOR_FOREGROUND, dualAccent, 0.28), noiseBase * 0.35 + 0.35);
 
       if (OUTLINE) {
         float edge = 0.0;
@@ -624,14 +617,11 @@
           edge = 1.0;
         }
 
-        // Crisp 1px topographic lines transitioning smoothly between Cyan, Active Ranger, and Magenta
+        // Subtle 1px topographic tech lines (brightens slightly inside cursor trail without creating background blobs)
         vec3 contourTint = mix(dualAccent, uRangerColor, 0.35);
-        background = mix(studioBaseBg, contourTint, edge * 0.32 * uReveal);
-        cursorBackground = mix(cursorBackground, dualAccent, edge * 0.65);
+        float lineStrength = (0.18 + cursorEffect * 0.28) * uReveal;
+        background = mix(studioBaseBg, contourTint, edge * lineStrength);
       }
-
-      background = mix(background, uColorHover, step(textureBackgroundNoise.g, -0.1 + uHover * 1.1));
-      background = mix(background, cursorBackground, cursorEffect * uCursorIntensity);
 
       vec4 textureDefaultDiffuse = texture2D(tDefaultDiffuse, vUv);
       vec4 textureHelmet = texture2D(tHelmet, vUv);
@@ -641,32 +631,12 @@
       cursorEffect += step(1.0 - hoverTransition, uHelmetHover);
       cursorEffect = clamp(cursorEffect * uCursorIntensity, 0.0, 1.0);
 
-      background = mix(background, cursorBackground, step(1.0 - hoverTransition, uHelmetHover));
-
-      // Crisp 3D letters & portrait composited directly with zero chalky white halo smudge
+      // Clean composition: character & 3D letters on top of studio background
       vec3 base = mix(background, textureDefaultDiffuse.rgb, textureDefaultDiffuse.a);
 
-      // Inside the liquid hover / Ranger reveal (rangerLayer), keep the 3D letters visible
-      // behind the Ranger and supercharge them with Cyan + Magenta Morphin Grid energy!
-      vec2 glowStep = vec2(0.0022, 0.0022 * uAspect);
-      float aR = texture2D(tDefaultDiffuse, vUv + vec2(glowStep.x, 0.0)).a;
-      float aL = texture2D(tDefaultDiffuse, vUv - vec2(glowStep.x, 0.0)).a;
-      float aU = texture2D(tDefaultDiffuse, vUv + vec2(0.0, glowStep.y)).a;
-      float aD = texture2D(tDefaultDiffuse, vUv - vec2(0.0, glowStep.y)).a;
-      float letterNeighborMax = max(max(aR, aL), max(aU, aD));
-      float letterEdge = clamp(abs(aR - aL) + abs(aU - aD), 0.0, 1.0);
-      float letterOuterHalo = clamp((letterNeighborMax - textureDefaultDiffuse.a) * 1.6, 0.0, 1.0);
-
-      float energySweep = 0.5 + 0.5 * sin(vUv.x * 26.0 - vUv.y * 16.0 - uTime * 7.2);
-      float shimmerBand = pow(0.5 + 0.5 * sin(vUv.x * 42.0 + vUv.y * 24.0 - uTime * 9.5), 4.0);
-      vec3 energyTint = mix(uRangerColor, dualAccent, 0.45 + 0.35 * shimmerBand);
-
-      vec3 flashyLetterRgb = mix(textureDefaultDiffuse.rgb, energyTint, 0.38 + 0.26 * energySweep);
-      flashyLetterRgb += letterEdge * mix(cyberCyan, cyberMagenta, energySweep) * 0.92;
-      flashyLetterRgb += shimmerBand * dualAccent * 0.32;
-
-      vec3 rangerBgWithLetters = mix(background, flashyLetterRgb, textureDefaultDiffuse.a);
-      rangerBgWithLetters = mix(rangerBgWithLetters, energyTint, letterOuterHalo * (1.0 - textureHelmet.a) * 0.72);
+      // Inside the liquid cursor / Ranger reveal, keep the 3D letters sleek and metallic (no blinding white blowout!)
+      vec3 hoverLetterRgb = mix(textureDefaultDiffuse.rgb, mix(uRangerColor, dualAccent, 0.4), 0.32);
+      vec3 rangerBgWithLetters = mix(background, hoverLetterRgb, textureDefaultDiffuse.a);
 
       vec3 rangerLayer = mix(rangerBgWithLetters, textureHelmet.rgb, textureHelmet.a);
       vec3 finalColor = mix(base, rangerLayer, cursorEffect);
@@ -694,9 +664,8 @@
   function computeSizes() {
     const width = window.innerWidth;
     const height = window.innerHeight;
-    const maxRatio = IS_LOW_END ? 1.0 : 1.25;
-    const pixelRatio = Math.min(window.devicePixelRatio || 1, maxRatio);
-    return { width, height, pixelRatio };
+    // Cap pixelRatio at 1.0 to ensure effortless 60fps on integrated GPU laptops & mobile
+    return { width, height, pixelRatio: 1.0 };
   }
 
   function toSRGBColor(hex) {
@@ -1429,7 +1398,7 @@
         normalized: mouse.createEasedNormalized(0.025),
       };
 
-      const portraitSegs = IS_LOW_END ? 48 : (sizes.width <= 768 ? 64 : 128);
+      const portraitSegs = IS_LOW_END ? 48 : 64;
       this.geometry = createExtendedCharacterGeometry(portraitSegs);
       this.material = new THREE.MeshStandardMaterial({
         displacementMap: assets.textures.head.depth,
@@ -1528,7 +1497,7 @@
     constructor(renderer, sizes, assets) {
       this.renderer = renderer;
       this.sizes = sizes;
-      const portraitSegs = IS_LOW_END ? 48 : (sizes.width <= 768 ? 64 : 128);
+      const portraitSegs = IS_LOW_END ? 48 : 64;
       this.geometry = createExtendedCharacterGeometry(portraitSegs);
       this.material = new THREE.MeshStandardMaterial({
         map: assets.textures.ranger.diffuse,
@@ -1554,7 +1523,7 @@
       this.renderTarget = new THREE.WebGLRenderTarget(
         this.sizes.width * this.sizes.pixelRatio,
         this.sizes.height * this.sizes.pixelRatio,
-        { samples: IS_LOW_END || this.sizes.width <= 768 ? 0 : 2 }
+        { samples: 0 }
       );
     }
 
@@ -1772,7 +1741,7 @@
       this.defaultRenderTarget = new THREE.WebGLRenderTarget(
         this.sizes.width * this.sizes.pixelRatio,
         this.sizes.height * this.sizes.pixelRatio,
-        { samples: IS_LOW_END || this.sizes.width <= 768 ? 0 : 1 }
+        { samples: 0 }
       );
 
       this.cameraTransformGroup = new THREE.Group();
@@ -1803,23 +1772,23 @@
       this.lettersGroup.position.set(0, 0, -0.18);
       this.defaultScene.add(this.lettersGroup);
 
-      // Stylish High-Tech 3D Display Typography ("Bebas Neue" / "Mona Sans Variable" with cyber speed-slant)
-      // Cohesive with the site's headline aesthetic — zero white fill, brushed dark gunmetal + Cyan/Magenta neon bevels
+      // Clean Architectural 3D Display Typography ("Bebas Neue" / "Mona Sans Variable")
+      // Lightweight 8-slice metallic relief, zero cartoon outlines, zero white fill
       const rows = [
-        { text: "MARCOS", y: 0.23, spacing: 0.128 },
-        { text: "SIQUEIRA", y: 0.04, spacing: 0.116 },
+        { text: "MARCOS", y: 0.23, spacing: 0.125 },
+        { text: "SIQUEIRA", y: 0.04, spacing: 0.114 },
       ];
 
       const getGlyphAdvanceFactor = (ch) => {
-        if (ch === "I") return 0.54;
-        if (ch === "M") return 1.08;
-        if (ch === "Q" || ch === "U" || ch === "R" || ch === "A" || ch === "O") return 0.94;
-        return 0.88;
+        if (ch === "I") return 0.52;
+        if (ch === "M") return 1.06;
+        if (ch === "Q" || ch === "U" || ch === "R" || ch === "A" || ch === "O") return 0.92;
+        return 0.86;
       };
 
       const planeGeo = new THREE.PlaneGeometry(0.19, 0.23);
-      const totalDepth = 0.068;
-      const sliceCount = IS_LOW_END ? 10 : (this.sizes.width <= 768 ? 14 : 28);
+      const totalDepth = 0.026;
+      const sliceCount = 8;
 
       rows.forEach((row) => {
         const chars = row.text.split("");
@@ -1933,105 +1902,61 @@
 
     updateLetterTextures(rangerKey = this.activeRangerKey) {
       const profile = RANGER_PROFILES[rangerKey] || RANGER_PROFILES.silver;
-      const fillHex = profile.letterFill || "#1E2433";
       const primaryNeon = profile.letterStroke || profile.accentHex || "#00E5FF";
       const secondaryNeon = profile.secondaryHex || "#FF2E93";
 
-      this.letterItems.forEach((item, idx) => {
-        // 1. Draw Front/Back Face: Stylized Slanted High-Tech Typography, Anodized Gunmetal Core (NO WHITE!) + Cyan/Magenta Bevel
+      this.letterItems.forEach((item) => {
+        // 1. Clean Architectural Metallic Face (Lando Norris / Awwwards editorial style: brushed titanium grey, subtle 1.5px rim, zero cartoon border, zero white!)
         const ctx = item.ctx;
         ctx.clearRect(0, 0, 256, 256);
         ctx.save();
-        ctx.translate(128, 132);
-        // Subtle aerodynamic forward speed-slant (-8 deg shear) for modern gaming/cyber identity
-        ctx.transform(1, 0, -0.11, 1, 0, 0);
+        ctx.translate(128, 130);
         ctx.textAlign = "center";
         ctx.textBaseline = "middle";
-        ctx.lineJoin = "bevel";
-        ctx.miterLimit = 3;
-        ctx.font = '700 202px "Bebas Neue", "Mona Sans Variable", Impact, sans-serif';
+        ctx.lineJoin = "miter";
+        ctx.miterLimit = 2;
+        ctx.font = '700 206px "Bebas Neue", "Mona Sans Variable", sans-serif';
 
-        // Step A: Fill interior with Anodized Dark Titanium / Gunmetal Gradient (Zero White!)
-        const faceGrad = ctx.createLinearGradient(-75, -95, 75, 95);
-        faceGrad.addColorStop(0, "#323C52");
-        faceGrad.addColorStop(0.46, fillHex);
-        faceGrad.addColorStop(1, "#0C0F17");
+        // Brushed Titanium Slate Face Gradient (No white, no garish stripes)
+        const faceGrad = ctx.createLinearGradient(0, -92, 0, 92);
+        faceGrad.addColorStop(0, "#76859B");
+        faceGrad.addColorStop(0.45, "#4E5B6E");
+        faceGrad.addColorStop(1, "#2A3240");
         ctx.fillStyle = faceGrad;
         ctx.fillText(item.char, 0, 0);
 
-        // Step B: Internal Cyber Tech Micro-Scanlines & Dual-Tone Metallic Sheen clipped inside the letter face
-        ctx.save();
-        ctx.globalCompositeOperation = "source-atop";
-
-        const sheenGrad = ctx.createLinearGradient(-80, -95, 80, 95);
-        sheenGrad.addColorStop(0, "rgba(0, 229, 255, 0.24)");
-        sheenGrad.addColorStop(0.38, "rgba(148, 163, 184, 0.06)");
-        sheenGrad.addColorStop(0.65, "rgba(15, 19, 28, 0.25)");
-        sheenGrad.addColorStop(1, "rgba(255, 46, 147, 0.26)");
-        ctx.fillStyle = sheenGrad;
-        ctx.fillRect(-128, -128, 256, 256);
-
-        // Diagonal high-tech laser slash across the glyph
-        ctx.fillStyle = idx % 2 === 0 ? "rgba(0, 229, 255, 0.16)" : "rgba(255, 46, 147, 0.16)";
-        ctx.beginPath();
-        ctx.moveTo(-120, -18);
-        ctx.lineTo(120, -52);
-        ctx.lineTo(120, -34);
-        ctx.lineTo(-120, 0);
-        ctx.closePath();
-        ctx.fill();
-
-        // Fine horizontal cyber scanlines inside the gunmetal letter face
-        ctx.fillStyle = "rgba(0, 229, 255, 0.08)";
-        for (let sy = -105; sy < 105; sy += 7) {
-          ctx.fillRect(-120, sy, 240, 2);
-        }
-        ctx.restore();
-
-        // Step C: Outer Dual-Tone Neon Bezel (Cyan -> Titanium -> Magenta, ZERO WHITE!)
-        const borderGrad = ctx.createLinearGradient(-85, -95, 85, 95);
-        borderGrad.addColorStop(0, primaryNeon);
-        borderGrad.addColorStop(0.5, "#64748B");
-        borderGrad.addColorStop(1, secondaryNeon);
-        ctx.lineWidth = 11;
-        ctx.strokeStyle = borderGrad;
-        ctx.strokeText(item.char, 0, 0);
-
-        // Step D: Crisp Inner Specular Neon Rim (catches top-left studio key light in Cyan/Magenta)
-        const rimGrad = ctx.createLinearGradient(-75, -90, 75, 90);
+        // Ultra-subtle 1.5px precision metallic edge catching Cyan (top-left) and Magenta (bottom-right)
+        const rimGrad = ctx.createLinearGradient(-70, -88, 70, 88);
         rimGrad.addColorStop(0, primaryNeon);
-        rimGrad.addColorStop(0.55, "#94A3B8");
+        rimGrad.addColorStop(0.5, "rgba(148, 163, 184, 0.35)");
         rimGrad.addColorStop(1, secondaryNeon);
-        ctx.lineWidth = 2.4;
+        ctx.lineWidth = 2.0;
         ctx.strokeStyle = rimGrad;
-        ctx.strokeText(item.char, -1.5, -1.5);
+        ctx.strokeText(item.char, 0, 0);
 
         ctx.restore();
         item.tex.needsUpdate = true;
 
-        // 2. Draw Solid 3D Extruded Side Wall Volume with Anodized Gunmetal + Cyan/Magenta Edge Lighting
+        // 2. Sleek Dark Anodized 3D Extruded Side Wall Volume
         if (item.sideCtx && item.sideTex) {
           const sCtx = item.sideCtx;
           sCtx.clearRect(0, 0, 256, 256);
           sCtx.save();
-          sCtx.translate(128, 132);
-          sCtx.transform(1, 0, -0.11, 1, 0, 0);
+          sCtx.translate(128, 130);
           sCtx.textAlign = "center";
           sCtx.textBaseline = "middle";
-          sCtx.lineJoin = "bevel";
-          sCtx.miterLimit = 3;
-          sCtx.font = '700 202px "Bebas Neue", "Mona Sans Variable", Impact, sans-serif';
+          sCtx.lineJoin = "miter";
+          sCtx.miterLimit = 2;
+          sCtx.font = '700 206px "Bebas Neue", "Mona Sans Variable", sans-serif';
 
-          const grad = sCtx.createLinearGradient(-90, -100, 90, 100);
-          grad.addColorStop(0, primaryNeon);
-          grad.addColorStop(0.32, "#1E2636");
-          grad.addColorStop(0.68, "#121722");
-          grad.addColorStop(1, secondaryNeon);
+          const sideGrad = sCtx.createLinearGradient(-70, -90, 70, 90);
+          sideGrad.addColorStop(0, "#1E2634");
+          sideGrad.addColorStop(1, "#0E121A");
 
-          sCtx.lineWidth = 13;
-          sCtx.strokeStyle = grad;
+          sCtx.lineWidth = 3.5;
+          sCtx.strokeStyle = "#18202C";
           sCtx.strokeText(item.char, 0, 0);
-          sCtx.fillStyle = "#121722";
+          sCtx.fillStyle = sideGrad;
           sCtx.fillText(item.char, 0, 0);
           sCtx.restore();
           item.sideTex.needsUpdate = true;
@@ -3406,7 +3331,7 @@
           heroFrameCard.style.borderRadius = `${radius}px`;
           heroFrameCard.style.borderWidth = `${borderW}px`;
           heroFrameCard.style.transform = `translate3d(0, ${parallaxLiftPx.toFixed(1)}px, 0) scale(${heroScale.toFixed(4)})`;
-          heroFrameCard.style.filter = IS_LOW_END ? "none" : `brightness(${heroBright.toFixed(3)})`;
+          heroFrameCard.style.filter = "none";
           heroFrameCard.style.pointerEvents = scrollY > vh * 1.55 ? "none" : "auto";
         }
       }
@@ -3540,7 +3465,7 @@
         card.style.setProperty("--card-slide-x", `${slideXPx.toFixed(1)}px`);
         card.style.setProperty("--card-parallax-y", `${cardParallaxY.toFixed(1)}px`);
         card.style.setProperty("--card-parallax-scale", cardScale.toFixed(4));
-        card.style.setProperty("--card-brightness", IS_LOW_END ? "1" : cardBrightness.toFixed(3));
+        card.style.setProperty("--card-brightness", "1");
       });
 
       // Drive typewriter on Section 2 (#habilidades) as it settles into view (never un-types backwards while visible)

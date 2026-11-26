@@ -328,15 +328,15 @@ textarea:focus-visible {
   gap: 1rem;
   padding: 0.6rem 1.3rem;
   border-radius: 999px;
-  /* 30% Secundária: Vidro Fumê Titanium Translúcido (Monolítico e Sofisticado) */
+  /* 30% Secundária: Vidro Fumê Titanium Translúcido (Leve para a GPU) */
   background: linear-gradient(
     135deg,
-    rgba(16, 19, 27, 0.82) 0%,
-    rgba(22, 27, 38, 0.72) 50%,
-    rgba(14, 17, 24, 0.86) 100%
+    rgba(16, 19, 27, 0.92) 0%,
+    rgba(22, 27, 38, 0.88) 50%,
+    rgba(14, 17, 24, 0.94) 100%
   );
-  backdrop-filter: blur(28px) saturate(180%);
-  -webkit-backdrop-filter: blur(28px) saturate(180%);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
   border: 1px solid rgba(255, 255, 255, 0.14);
   box-shadow:
     0 18px 44px rgba(0, 0, 0, 0.5),
@@ -668,18 +668,18 @@ canvas.gl {
 .hero-intro-box {
   background: linear-gradient(
     145deg,
-    rgba(16, 19, 27, 0.84) 0%,
-    rgba(22, 26, 37, 0.74) 55%,
-    rgba(14, 17, 24, 0.88) 100%
+    rgba(16, 19, 27, 0.92) 0%,
+    rgba(22, 26, 37, 0.88) 55%,
+    rgba(14, 17, 24, 0.94) 100%
   );
-  backdrop-filter: blur(28px) saturate(180%);
-  -webkit-backdrop-filter: blur(28px) saturate(180%);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
   border: 1px solid rgba(255, 255, 255, 0.14);
   border-radius: 1.5rem;
   padding: 1.25rem 1.4rem;
   box-shadow:
-    0 24px 52px rgba(0, 0, 0, 0.52),
-    inset 0 1px 1px rgba(255, 255, 255, 0.16);
+    0 20px 44px rgba(0, 0, 0, 0.5),
+    inset 0 1px 1px rgba(255, 255, 255, 0.14);
 }
 
 .status-pill {
@@ -818,9 +818,9 @@ canvas.gl {
 /* Center subtle Cyber HUD hint pill at the bottom of the character */
 .hero-center-hint {
   justify-self: center;
-  background: linear-gradient(135deg, rgba(16, 19, 27, 0.84), rgba(22, 26, 37, 0.74));
-  backdrop-filter: blur(24px) saturate(180%);
-  -webkit-backdrop-filter: blur(24px) saturate(180%);
+  background: linear-gradient(135deg, rgba(16, 19, 27, 0.92), rgba(22, 26, 37, 0.88));
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
   border: 1px solid rgba(255, 255, 255, 0.14);
   box-shadow: 0 10px 28px rgba(0, 0, 0, 0.45), inset 0 1px 1px rgba(255, 255, 255, 0.15);
   color: var(--ink-light);
@@ -837,13 +837,13 @@ canvas.gl {
 .morphin-dock {
   background: linear-gradient(
     145deg,
-    rgba(16, 19, 27, 0.84) 0%,
-    rgba(22, 26, 37, 0.74) 55%,
-    rgba(14, 17, 24, 0.88) 100%
+    rgba(16, 19, 27, 0.92) 0%,
+    rgba(22, 26, 37, 0.88) 55%,
+    rgba(14, 17, 24, 0.94) 100%
   );
   color: var(--ink-light);
-  backdrop-filter: blur(28px) saturate(180%);
-  -webkit-backdrop-filter: blur(28px) saturate(180%);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
   border: 1px solid rgba(255, 255, 255, 0.14);
   border-radius: 1.65rem;
   padding: 1.25rem 1.35rem;
@@ -851,8 +851,8 @@ canvas.gl {
   flex-direction: column;
   gap: 0.9rem;
   box-shadow:
-    0 24px 52px rgba(0, 0, 0, 0.52),
-    inset 0 1px 1px rgba(255, 255, 255, 0.16);
+    0 20px 44px rgba(0, 0, 0, 0.5),
+    inset 0 1px 1px rgba(255, 255, 255, 0.14);
   transition: border-color 0.3s ease;
 }
 
@@ -1053,9 +1053,8 @@ canvas.gl {
   scroll-margin-top: 5.5rem;
   transform-origin: center top;
   transform: translate3d(var(--card-slide-x, 0px), var(--card-parallax-y, 0px), 0) scale(var(--card-parallax-scale, 1));
-  filter: brightness(var(--card-brightness, 1));
-  will-change: transform, filter;
-  transition: border-color 0.45s ease, box-shadow 0.45s ease;
+  will-change: transform;
+  transition: border-color 0.45s ease;
 }
 
 /* Section 3 (#exemplos) connects cleanly BELOW the Section 2 (#habilidades) card box */
