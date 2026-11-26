@@ -661,11 +661,40 @@
   // Core Helpers & Input Controllers
   // =========================================================================
 
+  function syncViewportZoomCompensation() {
+    const outerW = window.outerWidth || 0;
+    const screenW = window.screen && window.screen.width ? window.screen.width : 1366;
+    const refW = outerW > 300 ? outerW : screenW;
+    const innerW = window.innerWidth || refW;
+    let zoomFix = 1;
+    // If Chrome tab zoom is < 100% (e.g. 33% or 50%, making innerWidth huge and menus tiny),
+    // automatically scale root rem font-size so all menus render at 100% normal physical size!
+    if (innerW > refW * 1.08 && innerW > 768) {
+      zoomFix = Math.min(4.5, innerW / refW);
+      document.documentElement.style.fontSize = `${(16 * zoomFix).toFixed(2)}px`;
+    } else {
+      document.documentElement.style.fontSize = "";
+    }
+    window.__uiZoomCompensation = zoomFix;
+    return zoomFix;
+  }
+
   function computeSizes() {
-    const width = window.innerWidth;
-    const height = window.innerHeight;
-    // Cap pixelRatio at 1.0 to ensure effortless 60fps on integrated GPU laptops & mobile
-    return { width, height, pixelRatio: 1.0 };
+    syncViewportZoomCompensation();
+    const width = window.innerWidth || 1280;
+    const height = window.innerHeight || 720;
+    // Cap internal WebGL render resolution to 1024x576 (800x450 on low-end) even if browser is zoomed out to 4K/5K
+    const maxW = IS_LOW_END ? 800 : 1024;
+    const maxH = IS_LOW_END ? 450 : 576;
+    const pixelRatio = Math.min(
+      window.devicePixelRatio || 1,
+      1.0,
+      maxW / Math.max(width, 1),
+      maxH / Math.max(height, 1)
+    );
+    const renderWidth = Math.max(1, Math.round(width * pixelRatio));
+    const renderHeight = Math.max(1, Math.round(height * pixelRatio));
+    return { width, height, pixelRatio, renderWidth, renderHeight };
   }
 
   function toSRGBColor(hex) {
@@ -1212,8 +1241,10 @@
     }
 
     calcSize() {
-      const w = Math.max(1, Math.round(this.options.resolution * this.sizes.width));
-      const h = Math.max(1, Math.round(this.options.resolution * this.sizes.height));
+      const baseW = this.sizes.renderWidth || Math.round(this.sizes.width * (this.sizes.pixelRatio || 1));
+      const baseH = this.sizes.renderHeight || Math.round(this.sizes.height * (this.sizes.pixelRatio || 1));
+      const w = Math.max(1, Math.round(this.options.resolution * baseW));
+      const h = Math.max(1, Math.round(this.options.resolution * baseH));
       let cellScaleX = 1 / w;
       let cellScaleY = 1 / h;
       cellScaleX *= w / (1100 * this.options.resolution);
@@ -1280,7 +1311,8 @@
       );
       this.scene.add(this.output);
 
-      this.sourceTarget = new THREE.WebGLRenderTarget(this.sizes.width, this.sizes.height, { samples: 2 });
+      // Fluid velocity output target only needs low resolution (256x144, 0 MSAA) — 500x lighter on GPU!
+      this.sourceTarget = new THREE.WebGLRenderTarget(256, 144, { samples: 0 });
       this.clock = new THREE.Clock();
       this.delta = 0;
       this.interval = 1 / 60;
@@ -1288,7 +1320,6 @@
 
     resize() {
       this.simulation.resize();
-      this.sourceTarget.setSize(this.sizes.width, this.sizes.height);
     }
 
     update() {
@@ -1344,16 +1375,25 @@
         })
       );
       this.scene.add(this.mesh);
-      this.renderTarget = new THREE.WebGLRenderTarget(this.sizes.width, this.sizes.height, { samples: 1 });
+      const noiseW = Math.max(1, Math.round((this.sizes.renderWidth || 960) * 0.65));
+      const noiseH = Math.max(1, Math.round((this.sizes.renderHeight || 540) * 0.65));
+      this.renderTarget = new THREE.WebGLRenderTarget(noiseW, noiseH, { samples: 0 });
+      this.frameSkip = 0;
     }
 
     resize() {
-      this.renderTarget.setSize(this.sizes.width, this.sizes.height);
+      const noiseW = Math.max(1, Math.round((this.sizes.renderWidth || 960) * 0.65));
+      const noiseH = Math.max(1, Math.round((this.sizes.renderHeight || 540) * 0.65));
+      this.renderTarget.setSize(noiseW, noiseH);
     }
 
     update(elapsed, delta) {
       this.easedMouse.normalized.update(delta);
       this.easedMouse.pace.update(delta);
+
+      // Update slow-moving background simplex noise at 30fps instead of 60fps to halve shader load
+      this.frameSkip = (this.frameSkip + 1) % 2;
+      if (this.frameSkip !== 0 && elapsed > 0.2) return;
 
       const u = this.mesh.material.uniforms;
       u.uTime.value = elapsed;
@@ -2735,11 +2775,13 @@
       }, 280);
     }
 
-    window.addEventListener("resize", () => {
+      window.addEventListener("resize", () => {
       const next = computeSizes();
       sizes.width = next.width;
       sizes.height = next.height;
       sizes.pixelRatio = next.pixelRatio;
+      sizes.renderWidth = next.renderWidth;
+      sizes.renderHeight = next.renderHeight;
 
       mainCamera.aspect = sizes.width / sizes.height;
       mainCamera.fov = 2 * Math.atan(sizes.height / 2 / 10) * (180 / Math.PI);
@@ -3313,12 +3355,13 @@
           heroFrameCard.style.pointerEvents = "auto";
           heroFrameCard.style.setProperty("--char-lift-y", "0px");
         } else {
+          const zoomComp = window.__uiZoomCompensation || 1;
           const pFrame = easeInOutCubic(rangeProgress(scrollY, vh * 0.42, vh * 1.10));
           const pHeroCovered = easeInOutCubic(rangeProgress(scrollY, section2EnterScrollPx, vh * 2.10));
-          const maxFramePx = vw > 1100 ? 76 : vw > 680 ? 28 : 14;
+          const maxFramePx = (vw > 1100 ? 76 : vw > 680 ? 28 : 14) * zoomComp;
           const padPx = (pFrame * maxFramePx).toFixed(1);
-          const radius = Math.round(pFrame * (vw > 680 ? 26 : 20));
-          const borderW = (pFrame * 4).toFixed(1);
+          const radius = Math.round(pFrame * (vw > 680 ? 26 : 20) * zoomComp);
+          const borderW = (pFrame * 4 * zoomComp).toFixed(1);
 
           heroFrameCard.style.setProperty("--char-lift-y", "0px");
 
