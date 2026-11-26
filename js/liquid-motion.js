@@ -561,7 +561,7 @@
     uniform sampler2D tBackgroundNoise;
     uniform sampler2D tNoise;
     uniform sampler2D tTitleText;
-    uniform sampler2D tRetrowaveBg;
+    uniform sampler2D tPalmsLayer;
     uniform vec2 uMouseParallax;
 
     uniform vec3 uRangerColor;
@@ -589,176 +589,260 @@
 
       vec4 textureBackgroundNoise = texture2D(tBackgroundNoise, vUv);
 
-      // Liquid cursor mask (smoothstep prevents pixelated stair-step edges on the liquid reveal)
+      // Liquid cursor mask
       vec4 textureCursorEffect = texture2D(tCursorEffect, vec2(0.025 + vUv.x * 0.95, 0.025 + vUv.y * 0.95));
       textureCursorEffect.rgb = 1.0 - textureCursorEffect.rgb;
       float cursorEffect = smoothstep(0.08, 0.16, textureCursorEffect.r);
 
-      // =======================================================================
-      // Interactive Retrowave Palms, 3D Wireframe Floor & Sun Heat-Haze Stage
-      // =======================================================================
-      float imgAspect = 1.777;
-      vec2 coverScale = uAspect > imgAspect
-        ? vec2(1.0, imgAspect / max(uAspect, 0.1))
-        : vec2(uAspect / imgAspect, 1.0);
-      vec2 baseUv = (vUv - 0.5) * coverScale * 0.93 + 0.5;
-
-      // Mouse position in image UV space for interactive palm hover & 3D floor light
       vec2 mouseScreenUv = uMouseParallax * 0.5 + 0.5;
-      vec2 mouseBgUv = (mouseScreenUv - 0.5) * coverScale * 0.93 + 0.5;
-
-      // 1. REAL 3D PERSPECTIVE FLOOR DEFORMATION (bgUv.y < 0.49):
-      //    Closer foreground wireframe terrain shifts and tilts in 3D perspective relative to the distant horizon
-      float floorProx = clamp((0.485 - baseUv.y) / 0.485, 0.0, 1.0);
-      float floorDepthCurve = floorProx * floorProx;
-
-      vec2 bgUv = baseUv;
-      // Gentle upper camera drift + strong 3D stereographic ground plane parallax on the wireframe floor
-      bgUv.x += sin(uTime * 0.35) * 0.006 - uMouseParallax.x * (0.010 + floorDepthCurve * 0.034);
-      bgUv.x = 0.492 + (bgUv.x - 0.492) * (1.0 - uMouseParallax.y * 0.038 * floorProx);
-      bgUv.y += cos(uTime * 0.28) * 0.004 - uMouseParallax.y * (0.006 + floorDepthCurve * 0.018);
-      // Subtle 3D rolling terrain elevation wave across the wireframe hills
-      bgUv.y += sin(bgUv.x * 16.0 + uTime * 1.8) * 0.0032 * floorProx * (1.0 - floorProx);
-
-      // 2. SOLAR THERMAL HEAT-HAZE ("efeito de calor no sol"):
-      //    Convective rising heat mirage distortion on and around the giant sliced neon sun
-      vec2 sunCenter = vec2(0.490, 0.655);
-      float sunDist = length((bgUv - sunCenter) * vec2(1.62, 1.0));
-      float sunHeatZone = smoothstep(0.36, 0.05, sunDist);
-      float horizonHeatZone = smoothstep(0.62, 0.44, bgUv.y) * smoothstep(0.40, 0.50, bgUv.y);
-      float totalHeatMask = max(sunHeatZone, horizonHeatZone * 0.75);
-
-      float heatWaveX = sin(bgUv.y * 140.0 - uTime * 5.6 + sin(bgUv.x * 48.0 + uTime * 2.4)) * 0.0028 * totalHeatMask;
-      float heatWaveY = sin(bgUv.x * 82.0 + bgUv.y * 105.0 - uTime * 4.8) * 0.0018 * sunHeatZone;
-      vec2 heatedUv = clamp(bgUv + vec2(heatWaveX, heatWaveY), 0.002, 0.998);
-
-      vec3 retroScene = texture2D(tRetrowaveBg, heatedUv).rgb;
-
-      // 3. INTERACTIVE HOVER-SWAYING PALM TREES ("palmeiras balançando naturalmente ao passar o hover"):
-      //    6 palm trees along the horizon (x = 0.076, 0.240, 0.392, 0.582, 0.735, 0.896, y = 0.48..0.82).
-      //    Uses dark-silhouette foreground/background separation so palms sway freely without ghosting or warping the sun!
-      float palmYMask = smoothstep(0.47, 0.51, bgUv.y) * smoothstep(0.83, 0.75, bgUv.y);
-      if (palmYMask > 0.001) {
-        float px = bgUv.x;
-        float palmCenter = px < 0.158 ? 0.076
-                         : px < 0.316 ? 0.240
-                         : px < 0.487 ? 0.392
-                         : px < 0.658 ? 0.582
-                         : px < 0.815 ? 0.735
-                                      : 0.896;
-        float palmId = floor(palmCenter * 10.0 + 0.5);
-        float distFromPalmX = abs(px - palmCenter);
-        float palmColMask = smoothstep(0.075, 0.012, distFromPalmX) * palmYMask;
-
-        if (palmColMask > 0.001) {
-          // Height from trunk root (0.48) to crown top (0.80)
-          float h = clamp((bgUv.y - 0.48) / 0.32, 0.0, 1.0);
-          float trunkBend = h * h * (1.35 - 0.35 * h);
-
-          // Hover detection: triggers when mouse cursor or liquid trail passes over this specific palm tree
-          float mouseDistToPalm = length((mouseBgUv - vec2(palmCenter, 0.65)) * vec2(1.45, 1.0));
-          float hoverProximity = smoothstep(0.19, 0.0, mouseDistToPalm);
-          float hoverStrength = clamp(hoverProximity * 1.25 + cursorEffect * 0.95, 0.0, 1.6);
-
-          // Natural tropical breeze + elastic hover wind gust + directional brush push from cursor
-          float idleBreeze = sin(uTime * 2.1 + palmId * 1.7) * 0.0032 + cos(uTime * 3.4 + palmId * 2.3) * 0.0014;
-          float hoverOsc = sin(uTime * 7.8 + palmId * 1.9 - h * 2.6) * 0.014 * hoverStrength;
-          float cursorPush = clamp(mouseBgUv.x - palmCenter, -0.09, 0.09) * -0.11 * hoverProximity;
-
-          // Individual palm frond rustling in the upper crown (y > 0.56)
-          float crownZone = smoothstep(0.55, 0.65, bgUv.y);
-          float frondFlutterX = sin(bgUv.y * 155.0 + bgUv.x * 115.0 - uTime * (5.2 + hoverStrength * 8.0))
-                              * (0.0011 + 0.0042 * hoverStrength) * crownZone;
-          float frondFlutterY = cos(bgUv.x * 140.0 - bgUv.y * 90.0 + uTime * (4.8 + hoverStrength * 7.5))
-                              * (0.0006 + 0.0024 * hoverStrength) * crownZone;
-
-          float swayX = (idleBreeze + hoverOsc + cursorPush) * trunkBend + frondFlutterX;
-          float swayY = frondFlutterY * trunkBend;
-
-          vec2 swayedUv = clamp(heatedUv - vec2(swayX, swayY), 0.002, 0.998);
-          vec3 swayedSample = texture2D(tRetrowaveBg, swayedUv).rgb;
-
-          // Reconstruct clean sky/sun stripe behind the static palm position by sampling adjacent bright horizon pixels
-          vec2 fillUv = clamp(heatedUv + vec2((px < palmCenter ? -0.022 : 0.022), 0.0), 0.002, 0.998);
-          vec3 cleanBackdrop = max(retroScene, texture2D(tRetrowaveBg, fillUv).rgb);
-
-          // Composite swayed dark palm silhouette cleanly onto the reconstructed sky/sun backdrop
-          float swayedLuma = dot(swayedSample, vec3(0.333));
-          float cleanLuma = dot(cleanBackdrop, vec3(0.333));
-          float isPalmSilhouette = smoothstep(cleanLuma + 0.02, cleanLuma - 0.08, swayedLuma);
-          vec3 compositedPalm = mix(cleanBackdrop, swayedSample, isPalmSilhouette);
-
-          retroScene = mix(retroScene, compositedPalm, palmColMask);
-        }
-      }
-
-      // 4. REAL 3D WIREFRAME FLOOR LIGHT ANIMATION ("animação da luz passando entre as linhas"):
-      vec3 cyberCyan = vec3(0.0, 0.85, 1.0);
-      vec3 cyberMagenta = vec3(1.0, 0.02, 0.48);
-      vec3 cyberViolet = vec3(0.65, 0.12, 1.0);
+      vec3 cyberCyan = vec3(0.0, 0.90, 1.0);
+      vec3 cyberMagenta = vec3(1.0, 0.02, 0.46);
+      vec3 cyberViolet = vec3(0.55, 0.08, 0.95);
       vec3 dualAccent = mix(cyberCyan, cyberMagenta, clamp(vUv.x * 0.55 + (1.0 - vUv.y) * 0.45, 0.0, 1.0));
 
-      float floorRegion = smoothstep(0.50, 0.42, bgUv.y);
-      if (floorRegion > 0.001) {
-        // Isolate the glowing wireframe lines of the 3D terrain from the dark valley quads
-        float lineSignal = retroScene.r * 1.55 + retroScene.b * 0.55 - retroScene.g * 0.4;
-        float gridLineMask = smoothstep(0.20, 0.42, lineSignal) * floorRegion;
+      // =======================================================================
+      // 5-PLANE PROCEDURAL RETROWAVE STAGE (Rebuilt from scratch in 5 layers)
+      // - 5º Plano (Fundo): Background com Degradê Noturno, Horizonte Neon & Estrelas
+      // - 4º Plano: Sol Retrowave Fatiado com Efeito de Calor (Thermal Heat-Haze)
+      // - 3º Plano: Palmeiras Isoladas com Balanço Natural no Hover
+      // - 2º Plano: Piso Gradeado 3D em Perspectiva com Luz Correndo Entre as Linhas
+      // - 1º Plano (Frente): Avatar (Personagem / Ranger) & Letreiro 3D
+      // =======================================================================
 
-        // 3D perspective depth coordinate (Z from vanishing point) & valley lane angle
-        float perspZ = 1.15 / max(0.505 - bgUv.y, 0.028);
-        float laneAngle = (bgUv.x - 0.492) / max(0.505 - bgUv.y, 0.035);
+      // -----------------------------------------------------------------------
+      // 5º PLANO: Background com Degradê Retrowave & Estrelas
+      // -----------------------------------------------------------------------
+      vec2 skyUv = vUv - uMouseParallax * 0.004;
+      float skyT = clamp((skyUv.y - 0.44) / 0.56, 0.0, 1.0);
 
-        // Wave 1: 3D depth light pulses racing along the horizontal wireframe rings
-        float zPulse1 = pow(0.5 + 0.5 * sin(perspZ * 2.1 - uTime * 4.2), 6.0);
-        // Wave 2: Counter-traveling laser streams along the longitudinal mountain & valley lines
-        float laneStream = pow(0.5 + 0.5 * sin(laneAngle * 14.0 - perspZ * 1.3 + uTime * 5.0), 6.0);
-        // Wave 3: Interactive 3D hover energy ring expanding along the floor lines around the mouse
-        float mouseFloorDist = length((bgUv - mouseBgUv) * vec2(1.4, 1.0));
-        float hoverGridRing = smoothstep(0.24, 0.0, mouseFloorDist) * (0.65 + 0.35 * sin(mouseFloorDist * 45.0 - uTime * 8.0));
+      vec3 skyTop = vec3(0.018, 0.003, 0.042);       // Deep space violet-black
+      vec3 skyMid = vec3(0.085, 0.008, 0.145);       // Synthwave twilight purple
+      vec3 skyLow = vec3(0.450, 0.012, 0.210);       // Deep crimson-magenta glow
+      vec3 skyHorizon = vec3(0.950, 0.025, 0.280);   // Intense neon pink-red horizon
 
-        vec3 lineLightColor = mix(cyberMagenta, cyberCyan, 0.5 + 0.5 * sin(laneAngle * 3.0 + uTime * 1.8));
-        vec3 hoverLineColor = mix(cyberCyan, cyberViolet, 0.4);
+      vec3 plane5Sky = mix(skyHorizon, skyLow, smoothstep(0.0, 0.22, skyT));
+      plane5Sky = mix(plane5Sky, skyMid, smoothstep(0.18, 0.55, skyT));
+      plane5Sky = mix(plane5Sky, skyTop, smoothstep(0.50, 1.0, skyT));
 
-        vec3 gridEmission = lineLightColor * (zPulse1 * 0.85 + laneStream * 0.75)
-                          + hoverLineColor * ((hoverGridRing + cursorEffect * 0.75) * 0.95);
+      // Intense horizon atmospheric bloom right around y = 0.46
+      float horizonBloom = exp(-abs(skyUv.y - 0.465) * 14.0);
+      plane5Sky += vec3(0.55, 0.02, 0.18) * horizonBloom;
 
-        retroScene += gridLineMask * gridEmission * (0.45 + 0.55 * floorProx);
+      // Procedural twinkling stars in the upper night sky (y > 0.58)
+      vec2 starGrid = skyUv * vec2(uAspect * 48.0, 48.0);
+      vec2 starId = floor(starGrid);
+      vec2 starLocal = fract(starGrid) - 0.5;
+      float starSeed = fract(sin(dot(starId, vec2(127.1, 311.7))) * 43758.5453);
+      if (starSeed > 0.92 && skyUv.y > 0.56) {
+        vec2 starOffset = vec2(fract(starSeed * 17.3) - 0.5, fract(starSeed * 29.7) - 0.5) * 0.55;
+        float starDist = length(starLocal - starOffset);
+        float twinkle = 0.55 + 0.45 * sin(uTime * (2.5 + fract(starSeed * 9.1) * 4.0) + starSeed * 60.0);
+        float starBrightness = smoothstep(0.085, 0.01, starDist) * twinkle * smoothstep(0.56, 0.72, skyUv.y);
+        plane5Sky += vec3(0.95, 0.80, 1.0) * starBrightness * 0.65;
       }
 
-      // 5. Thermal Solar Corona & Horizon Glow + Subtle CRT Scanlines
-      float sunCorona = smoothstep(0.45, 0.0, sunDist);
-      float heatPulse = 0.5 + 0.5 * sin(uTime * 3.2 - sunDist * 16.0);
-      retroScene += vec3(0.95, 0.08, 0.38) * (sunCorona * (0.06 + 0.05 * heatPulse));
+      vec3 sceneColor = plane5Sky;
 
+      // -----------------------------------------------------------------------
+      // 4º PLANO: O Sol Retrowave Fatiado com Efeito de Calor (Behind Palms & Floor)
+      // -----------------------------------------------------------------------
+      vec2 sunCenter = vec2(0.50, 0.635) - uMouseParallax * 0.009;
+      vec2 sunAspectScale = vec2(max(uAspect * 0.64, 0.52), 1.0);
+      vec2 rawSunDelta = (vUv - sunCenter) * sunAspectScale;
+      float rawSunDist = length(rawSunDelta);
+
+      // Thermal Heat-Haze Distortion ("efeito de calor no sol"):
+      // Rising convective heat waves warp the sun's disc edge, horizontal slices, and solar corona
+      float sunHeatZone = smoothstep(0.36, 0.04, rawSunDist);
+      float heatWaveX = sin(vUv.y * 135.0 - uTime * 5.4 + sin(vUv.x * 42.0 + uTime * 2.3)) * 0.0038 * sunHeatZone;
+      float heatWaveY = sin(vUv.x * 80.0 + vUv.y * 105.0 - uTime * 4.6) * 0.0024 * sunHeatZone;
+
+      vec2 heatedSunDelta = (vUv + vec2(heatWaveX, heatWaveY) - sunCenter) * sunAspectScale;
+      float sunDist = length(heatedSunDelta);
+      float sunRadius = 0.215;
+
+      // Living thermal solar corona around the 4th-plane sun
+      float sunCorona = smoothstep(sunRadius * 2.1, sunRadius * 0.4, sunDist);
+      float coronaPulse = 0.5 + 0.5 * sin(uTime * 3.0 - sunDist * 18.0);
+      sceneColor += vec3(0.85, 0.03, 0.38) * (sunCorona * (0.14 + 0.06 * coronaPulse));
+
+      // Sliced Sun Disc with 20 progressive horizontal cut-out bars
+      float sunDiscMask = smoothstep(sunRadius + 0.003, sunRadius - 0.003, sunDist);
+      if (sunDiscMask > 0.001) {
+        // Normalized vertical position inside the sun: 0.0 at bottom, 1.0 at top
+        float sunNormY = clamp((heatedSunDelta.y + sunRadius) / (2.0 * sunRadius), 0.0, 1.0);
+
+        // Horizontal slice bars (21 bands; solid near the very top, progressively wider dark gaps toward the bottom)
+        float sliceFreq = 21.0;
+        float slicePhase = fract(sunNormY * sliceFreq - uTime * 0.18);
+        // Gap threshold decreases toward the top so top bands are thick and bottom bands have wider cut-outs
+        float gapThreshold = clamp(0.46 * (1.0 - sunNormY * 0.82), 0.06, 0.46);
+        float sliceBarMask = smoothstep(gapThreshold - 0.04, gapThreshold + 0.04, slicePhase);
+
+        // Sun vertical color gradient: Hot Electric Violet-Magenta at top -> Neon Pink -> Sunset Crimson-Orange at base
+        vec3 sunTopCol = vec3(0.78, 0.04, 0.85);
+        vec3 sunMidCol = vec3(0.98, 0.03, 0.52);
+        vec3 sunBotCol = vec3(1.00, 0.12, 0.28);
+        vec3 sunColor = mix(sunBotCol, sunMidCol, smoothstep(0.0, 0.55, sunNormY));
+        sunColor = mix(sunColor, sunTopCol, smoothstep(0.50, 1.0, sunNormY));
+
+        // Internal thermal plasma shimmer inside the sun bands
+        sunColor *= 0.92 + 0.14 * sin(sunNormY * 45.0 - uTime * 4.2);
+
+        sceneColor = mix(sceneColor, sunColor, sunDiscMask * sliceBarMask);
+      }
+
+      // -----------------------------------------------------------------------
+      // 3º PLANO: As Palmeiras (Isolated Transparent Layer in front of Sun, behind 3D Floor)
+      // -----------------------------------------------------------------------
+      vec2 palmBaseUv = vUv - uMouseParallax * 0.016;
+      // Map screen Y [0.43..0.81] to palms canvas Y [0.0..1.0]
+      float palmLocalY = (palmBaseUv.y - 0.43) / 0.38;
+      if (palmLocalY > 0.0 && palmLocalY < 1.0) {
+        // 6 palm trees positioned across X: 0.08, 0.235, 0.395, 0.595, 0.750, 0.905
+        float px = palmBaseUv.x;
+        float palmCenter = px < 0.157 ? 0.080
+                         : px < 0.315 ? 0.235
+                         : px < 0.495 ? 0.395
+                         : px < 0.672 ? 0.595
+                         : px < 0.827 ? 0.750
+                                      : 0.905;
+        float palmId = floor(palmCenter * 10.0 + 0.5);
+
+        // Cantilever height from trunk base (0.0) to crown top (1.0)
+        float h = clamp(palmLocalY, 0.0, 1.0);
+        float trunkBend = h * h * (1.35 - 0.35 * h);
+
+        // Hover interaction on this specific palm tree (mouse proximity + liquid cursor trail)
+        float mouseDistToPalm = length((mouseScreenUv - vec2(palmCenter, 0.62)) * vec2(1.4, 1.0));
+        float hoverProximity = smoothstep(0.18, 0.0, mouseDistToPalm);
+        float hoverStrength = clamp(hoverProximity * 1.35 + cursorEffect * 0.90, 0.0, 1.7);
+
+        // Natural breeze + elastic hover wind gust + directional push away from mouse cursor
+        float idleBreeze = sin(uTime * 2.0 + palmId * 1.7) * 0.0035 + cos(uTime * 3.3 + palmId * 2.1) * 0.0015;
+        float hoverOsc = sin(uTime * 7.6 + palmId * 2.0 - h * 2.5) * 0.015 * hoverStrength;
+        float cursorPush = clamp(mouseScreenUv.x - palmCenter, -0.09, 0.09) * -0.12 * hoverProximity;
+
+        // Individual palm frond rustling in the upper crown (h > 0.38)
+        float crownZone = smoothstep(0.35, 0.62, h);
+        float frondFlutterX = sin(palmLocalY * 85.0 + px * 120.0 - uTime * (5.5 + hoverStrength * 8.5))
+                            * (0.0012 + 0.0045 * hoverStrength) * crownZone;
+        float frondFlutterY = cos(px * 130.0 - palmLocalY * 65.0 + uTime * (5.0 + hoverStrength * 7.5))
+                            * (0.0010 + 0.0035 * hoverStrength) * crownZone;
+
+        float swayX = (idleBreeze + hoverOsc + cursorPush) * trunkBend + frondFlutterX;
+        float swayY = frondFlutterY * trunkBend;
+
+        vec2 palmSampleUv = vec2(clamp(px - swayX, 0.001, 0.999), clamp(palmLocalY - swayY, 0.001, 0.999));
+        vec4 palmTex = texture2D(tPalmsLayer, palmSampleUv);
+
+        // Dark purple-black silhouette with subtle neon rim-backlight from the sun & horizon behind it
+        vec3 palmSilhouetteCol = vec3(0.035, 0.006, 0.055);
+        float sunBehindPalm = smoothstep(sunRadius * 1.25, sunRadius * 0.2, length((vec2(px, vUv.y) - sunCenter) * sunAspectScale));
+        palmSilhouetteCol += vec3(0.22, 0.01, 0.12) * sunBehindPalm * (1.0 - palmTex.a * 0.5);
+
+        sceneColor = mix(sceneColor, palmSilhouetteCol, palmTex.a);
+      }
+
+      // -----------------------------------------------------------------------
+      // 2º PLANO: O Piso Gradeado 3D com Luz Passando Entre as Linhas (In front of Palms & Sun, behind Avatar)
+      // -----------------------------------------------------------------------
+      float horizonY = 0.455 - uMouseParallax.y * 0.016;
+      float sx = vUv.x - 0.50 - uMouseParallax.x * 0.026;
+      float sideAbs = abs(sx);
+
+      // Flat central highway valley (|sx| < 0.075) flanked by 3D undulating wireframe mountain ridges on left & right
+      float valleyWall = smoothstep(0.065, 0.24, sideAbs);
+      float ridgeProfile = valleyWall * (
+        0.042 +
+        0.026 * sin(sx * 22.0 + 0.7) +
+        0.016 * cos(sx * 38.0 - 0.4) +
+        0.020 * sin(sx * 13.0)
+      );
+      float terrainTopY = horizonY + ridgeProfile;
+
+      // Smooth 2nd-plane occlusion mask (occludes the lower trunks of the 3rd-plane palms and base of the 4th-plane sun!)
+      float floorPlaneMask = smoothstep(terrainTopY + 0.003, terrainTopY - 0.003, vUv.y);
+      if (floorPlaneMask > 0.001) {
+        float dy = max(terrainTopY - vUv.y, 0.003);
+        float floorProx = clamp(dy / 0.46, 0.0, 1.0);
+
+        // True 3D perspective depth Z & lateral world coordinate X
+        float z3d = 0.58 / (dy + 0.024);
+        float x3d = sx * z3d * 1.55;
+
+        // 3D undulating hill elevation across the side mountains & valley floor
+        float hill3D = valleyWall * (
+          sin(x3d * 1.45 + z3d * 0.75) * 0.52 +
+          cos(x3d * 2.60 - z3d * 1.05) * 0.28
+        ) + sin(x3d * 1.10 + z3d * 0.85) * 0.08 * (1.0 - valleyWall * 0.5);
+
+        // 3D Wireframe Grid UV coordinates wrapping over the 3D hills and central valley highway
+        float gridU = x3d * 2.35 + hill3D * 0.55;
+        float gridV = z3d * 1.95 + hill3D * 0.65 - uTime * 0.65;
+
+        float distU = abs(fract(gridU - 0.5) - 0.5);
+        float distV = abs(fract(gridV - 0.5) - 0.5);
+
+        // Perspective-correct anti-aliased grid line width + soft glow halo
+        float lineCoreW = clamp(0.016 + dy * 0.032, 0.014, 0.042);
+        float lineGlowW = lineCoreW * 3.2;
+
+        float coreU = smoothstep(lineCoreW, lineCoreW * 0.2, distU);
+        float coreV = smoothstep(lineCoreW, lineCoreW * 0.2, distV);
+        float glowU = smoothstep(lineGlowW, lineCoreW * 0.5, distU);
+        float glowV = smoothstep(lineGlowW, lineCoreW * 0.5, distV);
+
+        float distFade = smoothstep(24.0, 2.2, z3d);
+        float gridCore = max(coreU, coreV) * distFade;
+        float gridGlow = max(glowU, glowV) * distFade;
+
+        // 2nd-Plane Solid Terrain Surface (dark synthwave indigo-violet with horizon rim reflection)
+        vec3 terrainSurface = mix(vec3(0.022, 0.005, 0.068), vec3(0.055, 0.012, 0.145), clamp(hill3D * 0.5 + 0.5, 0.0, 1.0));
+        // Warm sunset reflection along the distant horizon vanishing point
+        float horizonMist = exp(-dy * 11.0);
+        terrainSurface = mix(terrainSurface, vec3(0.42, 0.02, 0.24), horizonMist * 0.65);
+
+        // Base Wireframe Grid Line Color (Retrowave Violet-Blue -> Neon Magenta near horizon)
+        vec3 baseGridCol = mix(vec3(0.28, 0.08, 0.78), vec3(0.85, 0.05, 0.55), horizonMist * 0.7 + valleyWall * 0.25);
+
+        // Animated Light Pulses Traveling Along the 3D Grid Lines ("animação da luz passando entre as linhas"):
+        // 1. Longitudinal laser streams racing along the U lines between horizon and foreground
+        float lineIdU = floor(gridU + 0.5);
+        float pulseAlongZ = pow(0.5 + 0.5 * sin(z3d * 1.65 - uTime * 4.8 + lineIdU * 0.85), 7.0);
+        // 2. Transversal energy waves sweeping across the V rings
+        float lineIdV = floor(gridV + 0.5);
+        float pulseAlongX = pow(0.5 + 0.5 * sin(x3d * 1.45 - uTime * 3.8 + lineIdV * 0.75), 7.0);
+        // 3. Interactive 3D hover light wave when cursor moves over the 3D floor
+        float mouseFloorDist = length((vUv - mouseScreenUv) * vec2(uAspect * 0.85, 1.0));
+        float hoverFloorWave = smoothstep(0.24, 0.0, mouseFloorDist) * (0.65 + 0.35 * sin(mouseFloorDist * 40.0 - uTime * 8.5));
+
+        vec3 pulseColorZ = mix(cyberCyan, cyberMagenta, 0.5 + 0.5 * sin(lineIdU * 1.3 + uTime * 1.5));
+        vec3 pulseColorX = mix(cyberMagenta, cyberCyan, 0.5 + 0.5 * cos(lineIdV * 1.1 - uTime * 1.8));
+
+        vec3 activeLineLight = pulseColorZ * (coreU * pulseAlongZ * 1.35)
+                             + pulseColorX * (coreV * pulseAlongX * 1.15)
+                             + mix(cyberCyan, cyberMagenta, 0.35) * ((hoverFloorWave + cursorEffect * 0.8) * gridCore * 1.25);
+
+        vec3 floorFinal = terrainSurface
+                        + baseGridCol * (gridCore * 0.78 + gridGlow * 0.22)
+                        + activeLineLight * (0.45 + 0.55 * floorProx);
+
+        sceneColor = mix(sceneColor, floorFinal, floorPlaneMask);
+      }
+
+      // Subtle CRT scanline texture & active Ranger theme aura
       float crtScan = 0.96 + 0.04 * sin(vUv.y * 420.0 + uTime * 3.5);
-      retroScene *= crtScan;
+      sceneColor *= crtScan;
 
-      // Subtle vignette & active Ranger theme aura blend
       vec2 stageDelta = (vUv - vec2(0.5, 0.48)) * vec2(max(uAspect, 0.65), 1.0);
-      float edgeVignette = clamp(1.0 - dot(stageDelta, stageDelta) * 0.34, 0.58, 1.0);
-      retroScene = mix(retroScene, retroScene * (0.72 + uRangerColor * 0.65), uRangerTintMix * 0.20);
-      vec3 studioBaseBg = retroScene * edgeVignette;
-      vec3 background = studioBaseBg;
+      float edgeVignette = clamp(1.0 - dot(stageDelta, stageDelta) * 0.32, 0.62, 1.0);
+      sceneColor = mix(sceneColor, sceneColor * (0.75 + uRangerColor * 0.60), uRangerTintMix * 0.18);
+      vec3 background = sceneColor * edgeVignette;
 
-      if (OUTLINE) {
-        float edge = 0.0;
-        vec4 sampledRight = texture2D(tBackgroundNoise, vUv + vec2(THICKNESS, 0.0));
-        vec4 sampledLeft = texture2D(tBackgroundNoise, vUv + vec2(-THICKNESS, 0.0));
-        vec4 sampledUp = texture2D(tBackgroundNoise, vUv + vec2(0.0, THICKNESS));
-        vec4 sampledDown = texture2D(tBackgroundNoise, vUv + vec2(0.0, -THICKNESS));
-
-        if (sampledRight.r != textureBackgroundNoise.r ||
-            sampledLeft.r != textureBackgroundNoise.r ||
-            sampledUp.r != textureBackgroundNoise.r ||
-            sampledDown.r != textureBackgroundNoise.r) {
-          edge = 1.0;
-        }
-
-        vec3 contourTint = mix(dualAccent, uRangerColor, 0.35);
-        float lineStrength = (0.04 + cursorEffect * 0.22) * uReveal;
-        background = mix(studioBaseBg, contourTint, edge * lineStrength);
-      }
-
+      // -----------------------------------------------------------------------
+      // 1º PLANO (FOREGROUND): Avatar (Marcos / Ranger) & Letreiro 3D
+      // -----------------------------------------------------------------------
       vec4 textureDefaultDiffuse = texture2D(tDefaultDiffuse, vUv);
       vec4 textureHelmet = texture2D(tHelmet, vUv);
 
@@ -767,13 +851,13 @@
       cursorEffect += smoothstep(0.98 - hoverTransition, 1.02 - hoverTransition, uHelmetHover);
       cursorEffect = clamp(cursorEffect * uCursorIntensity, 0.0, 1.0);
 
-      // Clean composition with deep blacks (removes milky / washed-out veil on portrait & letters)
+      // Clean composition with deep blacks (Avatar in 1st plane over the 2nd-plane 3D floor!)
       vec3 portraitRgb = pow(max(textureDefaultDiffuse.rgb, vec3(0.0)), vec3(1.16));
       vec3 helmetRgb = pow(max(textureHelmet.rgb, vec3(0.0)), vec3(1.12));
 
       vec3 base = mix(background, portraitRgb, textureDefaultDiffuse.a);
 
-      // Inside the liquid cursor / Ranger reveal, deepen letter saturation naturally (multiplicative tint, zero whitening!)
+      // Inside the liquid cursor / Ranger reveal, deepen letter saturation naturally
       vec3 saturatedTint = mix(uRangerColor, dualAccent, 0.4);
       vec3 hoverLetterRgb = mix(portraitRgb, portraitRgb * (0.65 + saturatedTint * 0.85), 0.45);
       vec3 rangerBgWithLetters = mix(background, hoverLetterRgb, textureDefaultDiffuse.a);
@@ -1888,6 +1972,16 @@
       this.titleTexture.needsUpdate = true;
       this.drawTitleSign();
 
+      // 3º Plano: Dedicated Transparent Palm Trees Layer Texture (6 detailed realistic coconut palm trees)
+      this.palmsCanvas = document.createElement("canvas");
+      this.palmsCanvas.width = 2048;
+      this.palmsCanvas.height = 768;
+      this.palmsTexture = new TextureCtor(this.palmsCanvas);
+      this.palmsTexture.minFilter = THREE.LinearFilter;
+      this.palmsTexture.magFilter = THREE.LinearFilter;
+      this.drawRetrowavePalmsLayer();
+      this.palmsTexture.needsUpdate = true;
+
       if (document.fonts && document.fonts.ready) {
         document.fonts.ready.then(() => {
           this.drawTitleSign();
@@ -1917,7 +2011,7 @@
             tBackgroundNoise: new THREE.Uniform(null),
             tNoise: new THREE.Uniform(assets.textures.noise.texture),
             tTitleText: new THREE.Uniform(this.titleTexture),
-            tRetrowaveBg: new THREE.Uniform(assets.textures.retrowaveBg || assets.textures.noise.texture),
+            tPalmsLayer: new THREE.Uniform(this.palmsTexture),
             uMouseParallax: new THREE.Uniform(new THREE.Vector2(0, 0)),
             uRangerColor: new THREE.Uniform(toSRGBColor("#1C2018")),
             uRangerTintMix: new THREE.Uniform(0.0),
@@ -2354,7 +2448,137 @@
     }
 
     drawTitleSign() {
-      // Replaced by 3D interactive Times New Roman letter blocks
+      // Replaced by 3D interactive letter blocks
+    }
+
+    drawRetrowavePalmsLayer() {
+      const canvas = this.palmsCanvas;
+      if (!canvas) return;
+      const ctx = canvas.getContext("2d");
+      if (!ctx) return;
+      const W = canvas.width;
+      const H = canvas.height;
+      ctx.clearRect(0, 0, W, H);
+
+      // 6 Palm Trees matching the Retrowave horizon layout:
+      // 3 on the left (0.080, 0.235, 0.395) and 3 on the right (0.595, 0.750, 0.905)
+      const palms = [
+        { x: 0.080, lean: -0.018, crownY: 0.32, scale: 0.92 },
+        { x: 0.235, lean: 0.014,  crownY: 0.28, scale: 0.98 },
+        { x: 0.395, lean: 0.022,  crownY: 0.26, scale: 1.04 },
+        { x: 0.595, lean: -0.022, crownY: 0.26, scale: 1.04 },
+        { x: 0.750, lean: -0.014, crownY: 0.29, scale: 0.97 },
+        { x: 0.905, lean: 0.018,  crownY: 0.33, scale: 0.91 },
+      ];
+
+      palms.forEach((p) => {
+        const baseX = p.x * W;
+        const baseY = H * 0.99;
+        const topX = (p.x + p.lean) * W;
+        const topY = p.crownY * H;
+        const ctrlX = (baseX + topX) * 0.5 - p.lean * W * 0.25;
+        const ctrlY = (baseY + topY) * 0.52;
+
+        ctx.save();
+        ctx.fillStyle = "#090212";
+        ctx.strokeStyle = "#090212";
+        ctx.lineCap = "round";
+
+        // 1. Curved Tapered Palm Trunk (wider at the base, tapering gracefully to the crown)
+        const steps = 28;
+        for (let i = 0; i < steps; i++) {
+          const t0 = i / steps;
+          const t1 = (i + 1) / steps;
+          const x0 = (1 - t0) * (1 - t0) * baseX + 2 * (1 - t0) * t0 * ctrlX + t0 * t0 * topX;
+          const y0 = (1 - t0) * (1 - t0) * baseY + 2 * (1 - t0) * t0 * ctrlY + t0 * t0 * topY;
+          const x1 = (1 - t1) * (1 - t1) * baseX + 2 * (1 - t1) * t1 * ctrlX + t1 * t1 * topX;
+          const y1 = (1 - t1) * (1 - t1) * baseY + 2 * (1 - t1) * t1 * ctrlY + t1 * t1 * topY;
+
+          const w = (19 * (1 - t0 * 0.58) + (i % 2 === 0 ? 1.2 : 0)) * p.scale;
+          ctx.lineWidth = w;
+          ctx.beginPath();
+          ctx.moveTo(x0, y0);
+          ctx.lineTo(x1, y1);
+          ctx.stroke();
+        }
+
+        // Crown hub / coconut cluster at the top of the trunk
+        ctx.beginPath();
+        ctx.arc(topX, topY + 6 * p.scale, 13 * p.scale, 0, Math.PI * 2);
+        ctx.fill();
+
+        // 2. Lush Tropical Feather-Leaf Palm Fronds (13 arching fronds with realistic hanging pinnate leaflets)
+        const frondSpecs = [
+          { angle: -2.85, len: 132, drop: 62, arch: -44 },
+          { angle: -2.48, len: 148, drop: 48, arch: -58 },
+          { angle: -2.12, len: 142, drop: 30, arch: -68 },
+          { angle: -1.78, len: 122, drop: 14, arch: -72 },
+          { angle: -1.42, len: 105, drop: 8,  arch: -68 },
+          { angle: -3.12, len: 112, drop: 78, arch: -24 },
+          { angle: -0.28, len: 132, drop: 62, arch: -44 },
+          { angle: -0.66, len: 148, drop: 48, arch: -58 },
+          { angle: -1.02, len: 142, drop: 30, arch: -68 },
+          { angle: -1.36, len: 122, drop: 14, arch: -72 },
+          { angle:  0.02, len: 112, drop: 78, arch: -24 },
+          { angle: -2.65, len: 125, drop: 68, arch: -35 },
+          { angle: -0.48, len: 125, drop: 68, arch: -35 },
+        ];
+
+        frondSpecs.forEach((f) => {
+          const dirX = Math.cos(f.angle);
+          const dirY = Math.sin(f.angle);
+          const endX = topX + dirX * f.len * p.scale;
+          const endY = topY + dirY * f.len * 0.48 * p.scale + f.drop * p.scale;
+          const midX = topX + dirX * f.len * 0.54 * p.scale;
+          const midY = topY + dirY * f.len * 0.36 * p.scale + f.arch * p.scale;
+
+          // Frond central spine (rachis)
+          ctx.lineWidth = 3.6 * p.scale;
+          ctx.beginPath();
+          ctx.moveTo(topX, topY);
+          ctx.quadraticCurveTo(midX, midY, endX, endY);
+          ctx.stroke();
+
+          // Individual drooping pointed leaflets along the frond spine
+          const numLeaflets = 24;
+          for (let l = 2; l <= numLeaflets; l++) {
+            const lt = l / numLeaflets;
+            const lx = (1 - lt) * (1 - lt) * topX + 2 * (1 - lt) * lt * midX + lt * lt * endX;
+            const ly = (1 - lt) * (1 - lt) * topY + 2 * (1 - lt) * lt * midY + lt * lt * endY;
+
+            // Tangent along spine
+            const tx = 2 * (1 - lt) * (midX - topX) + 2 * lt * (endX - midX);
+            const ty = 2 * (1 - lt) * (midY - topY) + 2 * lt * (endY - midY);
+            const tLen = Math.hypot(tx, ty) || 1;
+            const nx = -ty / tLen;
+            const ny = tx / tLen;
+
+            const env = Math.sin(lt * Math.PI);
+            const leafLen = (10 + 36 * env) * p.scale;
+            const sideSign = endX >= topX ? 1 : -1;
+
+            // Upper & lower hanging pinnae
+            [-1, 1].forEach((side) => {
+              const sLen = side === 1 ? leafLen : leafLen * 0.65;
+              const tipX = lx + (nx * side * 0.55 + (tx / tLen) * 0.42) * sLen * 0.55 + sideSign * 4 * lt;
+              const tipY = ly + Math.abs(ny) * sLen * (side === 1 ? 0.95 : 0.45) + sLen * 0.52;
+
+              ctx.lineWidth = (2.2 - lt * 0.9) * p.scale;
+              ctx.beginPath();
+              ctx.moveTo(lx, ly);
+              ctx.quadraticCurveTo(
+                (lx + tipX) * 0.5 + sideSign * 2,
+                (ly + tipY) * 0.5 - 3 * p.scale,
+                tipX,
+                tipY
+              );
+              ctx.stroke();
+            });
+          }
+        });
+
+        ctx.restore();
+      });
     }
 
     setRanger(key, { pulseMorph = false } = {}) {
