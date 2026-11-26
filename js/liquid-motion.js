@@ -2598,8 +2598,10 @@
         });
       };
 
-      // Click anywhere -> return all letters to original position and stay still for 0.8 seconds (800ms)
-      const onGlobalClickReset = () => {
+      // Reset letters to original position and stay still for 0.8 seconds (800ms):
+      // - On Desktop (> 768px with mouse): single click anywhere resets
+      // - On Mobile (<= 768px / touch): ONLY resets on a double-tap / double-click ("click duplo")!
+      const triggerLettersOriginReset = () => {
         this.lettersPauseUntil = performance.now() + 800;
         this.letterItems.forEach((item) => {
           item.velX = 0;
@@ -2615,10 +2617,51 @@
         });
       };
 
+      let lastTouchTime = 0;
+      let lastTapTime = 0;
+      let lastTapX = 0;
+      let lastTapY = 0;
+
+      const onDesktopMouseDown = () => {
+        const now = performance.now();
+        // Ignore synthesized mousedown from mobile touch or when on mobile viewport
+        if (this.sizes.width <= 768 || now - lastTouchTime < 650) return;
+        triggerLettersOriginReset();
+      };
+
+      const onMobileTouchStart = (e) => {
+        const now = performance.now();
+        lastTouchTime = now;
+        const touch = e.touches && e.touches[0];
+        if (!touch) return;
+
+        lastX = touch.clientX;
+        lastY = touch.clientY;
+
+        // Detect double-tap ("click duplo") within 340ms and 48px radius
+        const dt = now - lastTapTime;
+        const dist = Math.hypot(touch.clientX - lastTapX, touch.clientY - lastTapY);
+        if (dt > 25 && dt <= 340 && dist < 48) {
+          lastTapTime = 0;
+          triggerLettersOriginReset();
+        } else {
+          lastTapTime = now;
+          lastTapX = touch.clientX;
+          lastTapY = touch.clientY;
+        }
+      };
+
+      const onMobileDblClick = () => {
+        if (this.sizes.width <= 768) {
+          triggerLettersOriginReset();
+        }
+      };
+
       window.addEventListener("mousemove", onPointerMove, { passive: true });
       window.addEventListener("touchmove", onPointerMove, { passive: true });
-      window.addEventListener("mousedown", onGlobalClickReset, { passive: true });
-      window.addEventListener("touchstart", onGlobalClickReset, { passive: true });
+      window.addEventListener("mousedown", onDesktopMouseDown, { passive: true });
+      window.addEventListener("touchstart", onMobileTouchStart, { passive: true });
+      window.addEventListener("dblclick", onMobileDblClick, { passive: true });
     }
 
     drawTitleSign() {
@@ -2638,11 +2681,11 @@
       // 3 on the left (0.080, 0.235, 0.395) and 3 on the right (0.595, 0.750, 0.905)
       const palms = [
         { x: 0.080, lean: -0.018, crownY: 0.32, scale: 0.92 },
-        { x: 0.235, lean: 0.014,  crownY: 0.28, scale: 0.98 },
-        { x: 0.395, lean: 0.022,  crownY: 0.26, scale: 1.04 },
+        { x: 0.235, lean: 0.014, crownY: 0.28, scale: 0.98 },
+        { x: 0.395, lean: 0.022, crownY: 0.26, scale: 1.04 },
         { x: 0.595, lean: -0.022, crownY: 0.26, scale: 1.04 },
         { x: 0.750, lean: -0.014, crownY: 0.29, scale: 0.97 },
-        { x: 0.905, lean: 0.018,  crownY: 0.33, scale: 0.91 },
+        { x: 0.905, lean: 0.018, crownY: 0.33, scale: 0.91 },
       ];
 
       palms.forEach((p) => {
@@ -2687,13 +2730,13 @@
           { angle: -2.48, len: 148, drop: 48, arch: -58 },
           { angle: -2.12, len: 142, drop: 30, arch: -68 },
           { angle: -1.78, len: 122, drop: 14, arch: -72 },
-          { angle: -1.42, len: 105, drop: 8,  arch: -68 },
+          { angle: -1.42, len: 105, drop: 8, arch: -68 },
           { angle: -3.12, len: 112, drop: 78, arch: -24 },
           { angle: -0.28, len: 132, drop: 62, arch: -44 },
           { angle: -0.66, len: 148, drop: 48, arch: -58 },
           { angle: -1.02, len: 142, drop: 30, arch: -68 },
           { angle: -1.36, len: 122, drop: 14, arch: -72 },
-          { angle:  0.02, len: 112, drop: 78, arch: -24 },
+          { angle: 0.02, len: 112, drop: 78, arch: -24 },
           { angle: -2.65, len: 125, drop: 68, arch: -35 },
           { angle: -0.48, len: 125, drop: 68, arch: -35 },
         ];
