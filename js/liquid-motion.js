@@ -4530,14 +4530,14 @@
       //    - Closes its frame border at scrollY: 42vh -> 110vh (unless returningToPhoto1)
       //    - Recedes smoothly in parallax as Menu 1 (#habilidades) rises over it
       if (heroFrameCard && heroViewport) {
-        if (isHeroLocked || returningToPhoto1) {
+        if (!hasHeroBoxes || isHeroLocked || returningToPhoto1) {
           heroViewport.style.padding = "0px";
-          heroViewport.style.visibility = "visible";
+          heroViewport.style.visibility = scrollY > heroPauseThreshold ? "hidden" : "visible";
           heroFrameCard.style.borderRadius = "0px";
           heroFrameCard.style.borderWidth = "0px";
           heroFrameCard.style.transform = "none";
-          heroFrameCard.style.filter = "brightness(1)";
-          heroFrameCard.style.pointerEvents = "auto";
+          heroFrameCard.style.filter = "none";
+          heroFrameCard.style.pointerEvents = scrollY > vh * 0.85 ? "none" : "auto";
           heroFrameCard.style.setProperty("--char-lift-y", "0px");
         } else {
           const zoomComp = window.__uiZoomCompensation || 1;
