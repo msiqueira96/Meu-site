@@ -4,19 +4,18 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=5" />
-  <title>Marcos Siqueira — Vitrine Direta B2B &amp; WhatsApp</title>
+  <title>Marcos Siqueira — Engenharia JS, Web Design 3D, Automações IA &amp; Tráfego B2B</title>
   <meta name="description"
-    content="Marcos Siqueira — Engenharia JS, Web Design 3D Interativo, Automações IA e Tráfego Pago B2B. Conecte-se direto no WhatsApp." />
+    content="Vitrine B2B Interativa de Marcos Siqueira: Criação de Softwares em JavaScript, Web Design 3D, Automações com IA no WhatsApp e Gestão de Tráfego Pago." />
   <link rel="icon" type="image/png" href="../assets/icons/ms-favicon.png?v=14" />
   <link rel="shortcut icon" type="image/png" href="../assets/icons/ms-favicon.png?v=14" />
   <link rel="apple-touch-icon" href="../assets/icons/ms-favicon.png?v=14" />
-  <link rel="stylesheet" href="../css/b2b-studio.css?v=71" />
-  <script defer src="../js/three-vendor.min.js?v=71"></script>
-  <script defer src="../js/liquid-motion.js?v=71"></script>
+  <link rel="stylesheet" href="../css/b2b-studio.css?v=72" />
+  <script defer src="../js/three-vendor.min.js?v=72"></script>
+  <script defer src="../js/liquid-motion.js?v=72"></script>
 </head>
 
 <body>
-  <!-- 1. Loading Overlay -->
   <div class="liquid-loader" aria-live="polite">
     <div class="liquid-loader-inner">
       <div class="liquid-loader-title">MARCOS SIQUEIRA<span class="dot-accent">.</span></div>
@@ -25,13 +24,12 @@
         <div class="liquid-loader-bar-fill" id="loader-bar-fill"></div>
       </div>
       <div class="liquid-loader-meta">
-        <span class="liquid-loader-status" id="loader-status-text">Inicializando Palco 3D B2B...</span>
+        <span class="liquid-loader-status" id="loader-status-text">Inicializando Palco 3D...</span>
         <span class="liquid-loader-percent" id="loader-percent">0%</span>
       </div>
     </div>
   </div>
 
-  <!-- 2. Top-Left: Single Active Color Circle + Pure Circle Popover Menu -->
   <aside class="color-circle-widget" id="color-circle-widget" aria-label="Trocar Cor do Tema">
     <button type="button" class="color-circle-trigger" id="color-circle-trigger" aria-expanded="false"
       aria-controls="color-circles-menu" title="Trocar cor"></button>
@@ -53,7 +51,6 @@
     </div>
   </aside>
 
-  <!-- 3. Top-Right: Flat White Gear Icon (Fraco / Normal / Forte) -->
   <aside class="quality-gear-widget" id="quality-gear-widget" aria-label="Qualidade Gráfica">
     <button type="button" class="quality-gear-btn" id="quality-gear-btn" aria-expanded="false"
       aria-controls="quality-gear-panel" title="Qualidade">
@@ -70,195 +67,165 @@
     </div>
   </aside>
 
-  <main>
-    <!-- ===================================================================
-         ACT 1: 100dvh 3D INTERACTIVE STAGE + COMMAND DOCK
-    ==================================================================== -->
-    <section id="hero" class="hero-scroll-track" data-section-ranger="silver">
-      <div class="hero-sticky-viewport">
-        <div class="hero-frame-card" id="hero-frame-card">
-          <div data-gl="head" class="gl-canvas" aria-hidden="true"></div>
-          <div class="gl-wrap" aria-hidden="true">
-            <canvas class="gl"></canvas>
-          </div>
-        </div>
+  <main class="scrollytelling-master-track" id="scrollytelling-track">
+    <div class="scrollytelling-sticky-stage" id="scrollytelling-stage">
 
-        <div class="stage-command-dock">
-          <div class="stage-dock-brand">
-            <span class="live-pulse-dot" aria-hidden="true"></span>
-            <div class="stage-dock-copy">
-              <strong>MARCOS SIQUEIRA — SOLUÇÕES DIGITAIS B2B</strong>
-              <span>Softwares em JS · Web Design 3D · Automações IA no WhatsApp · Tráfego Pago</span>
-            </div>
-          </div>
-          <div class="stage-dock-cta">
-            <a href="#contato" class="btn-wa-primary" data-wa-direct="Olá Marcos Siqueira! Vi seu site 3D interativo e quero conversar sobre uma solução B2B para minha empresa.">
-              <span>Falar no WhatsApp</span>
-              <span aria-hidden="true">↗</span>
-            </a>
-            <a href="#vitrine" class="btn-stage-ghost">Serviços ↓</a>
-          </div>
+      <div class="stage-ambient-bg" aria-hidden="true">
+        <div class="stage-ambient-grid"></div>
+      </div>
+
+      <!-- CENA 1: Letreiro HTML Horizontal passando atrás da moldura -->
+      <div class="scene1-behind-marquee" id="scene1-behind-marquee" aria-hidden="true">
+        <div class="marquee-track-line" id="marquee-line-primary">
+          MARCOS SIQUEIRA <span class="marquee-accent">•</span> ENGENHARIA JS <span class="marquee-accent">•</span> WEB DESIGN 3D <span class="marquee-accent">•</span> AUTOMAÇÕES IA <span class="marquee-accent">•</span> TRÁFEGO PAGO B2B
+        </div>
+        <div class="marquee-track-line marquee-track-line--outline" id="marquee-line-secondary">
+          SOFTWARES SOB MEDIDA • EXPERIÊNCIAS AWWWARDS • ATENDIMENTO IA 24H • ESCALA COMERCIAL
         </div>
       </div>
-    </section>
 
-    <!-- ===================================================================
-         ACT 2: DIRECT VITRINE OF 4 B2B SERVICES + WHATSAPP CLOSING
-    ==================================================================== -->
-    <div class="b2b-showcase-wrapper" id="vitrine">
-      <div class="b2b-container">
+      <!-- CENA 1: Moldura Lando Norris com troca para a foto -->
+      <div class="hero-frame-card" id="hero-frame-card">
+        <div data-gl="head" class="gl-canvas" aria-hidden="true"></div>
+        <div class="gl-wrap" aria-hidden="true">
+          <canvas class="gl"></canvas>
+        </div>
 
-        <section id="habilidades" data-section-ranger="blue">
-          <div class="b2b-section-header">
-            <span class="b2b-eyebrow">VITRINE DE SOLUÇÕES B2B</span>
-            <h1 class="b2b-title">TECNOLOGIA E AQUISIÇÃO <span class="text-accent">PARA ESCALAR SUA EMPRESA.</span></h1>
-            <p class="b2b-subtitle">
-              Escolha o serviço ideal para a sua operação e fale diretamente comigo no WhatsApp:
-            </p>
-          </div>
+        <div class="framed-portrait-photo" id="framed-portrait-photo" aria-hidden="true">
+          <img src="../assets/gl/textures/head/webp/user-diffuse.png" alt="Marcos Siqueira" class="framed-photo-img" />
+          <span class="framed-photo-badge">MARCOS SIQUEIRA // B2B</span>
+        </div>
+      </div>
 
-          <div class="b2b-bento-grid">
-            <article class="bento-card" data-ranger-preview="blue">
-              <div class="bento-card-top">
-                <div class="bento-meta-row">
-                  <span class="bento-index">01 / ENGENHARIA JS</span>
-                  <span class="bento-tag">SaaS · ERPs · Dashboards</span>
-                </div>
-                <h3>Criação de Softwares &amp; Sistemas Web</h3>
-                <p>
-                  Sistemas personalizados para eliminar planilhas manuais: controle financeiro, painéis operacionais, CRMs próprios e leitura automática de documentos via IA.
-                </p>
+      <div class="hero-scroll-cue" id="hero-scroll-cue" aria-hidden="true">
+        <span>ROLE PARA INICIAR A EXPERIÊNCIA</span>
+        <span>↓</span>
+      </div>
+
+      <!-- CENA 2: Letreiro Superior + Setas Animadas + 4 Janelas de Trabalho -->
+      <section class="scene2-stage-layer" id="scene2-stage-layer" aria-label="Vitrine de Trabalhos e Contato">
+        <header class="scene2-top-header">
+          <span class="scene2-eyebrow">ENGENHARIA DIGITAL &amp; PROSPECÇÃO B2B</span>
+          <h1 class="scene2-typewriter-heading">
+            <span id="scene2-typewriter-text" data-full-text="SOLUÇÕES QUE AUTOMATIZAM E ESCALAM SUA EMPRESA"></span><span class="scene2-caret" aria-hidden="true"></span>
+          </h1>
+        </header>
+
+        <svg class="scene2-arrows-svg" viewBox="0 0 1000 600" preserveAspectRatio="none" aria-hidden="true">
+          <defs>
+            <marker id="scene2ArrowHead" markerWidth="8" markerHeight="8" refX="6" refY="4" orient="auto">
+              <path d="M0,0 L8,4 L0,8 Z" fill="#00F0FF" />
+            </marker>
+          </defs>
+          <path class="scene2-arrow-path" id="arrow-path-0" pathLength="1"
+            d="M 460 88 C 360 95, 290 120, 260 158" marker-end="url(#scene2ArrowHead)" />
+          <path class="scene2-arrow-path" id="arrow-path-1" pathLength="1"
+            d="M 540 88 C 640 95, 710 120, 740 158" marker-end="url(#scene2ArrowHead)" />
+          <path class="scene2-arrow-path" id="arrow-path-2" pathLength="1"
+            d="M 480 94 C 440 210, 340 295, 260 355" marker-end="url(#scene2ArrowHead)" />
+          <path class="scene2-arrow-path" id="arrow-path-3" pathLength="1"
+            d="M 520 94 C 560 210, 660 295, 740 355" marker-end="url(#scene2ArrowHead)" />
+        </svg>
+
+        <div class="scene2-windows-grid">
+          <article class="work-window" id="work-window-0" data-ranger-preview="blue">
+            <div class="window-titlebar">
+              <div class="window-dots"><span></span><span></span><span></span></div>
+              <span class="window-code">01 // SOFTWARES_JS.APP</span>
+              <span class="window-badge">SaaS · ERPs · IA</span>
+            </div>
+            <div class="window-body">
+              <div>
+                <h3>Criação de Softwares &amp; Sistemas JS</h3>
+                <p>Painéis financeiros, CRMs sob medida e sistemas que leem notas fiscais e PDFs sozinhos com IA em menos de 1 segundo.</p>
               </div>
-              <button type="button" class="bento-wa-btn" data-wa-direct="Olá Marcos! Quero conversar sobre o desenvolvimento de um *Software / Sistema Web em JS* para minha empresa.">
-                <span>Orçar no WhatsApp</span>
+              <div class="window-preview-strip">
+                <span>Leitura IA de Nota Fiscal.pdf</span>
+                <strong>✓ Extraído em 0,7s</strong>
+              </div>
+              <button type="button" class="window-wa-btn" data-wa-direct="Olá Marcos Siqueira! Vi sua vitrine interativa e quero conversar sobre um *Software / Sistema em JS* para minha empresa.">
+                <span>Orçar Sistema no WhatsApp</span>
                 <span aria-hidden="true">↗</span>
               </button>
-            </article>
+            </div>
+          </article>
 
-            <article class="bento-card" data-ranger-preview="red">
-              <div class="bento-card-top">
-                <div class="bento-meta-row">
-                  <span class="bento-index">02 / PADRÃO AWWWARDS</span>
-                  <span class="bento-tag">WebGL · Alta Conversão</span>
-                </div>
+          <article class="work-window" id="work-window-1" data-ranger-preview="red">
+            <div class="window-titlebar">
+              <div class="window-dots"><span></span><span></span><span></span></div>
+              <span class="window-code">02 // WEB_DESIGN_3D.GL</span>
+              <span class="window-badge">Padrão Awwwards</span>
+            </div>
+            <div class="window-body">
+              <div>
                 <h3>Web Design 3D &amp; Landing Pages B2B</h3>
-                <p>
-                  Sites interativos de alto impacto visual projetados para posicionar sua marca como líder no primeiro segundo e transformar visitantes em clientes reais.
-                </p>
+                <p>Páginas interativas de alto impacto (como esta animação) otimizadas para qualquer celular ou PC, feitas para converter decisores.</p>
               </div>
-              <button type="button" class="bento-wa-btn" data-wa-direct="Olá Marcos! Quero criar um *Site Interativo / Landing Page B2B* para minha empresa.">
-                <span>Orçar no WhatsApp</span>
+              <div class="window-preview-strip">
+                <span>Performance WebGL Adaptativa</span>
+                <strong>60–120Hz Fluido</strong>
+              </div>
+              <button type="button" class="window-wa-btn" data-wa-direct="Olá Marcos Siqueira! Vi sua vitrine interativa e quero criar um *Site 3D / Landing Page de Alta Conversão* para minha empresa.">
+                <span>Orçar Site no WhatsApp</span>
                 <span aria-hidden="true">↗</span>
               </button>
-            </article>
+            </div>
+          </article>
 
-            <article class="bento-card" data-ranger-preview="green">
-              <div class="bento-card-top">
-                <div class="bento-meta-row">
-                  <span class="bento-index">03 / OPERAÇÃO AUTÔNOMA</span>
-                  <span class="bento-tag">IA · WhatsApp 24/7 · n8n</span>
-                </div>
+          <article class="work-window" id="work-window-2" data-ranger-preview="green">
+            <div class="window-titlebar">
+              <div class="window-dots"><span></span><span></span><span></span></div>
+              <span class="window-code">03 // AUTOMACAO_IA.N8N</span>
+              <span class="window-badge">WhatsApp 24/7</span>
+            </div>
+            <div class="window-body">
+              <div>
                 <h3>Automações com IA &amp; SDR no WhatsApp</h3>
-                <p>
-                  Agentes de IA que atendem seus leads em 2 segundos no WhatsApp, agendam reuniões, leem PDFs e atualizam seu CRM sozinhos 24h por dia.
-                </p>
+                <p>Robôs inteligentes que atendem seus leads em 2 segundos, tiram dúvidas, agendam reuniões e atualizam seu CRM automaticamente.</p>
               </div>
-              <button type="button" class="bento-wa-btn" data-wa-direct="Olá Marcos! Quero implantar *Automações com IA e Atendimento no WhatsApp* na minha operação.">
-                <span>Orçar no WhatsApp</span>
+              <div class="window-preview-strip">
+                <span>Agente SDR IA no WhatsApp</span>
+                <strong>✓ Reunião Agendada (1,2s)</strong>
+              </div>
+              <button type="button" class="window-wa-btn" data-wa-direct="Olá Marcos Siqueira! Vi sua vitrine interativa e quero implantar *Automações com IA no WhatsApp* na minha operação.">
+                <span>Orçar Automação no WhatsApp</span>
                 <span aria-hidden="true">↗</span>
               </button>
-            </article>
+            </div>
+          </article>
 
-            <article class="bento-card" data-ranger-preview="yellow">
-              <div class="bento-card-top">
-                <div class="bento-meta-row">
-                  <span class="bento-index">04 / ESCALA COMERCIAL</span>
-                  <span class="bento-tag">Meta Ads · Google Ads</span>
-                </div>
-                <h3>Gestão de Tráfego Pago &amp; Aquisição</h3>
-                <p>
-                  Campanhas estratégicas no Meta Ads e Google Ads com rastreamento avançado para colocar clientes qualificados todos os dias no seu funil.
-                </p>
+          <article class="work-window" id="work-window-3" data-ranger-preview="yellow">
+            <div class="window-titlebar">
+              <div class="window-dots"><span></span><span></span><span></span></div>
+              <span class="window-code">04 // TRAFEGO_B2B.ADS</span>
+              <span class="window-badge">Meta &amp; Google Ads</span>
+            </div>
+            <div class="window-body">
+              <div>
+                <h3>Gestão de Tráfego Pago &amp; Escala B2B</h3>
+                <p>Anúncios estratégicos com rastreamento avançado levando clientes qualificados todos os dias direto para o seu funil automatizado.</p>
               </div>
-              <button type="button" class="bento-wa-btn" data-wa-direct="Olá Marcos! Quero escalar minhas vendas com *Gestão de Tráfego Pago*.">
-                <span>Orçar no WhatsApp</span>
+              <div class="window-preview-strip">
+                <span>Tráfego + Site Rápido + IA 24h</span>
+                <strong>+60% Leads Qualificados</strong>
+              </div>
+              <button type="button" class="window-wa-btn" data-wa-direct="Olá Marcos Siqueira! Vi sua vitrine interativa e quero escalar minhas vendas com *Gestão de Tráfego Pago B2B*.">
+                <span>Orçar Tráfego no WhatsApp</span>
                 <span aria-hidden="true">↗</span>
               </button>
-            </article>
-          </div>
-        </section>
-
-        <section id="contato" data-section-ranger="black">
-          <div class="b2b-contact-card">
-            <div>
-              <span class="b2b-eyebrow">CONEXÃO DIRETA NO WHATSAPP</span>
-              <h2 class="b2b-title">VAMOS INICIAR <span class="text-accent">SEU PROJETO?</span></h2>
-              <p class="b2b-subtitle">
-                Marque ao lado os serviços que você busca e clique no botão para abrir a conversa comigo diretamente no WhatsApp já com seu escopo pronto.
-              </p>
-              <ul class="contact-pitch-list">
-                <li>Atendimento direto comigo, sem intermediários</li>
-                <li>Diagnóstico técnico e comercial focado no seu ROI</li>
-                <li>Resposta rápida diretamente pelo WhatsApp</li>
-              </ul>
             </div>
+          </article>
+        </div>
 
-            <form id="briefing-form" class="briefing-form">
-              <div class="form-group">
-                <label class="form-label">1. Selecione os serviços de interesse:</label>
-                <div class="service-selector" id="service-selector">
-                  <button type="button" class="service-chip is-selected" data-service="Sistema / Software em JS" data-chip-ranger="blue">
-                    Sistema / Software em JS
-                  </button>
-                  <button type="button" class="service-chip" data-service="Site 3D / Landing Page" data-chip-ranger="red">
-                    Site 3D / Landing Page
-                  </button>
-                  <button type="button" class="service-chip" data-service="Automação IA / WhatsApp" data-chip-ranger="green">
-                    Automação IA / WhatsApp
-                  </button>
-                  <button type="button" class="service-chip" data-service="Gestão de Tráfego Pago" data-chip-ranger="yellow">
-                    Gestão de Tráfego Pago
-                  </button>
-                </div>
-              </div>
+        <div class="scene2-bottom-bar" id="scene2-bottom-bar">
+          <a href="#whatsapp" class="btn-wa-primary" data-wa-direct="Olá Marcos Siqueira! Vi sua apresentação interativa e quero conversar sobre um projeto para minha empresa.">
+            <span class="live-pulse-dot" aria-hidden="true"></span>
+            <span>Falar com Marcos no WhatsApp Agora</span>
+            <span aria-hidden="true">↗</span>
+          </a>
+        </div>
+      </section>
 
-              <div class="form-row">
-                <div class="form-group">
-                  <label for="client-name" class="form-label">2. Seu Nome ou Empresa</label>
-                  <input type="text" id="client-name" class="form-input" placeholder="Ex: Marcos / Empresa B2B" required />
-                </div>
-                <div class="form-group">
-                  <label for="client-contact" class="form-label">3. Seu WhatsApp (opcional)</label>
-                  <input type="text" id="client-contact" class="form-input" placeholder="(00) 99999-9999" />
-                </div>
-              </div>
-
-              <div class="form-group">
-                <label for="client-goal" class="form-label">4. Resumo rápido do objetivo (opcional):</label>
-                <textarea id="client-goal" class="form-textarea" rows="2"
-                  placeholder="Ex: Preciso automatizar meu WhatsApp com IA e criar uma página de alta conversão..."></textarea>
-              </div>
-
-              <div class="form-actions">
-                <button type="submit" class="btn-wa-primary btn-full">
-                  <span>Iniciar Conversa no WhatsApp</span>
-                  <span aria-hidden="true">↗</span>
-                </button>
-                <span class="copy-feedback" id="copy-feedback" aria-live="polite"></span>
-              </div>
-            </form>
-          </div>
-
-          <footer class="site-footer">
-            <div>
-              <strong>MARCOS SIQUEIRA<span class="dot-accent">.</span></strong>
-              <span> — Engenharia JS · Web Design 3D · Automações IA · Tráfego Pago B2B</span>
-            </div>
-            <a href="#hero" class="back-top-link">Voltar ao palco 3D ↑</a>
-          </footer>
-        </section>
-
-      </div>
     </div>
   </main>
 </body>

@@ -4398,331 +4398,137 @@
       }
     }, { passive: true });
 
-    function applyTimelineAt(rawScrollY, scrollY, now, dtSec) {
-      if (isHeroLocked) {
-        rawScrollY = 0;
-        scrollY = 0;
-      }
+    // Elements for Scene 1 (Lando Norris Frame + Behind-Frame Horizontal Marquee + Photo Swap)
+    // & Scene 2 (Top HTML Typewriter + Animated SVG Arrows + 4 Opening Work Windows)
+    const scrollyTrack = document.getElementById("scrollytelling-track");
+    const scene1Marquee = document.getElementById("scene1-behind-marquee");
+    const marqueeLinePrimary = document.getElementById("marquee-line-primary");
+    const marqueeLineSecondary = document.getElementById("marquee-line-secondary");
+    const framedPortraitPhoto = document.getElementById("framed-portrait-photo");
+    const scene2Layer = document.getElementById("scene2-stage-layer");
+    const scene2TypewriterText = document.getElementById("scene2-typewriter-text");
+    const scene2FullText = scene2TypewriterText
+      ? scene2TypewriterText.getAttribute("data-full-text") || "SOLUÇÕES QUE AUTOMATIZAM E ESCALAM SUA EMPRESA"
+      : "";
+    const arrowPaths = [0, 1, 2, 3].map((i) => document.getElementById(`arrow-path-${i}`));
+    const workWindows = [0, 1, 2, 3].map((i) => document.getElementById(`work-window-${i}`));
+    const scene2BottomBar = document.getElementById("scene2-bottom-bar");
 
+    function applyTimelineAt(rawScrollY, scrollY) {
       const vh = window.innerHeight || 800;
       const vw = window.innerWidth || 1280;
       const isMobile = vw <= 768;
-      const hasHeroBoxes = Boolean(morphinDock || heroIntroBox);
-      const section2EnterScrollPx = hasHeroBoxes ? vh * 1.15 : vh * 0.15;
 
-      const rawDeltaY = rawScrollY - prevRawScrollY;
-      prevRawScrollY = rawScrollY;
+      const trackHeight = scrollyTrack ? scrollyTrack.offsetHeight : vh * 4.6;
+      const maxScroll = Math.max(trackHeight - vh, 1);
+      const p = clamp01(scrollY / maxScroll);
 
-      // Detect when user has reached Section 2 (#habilidades) and then scrolls UP back into Section 1 (#hero):
-      if (hasHeroBoxes) {
-        if (rawScrollY >= vh * 1.05) {
-          hasVisitedSection2 = true;
-          returningToPhoto1 = false;
-        } else if (hasVisitedSection2 && rawDeltaY < -0.5 && rawScrollY < vh * 1.05) {
-          returningToPhoto1 = true;
-          hasVisitedSection2 = false;
-          returnLowestScrollY = rawScrollY;
-          window.scrollTo({ top: 0, behavior: "smooth" });
-        }
-
-        if (returningToPhoto1) {
-          if (rawScrollY < returnLowestScrollY) {
-            returnLowestScrollY = rawScrollY;
-          }
-          if (rawScrollY <= 10 || rawScrollY > returnLowestScrollY + 24) {
-            returningToPhoto1 = false;
-          }
-        }
-      } else {
-        returningToPhoto1 = false;
-      }
-
-      // Auto-pause WebGL loop when Hero stage is completely covered by content sections
-      const heroPauseThreshold = hasHeroBoxes ? vh * 2.35 : vh * 1.25;
-      window.__isHeroStageVisible = isHeroLocked || scrollY <= heroPauseThreshold;
-
-      // 0. Initial Scroll Cue: visible at scrollY = 0 (or when returning to Photo 1)
+      // 0. Scroll Cue at scrollY = 0
       if (heroScrollCue) {
-        heroScrollCue.classList.toggle("is-cue-hidden", (rawScrollY > 10 && !returningToPhoto1) || isHeroLocked);
+        heroScrollCue.classList.toggle("is-hidden", rawScrollY > 12);
       }
 
-      // 1. Trigger sequence on First Scroll (rawScrollY >= 10px):
-      //    - On Mobile (isMobile): 1st scroll recedes the character into the background (Photo 3 red circle/rectangle)
-      //      and shows ONLY #morphin-dock below him! Then scrolling further (scrollY >= 54vh) swaps #morphin-dock
-      //      out and brings #hero-intro-box into the bottom dock!
-      //    - When returning from Section 2 to Section 1 (returningToPhoto1): immediately resets to Photo 1 state!
-      if (rawScrollY < 8 || returningToPhoto1) {
-        rightBoxTriggered = false;
-        leftBoxTriggered = false;
-        firstScrollTimestamp = 0;
-        if (returningToPhoto1) {
-          rightEnterProgress = 0;
-          leftEnterProgress = 0;
-          hintEnterProgress = 0;
-        } else {
-          rightEnterProgress = Math.max(0, rightEnterProgress - dtSec * 1.8);
-          leftEnterProgress = Math.max(0, leftEnterProgress - dtSec * 1.8);
-          hintEnterProgress = Math.max(0, hintEnterProgress - dtSec * 1.8);
-        }
-        rightAutoType = 0;
-        leftAutoType = 0;
-        hintAutoType = 0;
-        rightTypedMax = 0;
-        leftTypedMax = 0;
-        hintTypedMax = 0;
-      } else {
-        if (!rightBoxTriggered) {
-          rightBoxTriggered = true;
-          firstScrollTimestamp = now;
-        }
-        if (isMobile) {
-          leftBoxTriggered = scrollY >= vh * 0.54;
-          if (!leftBoxTriggered) {
-            leftEnterProgress = Math.max(0, leftEnterProgress - dtSec * 2.4);
-            leftAutoType = 0;
-          }
-        } else if (!leftBoxTriggered && (now - firstScrollTimestamp >= 1250 || scrollY >= vh * 0.24)) {
-          leftBoxTriggered = true;
-        }
+      // =====================================================================
+      // CENA 1 (p: 0.00 -> 0.50):
+      // 1) Lando Norris Frame Shrinks to Center Portrait Frame (0.02 -> 0.20)
+      // 2) 3D Stage Crossfades to Framed Portrait Photo (0.06 -> 0.18)
+      // 3) Giant HTML Marquee Passes Horizontally Right-to-Left BEHIND Frame (0.07 -> 0.49)
+      // 4) Framed Photo Fades Out Smoothly as Marquee Reaches the End (0.38 -> 0.49)
+      // =====================================================================
+      const pShrink = easeInOutCubic(rangeProgress(p, 0.02, 0.20));
+      const pPhoto = easeInOutCubic(rangeProgress(p, 0.06, 0.18));
+      const pFadeOutFrame = easeInOutCubic(rangeProgress(p, 0.38, 0.49));
+
+      // Pause 3D WebGL loop once the photo inside the small frame is 100% opaque (saves 100% GPU during scroll!)
+      window.__isHeroStageVisible = pPhoto < 0.98 && p < 0.22;
+
+      if (framedPortraitPhoto) {
+        framedPortraitPhoto.style.opacity = pPhoto.toFixed(3);
       }
 
-      if (rightBoxTriggered) {
-        rightEnterProgress = Math.min(1, rightEnterProgress + dtSec * 1.15);
-        if (rightEnterProgress > 0.42) {
-          rightAutoType = Math.min(1, rightAutoType + dtSec * 0.65);
+      if (heroFrameCard) {
+        const targetSmallScale = isMobile ? 0.56 : 0.44;
+        const shrinkScale = 1 - pShrink * (1 - targetSmallScale);
+        const finalScale = shrinkScale * (1 - pFadeOutFrame * 0.20);
+        const frameOpacity = 1 - pFadeOutFrame;
+        const radiusPx = Math.round(pShrink * 28);
+        const borderPx = (pShrink * 2.5).toFixed(2);
+
+        heroFrameCard.style.transform = `translate3d(0, 0, 0) scale(${finalScale.toFixed(4)})`;
+        heroFrameCard.style.borderRadius = `${radiusPx}px`;
+        heroFrameCard.style.borderWidth = `${borderPx}px`;
+        heroFrameCard.style.opacity = frameOpacity.toFixed(3);
+        heroFrameCard.style.visibility = frameOpacity <= 0.005 ? "hidden" : "visible";
+        heroFrameCard.style.pointerEvents = p < 0.08 ? "auto" : "none";
+      }
+
+      if (scene1Marquee) {
+        const pMarquee = rangeProgress(p, 0.06, 0.49);
+        const marqueeFadeIn = rangeProgress(p, 0.06, 0.13);
+        const marqueeFadeOut = 1 - rangeProgress(p, 0.42, 0.50);
+        const marqueeOp = marqueeFadeIn * marqueeFadeOut;
+
+        scene1Marquee.style.opacity = marqueeOp.toFixed(3);
+        scene1Marquee.style.visibility = marqueeOp <= 0.005 ? "hidden" : "visible";
+
+        // Move horizontally from Right (+85vw) to Left (-175vw) behind the small frame
+        const xPrimaryVw = 85 - pMarquee * 260;
+        const xSecondaryVw = 110 - pMarquee * 250;
+        if (marqueeLinePrimary) {
+          marqueeLinePrimary.style.transform = `translate3d(${xPrimaryVw.toFixed(2)}vw, 0, 0)`;
         }
-      }
-      if (leftBoxTriggered) {
-        leftEnterProgress = Math.min(1, leftEnterProgress + dtSec * 1.05);
-        hintEnterProgress = Math.min(1, hintEnterProgress + dtSec * 0.95);
-        if (leftEnterProgress > 0.42) {
-          leftAutoType = Math.min(1, leftAutoType + dtSec * 0.48);
-          hintAutoType = Math.min(1, hintAutoType + dtSec * 0.78);
-        }
-      }
-
-      const pEnterR = returningToPhoto1
-        ? 0
-        : Math.max(easeOutCubic(rightEnterProgress), easeOutCubic(rangeProgress(scrollY, 15, vh * 0.30)));
-      const pEnterL = returningToPhoto1
-        ? 0
-        : isMobile
-          ? Math.max(easeOutCubic(leftEnterProgress), easeOutCubic(rangeProgress(scrollY, vh * 0.54, vh * 0.78)))
-          : Math.max(easeOutCubic(leftEnterProgress), easeOutCubic(rangeProgress(scrollY, vh * 0.20, vh * 0.48)));
-      const pEnterH = returningToPhoto1
-        ? 0
-        : Math.max(easeOutCubic(hintEnterProgress), easeOutCubic(rangeProgress(scrollY, vh * 0.25, vh * 0.52)));
-
-      // Sync mobile 3D character recession progress (only recede if bottom dock boxes actually exist in the DOM)
-      window.__mobileHeroRecedeProgress = hasHeroBoxes && isMobile && !isHeroLocked && !returningToPhoto1 ? pEnterR : 0;
-
-      // Header follows Right Box entrance on first scroll
-      if (siteHeader) {
-        siteHeader.classList.toggle("is-entrance-hidden", pEnterR < 0.02);
-        siteHeader.style.setProperty("--header-y", `${((1 - pEnterR) * -36).toFixed(1)}px`);
-        siteHeader.style.setProperty("--header-opacity", pEnterR.toFixed(3));
-        document.body.classList.toggle("is-header-visible", pEnterR > 0.15);
-      }
-
-      // 2. Main Character Stage (#hero-frame-card):
-      //    - Never lifts the canvas upward in CSS (--char-lift-y: 0px) so the character is never cut off at the bottom
-      //    - Closes its frame border at scrollY: 42vh -> 110vh (unless returningToPhoto1)
-      //    - Recedes smoothly in parallax as Menu 1 (#habilidades) rises over it
-      if (heroFrameCard && heroViewport) {
-        if (!hasHeroBoxes || isHeroLocked || returningToPhoto1) {
-          heroViewport.style.padding = "0px";
-          heroViewport.style.visibility = scrollY > heroPauseThreshold ? "hidden" : "visible";
-          heroFrameCard.style.borderRadius = "0px";
-          heroFrameCard.style.borderWidth = "0px";
-          heroFrameCard.style.transform = "none";
-          heroFrameCard.style.filter = "none";
-          heroFrameCard.style.pointerEvents = scrollY > vh * 0.85 ? "none" : "auto";
-          heroFrameCard.style.setProperty("--char-lift-y", "0px");
-        } else {
-          const zoomComp = window.__uiZoomCompensation || 1;
-          const frameStart = hasHeroBoxes ? vh * 0.42 : vh * 0.04;
-          const frameEnd = hasHeroBoxes ? vh * 1.10 : vh * 0.55;
-          const coverEnd = hasHeroBoxes ? vh * 2.10 : vh * 1.05;
-          const pFrame = easeInOutCubic(rangeProgress(scrollY, frameStart, frameEnd));
-          const pHeroCovered = easeInOutCubic(rangeProgress(scrollY, section2EnterScrollPx, coverEnd));
-          const maxFramePx = (vw > 1100 ? 48 : vw > 680 ? 22 : 10) * zoomComp;
-          const padPx = (pFrame * maxFramePx).toFixed(1);
-          const radius = Math.round(pFrame * (vw > 680 ? 24 : 16) * zoomComp);
-          const borderW = (pFrame * 1.5 * zoomComp).toFixed(1);
-
-          heroFrameCard.style.setProperty("--char-lift-y", "0px");
-
-          const parallaxLiftPx = -Math.max(0, scrollY - section2EnterScrollPx) * 0.28;
-          const heroScale = 1 - pHeroCovered * 0.05;
-
-          heroViewport.style.padding = `${padPx}px`;
-          heroViewport.style.visibility = scrollY > heroPauseThreshold ? "hidden" : "visible";
-          heroFrameCard.style.borderRadius = `${radius}px`;
-          heroFrameCard.style.borderWidth = `${borderW}px`;
-          heroFrameCard.style.transform = `translate3d(0, ${parallaxLiftPx.toFixed(1)}px, 0) scale(${heroScale.toFixed(4)})`;
-          heroFrameCard.style.filter = "none";
-          heroFrameCard.style.pointerEvents = scrollY > vh * 0.85 ? "none" : "auto";
+        if (marqueeLineSecondary) {
+          marqueeLineSecondary.style.transform = `translate3d(${xSecondaryVw.toFixed(2)}vw, 0, 0)`;
         }
       }
 
-      // 3. Right Box (#morphin-dock):
-      if (morphinDock) {
-        if (isHeroLocked) {
-          morphinDock.classList.remove("is-entrance-hidden");
-          morphinDock.style.setProperty("--scroll-y", "0px");
-          morphinDock.style.setProperty("--box-opacity", "1");
-        } else if (returningToPhoto1) {
-          morphinDock.classList.add("is-entrance-hidden");
-          morphinDock.style.setProperty("--box-opacity", "0");
-        } else {
-          const exitStartR = isMobile ? vh * 0.36 : vh * 1.12;
-          const exitEndR = isMobile ? vh * 0.54 : vh * 1.78;
-          const fadeStartR = isMobile ? vh * 0.38 : vh * 1.62;
-          const pExitR = easeInOutCubic(rangeProgress(scrollY, exitStartR, exitEndR));
-          const enterOffsetPx = (1 - pEnterR) * 80;
-          // On mobile, fade out in place at the bottom dock instead of floating up across the character's face
-          const exitOffsetPx = -pExitR * (isMobile ? 16 : vh * 1.05);
-          const totalRightY = enterOffsetPx + exitOffsetPx;
-          const rightOpacity = pEnterR * (1 - rangeProgress(scrollY, fadeStartR, exitEndR));
-
-          morphinDock.classList.toggle("is-entrance-hidden", rightOpacity < 0.02);
-          morphinDock.style.setProperty("--scroll-y", `${totalRightY.toFixed(1)}px`);
-          morphinDock.style.setProperty("--box-opacity", rightOpacity.toFixed(3));
-
-          const scrollTypeR = rangeProgress(scrollY, 25, vh * 0.35);
-          if (rightOpacity < 0.01) {
-            rightTypedMax = 0;
-          } else {
-            rightTypedMax = Math.max(rightTypedMax, rightAutoType, scrollTypeR);
-          }
-          rightBoxTyper.setProgress(rawScrollY < 8 ? 0 : rightTypedMax);
-        }
+      // =====================================================================
+      // CENA 2 (p: 0.50 -> 1.00):
+      // 1) Top HTML Marquee/Headline Writes Itself Above (0.51 -> 0.72)
+      // 2) Vector SVG Arrows Draw Down from Top Header (0.55 -> 0.82)
+      // 3) 4 Work Windows Open Smoothly as Arrows Arrive (0.60 -> 0.88)
+      // 4) Direct WhatsApp Bottom CTA Appears (0.78 -> 0.92)
+      // =====================================================================
+      if (scene2Layer) {
+        const s2Op = easeOutCubic(rangeProgress(p, 0.49, 0.55));
+        scene2Layer.style.opacity = s2Op.toFixed(3);
+        scene2Layer.style.visibility = s2Op <= 0.005 ? "hidden" : "visible";
+        scene2Layer.classList.toggle("is-interactive", p >= 0.53);
       }
 
-      // 4. Left Box (#hero-intro-box):
-      if (heroIntroBox) {
-        if (isHeroLocked || returningToPhoto1) {
-          heroIntroBox.classList.add("is-entrance-hidden");
-          heroIntroBox.style.setProperty("--box-opacity", "0");
-        } else {
-          const exitStartL = isMobile ? vh * 0.88 : vh * 1.48;
-          const exitEndL = isMobile ? vh * 1.15 : vh * 2.15;
-          const fadeStartL = isMobile ? vh * 0.90 : vh * 1.98;
-          const pExitL = easeInOutCubic(rangeProgress(scrollY, exitStartL, exitEndL));
-          const enterOffsetPx = (1 - pEnterL) * 80;
-          // On mobile, fade out in place at the bottom dock instead of floating up across the character's face (Photo 2)
-          const exitOffsetPx = -pExitL * (isMobile ? 16 : vh * 1.05);
-          const totalLeftY = enterOffsetPx + exitOffsetPx;
-          const leftOpacity = pEnterL * (1 - rangeProgress(scrollY, fadeStartL, exitEndL));
-
-          heroIntroBox.classList.toggle("is-entrance-hidden", leftOpacity < 0.02);
-          heroIntroBox.style.setProperty("--scroll-y", `${totalLeftY.toFixed(1)}px`);
-          heroIntroBox.style.setProperty("--box-opacity", leftOpacity.toFixed(3));
-
-          const scrollTypeL = rangeProgress(
-            scrollY,
-            isMobile ? vh * 0.54 : vh * 0.22,
-            isMobile ? vh * 0.78 : vh * 0.56
-          );
-          if (leftOpacity < 0.01) {
-            leftTypedMax = 0;
-          } else {
-            leftTypedMax = Math.max(leftTypedMax, leftAutoType, scrollTypeL);
-          }
-          leftBoxTyper.setProgress(rawScrollY < 8 ? 0 : leftTypedMax);
-        }
+      if (scene2TypewriterText && scene2FullText) {
+        const pType = rangeProgress(p, 0.51, 0.72);
+        const charCount = Math.round(pType * scene2FullText.length);
+        scene2TypewriterText.textContent = scene2FullText.slice(0, charCount);
       }
 
-      // 5. Center Hint (#hero-center-hint):
-      if (heroCenterHint) {
-        if (returningToPhoto1) {
-          heroCenterHint.classList.add("is-entrance-hidden");
-          heroCenterHint.style.setProperty("--box-opacity", "0");
-        } else {
-          const pExitH = easeInOutCubic(rangeProgress(scrollY, vh * 1.05, vh * 1.58));
-          const hintY = (1 - pEnterH) * 35 - pExitH * (vh * 0.95);
-          const hintOpacity = pEnterH * (1 - rangeProgress(scrollY, vh * 1.42, vh * 1.60));
-
-          heroCenterHint.classList.toggle("is-entrance-hidden", hintOpacity < 0.02);
-          heroCenterHint.style.setProperty("--scroll-y", `${hintY.toFixed(1)}px`);
-          heroCenterHint.style.setProperty("--box-opacity", hintOpacity.toFixed(3));
-
-          const scrollTypeH = rangeProgress(scrollY, vh * 0.24, vh * 0.52);
-          if (hintOpacity < 0.01) {
-            hintTypedMax = 0;
-          } else {
-            hintTypedMax = Math.max(hintTypedMax, hintAutoType, scrollTypeH);
-          }
-          hintTyper.setProgress(rawScrollY < 8 ? 0 : hintTypedMax);
-        }
-      }
-
-      // 6. Stacked Menu Sections Parallax (#habilidades -> #exemplos -> #processo -> #contato):
-      //    - Uses cached document offsets (zero getBoundingClientRect() during scroll -> zero layout thrashing on mobile!)
-      //    - Section 2 (#habilidades) slides in FROM THE RIGHT (+48vw -> 0px) and its cards write on scroll
-      //    - Section 3 (#exemplos, idx 1) connects cleanly BELOW Section 2's card box (does NOT cover Section 2)
-      if (!cachedCardDocTops.length) {
-        refreshLayoutOffsetsCache();
-      }
-      const untransformedTops = menuCards.map((_, idx) => (cachedCardDocTops[idx] || 0) - rawScrollY);
-
-      menuCards.forEach((card, idx) => {
-        const uTop = untransformedTops[idx];
-        const enterP = easeOutCubic(rangeProgress(vh - uTop, 0, vh * 0.75));
-        const innerY = (1 - enterP) * 14;
-
-        card.__lastAppliedY = 0;
-        card.style.setProperty("--inner-parallax-y", `${innerY.toFixed(1)}px`);
-        card.style.setProperty("--card-slide-x", "0px");
-        card.style.setProperty("--card-parallax-y", "0px");
-        card.style.setProperty("--card-parallax-scale", "1");
-        card.style.setProperty("--card-brightness", "1");
+      arrowPaths.forEach((pathEl, idx) => {
+        if (!pathEl) return;
+        const aStart = 0.55 + idx * 0.04;
+        const aEnd = aStart + 0.12;
+        const pArrow = easeOutCubic(rangeProgress(p, aStart, aEnd));
+        pathEl.style.strokeDashoffset = (1 - pArrow).toFixed(3);
+        pathEl.style.opacity = pArrow > 0.01 ? "1" : "0";
       });
 
-      // Drive typewriter on Section 2 (#habilidades) as it settles into view (never un-types backwards while visible)
-      const s2UTop = untransformedTops[0] !== undefined ? untransformedTops[0] : vh;
-      const s2WriteP = clamp01((vh * 0.88 - s2UTop) / (vh * 0.65));
-      if (s2UTop > vh * 1.02) {
-        section2TypedMax = 0;
-      } else {
-        section2TypedMax = Math.max(section2TypedMax, s2WriteP);
-      }
-      section2Typer.setProgress(section2TypedMax);
+      workWindows.forEach((winEl, idx) => {
+        if (!winEl) return;
+        const wStart = 0.59 + idx * 0.045;
+        const wEnd = wStart + 0.14;
+        const pWin = easeOutCubic(rangeProgress(p, wStart, wEnd));
+        const scaleY = 0.12 + pWin * 0.88;
+        const scaleX = 0.90 + pWin * 0.10;
+        const transY = (1 - pWin) * 22;
 
-      // Drive scroll-based typewriter on the headers/steps of Menu 2, Menu 3, Menu 4 as they enter
-      extraSectionTypers.forEach(({ secEl, typer }, tIdx) => {
-        const foundIdx = menuCards.indexOf(secEl);
-        const cardIdx = foundIdx >= 0 ? foundIdx : tIdx + 1;
-        const uTop = untransformedTops[cardIdx] !== undefined ? untransformedTops[cardIdx] : vh;
-        const pSecWrite = clamp01((vh * 0.85 - uTop) / (vh * 0.58));
-        if (uTop > vh * 1.02) {
-          extraSectionTypedMax[tIdx] = 0;
-        } else {
-          extraSectionTypedMax[tIdx] = Math.max(extraSectionTypedMax[tIdx] || 0, pSecWrite);
-        }
-        typer.setProgress(extraSectionTypedMax[tIdx]);
+        winEl.style.opacity = pWin.toFixed(3);
+        winEl.style.transform = `translate3d(0, ${transY.toFixed(1)}px, 0) scaleX(${scaleX.toFixed(3)}) scaleY(${scaleY.toFixed(3)})`;
       });
 
-      // Active navigation link highlight + automatic menu Ranger accent color sync on scroll (zero DOM reflow)
-      let currentId = "hero";
-      let currentRangerKey = "silver";
-      sectionEls.forEach((sec, sIdx) => {
-        const secTop = (cachedSectionDocTops[sIdx] || 0) - rawScrollY;
-        if (secTop <= vh * 0.42) {
-          currentId = sec.id;
-          if (sec.dataset.sectionRanger) {
-            currentRangerKey = sec.dataset.sectionRanger;
-          }
-        }
-      });
-      navLinks.forEach((link) => {
-        link.classList.toggle("is-active", link.getAttribute("href") === `#${currentId}`);
-      });
-      if (currentId !== lastActiveSectionId) {
-        lastActiveSectionId = currentId;
-        if (typeof window.__setPortfolioRangerFromScroll === "function") {
-          window.__setPortfolioRangerFromScroll(currentRangerKey);
-        }
+      if (scene2BottomBar) {
+        const pCta = easeOutCubic(rangeProgress(p, 0.78, 0.92));
+        const ctaY = (1 - pCta) * 16;
+        scene2BottomBar.style.opacity = pCta.toFixed(3);
+        scene2BottomBar.style.transform = `translate3d(0, ${ctaY.toFixed(1)}px, 0)`;
       }
     }
 
