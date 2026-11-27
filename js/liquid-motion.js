@@ -3140,8 +3140,25 @@
         activeNameEl.textContent = profile.name;
       }
 
+      const colorMap = {
+        silver: "linear-gradient(135deg, #FFFFFF, #8E9BAE)",
+        red: "#FF1E27",
+        blue: "#0088FF",
+        green: "#00E676",
+        yellow: "#FFD000",
+        pink: "#FF2A85",
+        black: "#11130E",
+      };
+      const circleTrigger = document.getElementById("color-circle-trigger");
+      if (circleTrigger) {
+        circleTrigger.style.setProperty("--active-circle-bg", colorMap[key] || colorMap.silver);
+        circleTrigger.setAttribute("data-current-color", key);
+      }
+
       document.querySelectorAll("[data-ranger-select]").forEach((ball) => {
-        ball.classList.toggle("is-active", ball.dataset.rangerSelect === key);
+        const isCurrent = ball.dataset.rangerSelect === key;
+        ball.classList.toggle("is-active", isCurrent);
+        ball.classList.toggle("is-current-color", isCurrent);
       });
 
       const u = this.compositionMesh.material.uniforms;
@@ -3233,13 +3250,37 @@
         });
       }
 
-      // 1. Morphin Balls Selector ("Seletor de Bolas Morphin")
-      document.querySelectorAll("[data-ranger-select]").forEach((ball) => {
-        ball.addEventListener("click", () => {
-          this.setRanger(ball.dataset.rangerSelect, { pulseMorph: true });
+      // 1. Minimal Single Color Circle & Popover Menu of Other Colors
+      const circleTrigger = document.getElementById("color-circle-trigger");
+      const circlesMenu = document.getElementById("color-circles-menu");
+
+      if (circleTrigger && circlesMenu) {
+        const toggleColorMenu = (forceOpen) => {
+          const nextOpen = typeof forceOpen === "boolean" ? forceOpen : circlesMenu.hidden;
+          circlesMenu.hidden = !nextOpen;
+          circleTrigger.setAttribute("aria-expanded", nextOpen ? "true" : "false");
+        };
+
+        circleTrigger.addEventListener("click", (e) => {
+          e.stopPropagation();
+          toggleColorMenu();
         });
-        ball.addEventListener("mouseenter", () => {
-          this.setRanger(ball.dataset.rangerSelect, { pulseMorph: false });
+
+        document.addEventListener("click", (e) => {
+          if (!circlesMenu.hidden && !circlesMenu.contains(e.target) && !circleTrigger.contains(e.target)) {
+            toggleColorMenu(false);
+          }
+        });
+      }
+
+      document.querySelectorAll("[data-ranger-select]").forEach((ball) => {
+        ball.addEventListener("click", (e) => {
+          e.stopPropagation();
+          this.setRanger(ball.dataset.rangerSelect, { pulseMorph: true });
+          if (circlesMenu && circleTrigger) {
+            circlesMenu.hidden = true;
+            circleTrigger.setAttribute("aria-expanded", "false");
+          }
         });
       });
 
@@ -4504,8 +4545,9 @@
         ? 0
         : Math.max(easeOutCubic(hintEnterProgress), easeOutCubic(rangeProgress(scrollY, vh * 0.25, vh * 0.52)));
 
-      // Sync mobile 3D character recession progress (0 = Photo 1 full size, 1 = Photo 3 receded into red circle/rectangle)
-      window.__mobileHeroRecedeProgress = isMobile && !isHeroLocked && !returningToPhoto1 ? pEnterR : 0;
+      // Sync mobile 3D character recession progress (only recede if bottom dock boxes actually exist in the DOM)
+      const hasHeroBoxes = Boolean(morphinDock || heroIntroBox);
+      window.__mobileHeroRecedeProgress = hasHeroBoxes && isMobile && !isHeroLocked && !returningToPhoto1 ? pEnterR : 0;
 
       // Header follows Right Box entrance on first scroll
       if (siteHeader) {

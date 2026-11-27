@@ -13,9 +13,9 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="../css/liquid-motion.css?v=63" />
-  <script defer src="../js/three-vendor.min.js?v=63"></script>
-  <script defer src="../js/liquid-motion.js?v=63"></script>
+  <link rel="stylesheet" href="../css/liquid-motion.css?v=64" />
+  <script defer src="../js/three-vendor.min.js?v=64"></script>
+  <script defer src="../js/liquid-motion.js?v=64"></script>
 </head>
 
 <body>
@@ -34,57 +34,27 @@
     </div>
   </div>
 
-  <!-- Top Navigation Header -->
-  <header class="site-header is-entrance-hidden" id="topo">
-    <a href="#hero" class="brand-logo" data-ranger-key="silver">
-      <span class="brand-dot" id="brand-dot"></span>
-      <span class="brand-name">MARCOS SIQUEIRA<span class="dot-accent">.</span></span>
-    </a>
-
-    <nav class="site-nav" aria-label="Menu principal">
-      <a href="#hero" class="nav-link is-active" data-ranger-key="silver" style="--nav-color:#C8D6E5">
-        <span class="nav-color-dot" style="background:linear-gradient(135deg,#FFFFFF,#8E9BAE)"></span>
-        <span>Início</span>
-      </a>
-      <a href="#habilidades" class="nav-link" data-ranger-key="red" style="--nav-color:#FF2233">
-        <span class="nav-color-dot" style="background:#FF2233"></span>
-        <span>Soluções B2B</span>
-      </a>
-      <a href="#exemplos" class="nav-link" data-ranger-key="blue" style="--nav-color:#0088FF">
-        <span class="nav-color-dot" style="background:#0088FF"></span>
-        <span>Simuladores</span>
-      </a>
-      <a href="#processo" class="nav-link" data-ranger-key="green" style="--nav-color:#00E676">
-        <span class="nav-color-dot" style="background:#00E676"></span>
-        <span>Método</span>
-      </a>
-      <a href="#contato" class="nav-link" data-ranger-key="black" style="--nav-color:#11130E">
-        <span class="nav-color-dot" style="background:#11130E;border-color:#FFFFFF"></span>
-        <span>WhatsApp</span>
-      </a>
-    </nav>
-
-    <div class="header-actions">
-      <a href="#contato" class="btn-whatsapp-b2b" data-wa-direct="Olá Marcos Siqueira! Vim pelo seu site interativo e quero conversar sobre um projeto B2B para minha empresa.">
-        <span class="wa-live-dot" aria-hidden="true"></span>
-        <span>Falar no WhatsApp</span>
-        <span aria-hidden="true">↗</span>
-      </a>
+  <!-- Minimal Single Selected Color Circle & Popover Menu of Other Colors -->
+  <aside class="color-circle-widget" id="color-circle-widget" aria-label="Seletor de Cor">
+    <button type="button" class="color-circle-trigger" id="color-circle-trigger" aria-expanded="false"
+      aria-controls="color-circles-menu" title="Trocar cor"></button>
+    <div class="color-circles-menu" id="color-circles-menu" hidden>
+      <button type="button" class="color-circle-option is-current-color" data-ranger-select="silver"
+        style="--ball-color:linear-gradient(135deg,#FFFFFF,#8E9BAE)" aria-label="Prata"></button>
+      <button type="button" class="color-circle-option" data-ranger-select="red"
+        style="--ball-color:#FF1E27" aria-label="Vermelho"></button>
+      <button type="button" class="color-circle-option" data-ranger-select="blue"
+        style="--ball-color:#0088FF" aria-label="Azul"></button>
+      <button type="button" class="color-circle-option" data-ranger-select="green"
+        style="--ball-color:#00E676" aria-label="Verde"></button>
+      <button type="button" class="color-circle-option" data-ranger-select="yellow"
+        style="--ball-color:#FFD000" aria-label="Amarelo"></button>
+      <button type="button" class="color-circle-option" data-ranger-select="pink"
+        style="--ball-color:#FF2A85" aria-label="Rosa"></button>
+      <button type="button" class="color-circle-option" data-ranger-select="black"
+        style="--ball-color:#11130E" aria-label="Preto"></button>
     </div>
-  </header>
-
-  <!-- Floating Awwwards Version Switcher -->
-  <nav class="awwwards-version-switcher" aria-label="Alternar versão do site">
-    <a href="../versao-completa/" class="version-switch-link is-active">1. Versão Completa</a>
-    <a href="../versao-direta/" class="version-switch-link">2. Versão Direta WhatsApp</a>
-  </nav>
-
-  <!-- Floating Direct WhatsApp FAB -->
-  <a href="#contato" class="wa-floating-fab" data-wa-direct="Olá Marcos Siqueira! Vim pelo seu portfólio 3D interativo e quero falar sobre uma solução para minha empresa.">
-    <span class="wa-fab-pulse" aria-hidden="true"></span>
-    <span>WhatsApp Direto</span>
-    <span aria-hidden="true">↗</span>
-  </a>
+  </aside>
 
   <!-- Minimal Flat White Gear Icon & 3 Complete Quality Presets (Fraco / Normal / Forte) -->
   <aside class="quality-gear-widget" id="quality-gear-widget" aria-label="Qualidade do Site">
@@ -107,7 +77,7 @@
   <main class="portfolio-main">
 
     <!-- ===================================================================
-         HERO SECTION — Marcos Siqueira Interactive Stage
+         HERO SECTION — Marcos Siqueira Clean 3D Interactive Stage (No Boxes!)
     ==================================================================== -->
     <section id="hero" class="hero-scroll-track" data-section-ranger="silver">
       <div class="hero-sticky-viewport">
@@ -117,98 +87,6 @@
             <canvas class="gl"></canvas>
           </div>
         </div>
-
-        <div class="hero-scroll-cue" id="hero-scroll-cue" aria-hidden="true">
-          <span>ROLE PARA EXPLORAR &amp; CONECTAR</span>
-          <span class="scroll-cue-arrow">↓</span>
-        </div>
-      </div>
-
-      <div class="hero-overlay-layout" id="hero-overlay-layout">
-
-        <!-- Left B2B Pitch -->
-        <div class="hero-intro-box is-entrance-hidden" id="hero-intro-box">
-          <div class="status-pill">
-            <span class="status-pulse"></span>
-            <span>PARCEIRO B2B • MARCOS SIQUEIRA</span>
-          </div>
-
-          <h1 class="hero-headline">
-            PROGRAMADOR JS,<br />
-            WEB DESIGN 3D &amp; <span class="text-accent">TRÁFEGO PAGO</span>
-          </h1>
-
-          <p class="hero-short-bio">
-            Construo <strong>softwares sob medida</strong>, <strong>experiências web nível Awwwards</strong>,
-            <strong>automações com IA no WhatsApp</strong> e <strong>aquisição B2B via anúncios</strong> para empresas que buscam escala e autoridade.
-          </p>
-
-          <div class="hero-actions">
-            <a href="#contato" class="btn-whatsapp-b2b" data-wa-direct="Olá Marcos Siqueira! Vi seu site 3D interativo e quero iniciar um projeto B2B para minha empresa.">
-              <span class="wa-live-dot" aria-hidden="true"></span>
-              <span>Chamar no WhatsApp</span>
-              <span aria-hidden="true">↗</span>
-            </a>
-            <button type="button" class="btn-outline" data-gl-helmet="hover">
-              <span>⚡ Segurar: Revelar Ranger</span>
-            </button>
-          </div>
-        </div>
-
-        <div class="hero-center-hint is-entrance-hidden" id="hero-center-hint">
-          <span>Interaja com o letreiro 3D e o personagem ou escolha sua solução B2B</span>
-        </div>
-
-        <!-- Right Morphin Selector -->
-        <div class="morphin-dock is-entrance-hidden" id="morphin-dock"
-          aria-label="Seletor Morphin de Cores do Ranger">
-          <div class="morphin-dock-top">
-            <span class="morphin-title">IT'S MORPHIN TIME</span>
-            <span class="morphin-active-name" id="morphin-active-name">RANGER PRATA</span>
-          </div>
-
-          <div class="morphin-balls" role="radiogroup" aria-label="Escolher Ranger">
-            <button type="button" class="morphin-ball is-active" data-ranger-select="silver"
-              style="--ball-color:linear-gradient(135deg,#FFFFFF,#8E9BAE); --ball-ring:#E2E8F0" title="Ranger Prata">
-              <span class="ball-core"></span>
-            </button>
-            <button type="button" class="morphin-ball" data-ranger-select="red"
-              style="--ball-color:#FF1E27; --ball-ring:#FF1E27" title="Ranger Vermelho">
-              <span class="ball-core"></span>
-            </button>
-            <button type="button" class="morphin-ball" data-ranger-select="blue"
-              style="--ball-color:#0088FF; --ball-ring:#0088FF" title="Ranger Azul">
-              <span class="ball-core"></span>
-            </button>
-            <button type="button" class="morphin-ball" data-ranger-select="green"
-              style="--ball-color:#00E676; --ball-ring:#00E676" title="Ranger Verde">
-              <span class="ball-core"></span>
-            </button>
-            <button type="button" class="morphin-ball" data-ranger-select="yellow"
-              style="--ball-color:#FFD000; --ball-ring:#FFD000" title="Ranger Amarelo">
-              <span class="ball-core"></span>
-            </button>
-            <button type="button" class="morphin-ball" data-ranger-select="pink"
-              style="--ball-color:#FF2A85; --ball-ring:#FF2A85" title="Ranger Rosa">
-              <span class="ball-core"></span>
-            </button>
-            <button type="button" class="morphin-ball" data-ranger-select="black"
-              style="--ball-color:#11130E; --ball-ring:#11130E; border-color:#11130E" title="Ranger Preto">
-              <span class="ball-core" style="border: 2px solid #FFFFFF"></span>
-            </button>
-          </div>
-
-          <div class="morphin-dock-actions">
-            <button type="button" class="morphin-lock-btn" data-toggle-helmet>
-              Fixar Ranger: OFF
-            </button>
-            <button type="button" class="morphin-ghost-btn" id="btn-toggle-boxes-visibility"
-              title="Tela cheia: ocultar boxes e prender o scroll">
-              👁 Boxes
-            </button>
-          </div>
-        </div>
-
       </div>
     </section>
 

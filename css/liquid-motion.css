@@ -2763,50 +2763,107 @@ html[data-quality-tier="high"] .morphin-dock {
   50% { transform: scale(1.32); opacity: 0.65; }
 }
 
-/* Floating Top-Left Version Switcher (Allows testing both folders with 1 click) */
-.awwwards-version-switcher {
+/* =========================================================================
+   Minimal Single Color Circle Selector (Só o círculo com a cor + menu com as outras cores)
+   ========================================================================= */
+
+.color-circle-widget {
   position: fixed;
-  top: 0.95rem;
+  top: 1rem;
   left: 1.05rem;
-  z-index: 94;
-  display: inline-flex;
+  z-index: 95;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.55rem;
+  pointer-events: auto;
+}
+
+.color-circle-trigger {
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border-radius: 50%;
+  background: var(--active-circle-bg, linear-gradient(135deg, #FFFFFF, #8E9BAE));
+  border: 2px solid rgba(255, 255, 255, 0.9);
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.55);
+  cursor: pointer;
+  transition: transform 0.22s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.22s ease;
+}
+
+.color-circle-trigger:hover,
+.color-circle-trigger[aria-expanded="true"] {
+  transform: scale(1.14);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.75);
+}
+
+.color-circles-menu {
+  display: flex;
+  flex-direction: column;
   align-items: center;
-  gap: 0.28rem;
-  padding: 0.26rem;
-  border-radius: 999px;
-  background: rgba(11, 5, 29, 0.88);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 255, 255, 0.16);
-  box-shadow: 0 10px 26px rgba(0, 0, 0, 0.55);
-  transition: top 0.45s cubic-bezier(0.22, 1, 0.36, 1);
+  gap: 0.5rem;
+  padding: 0;
+  background: transparent;
+  border: none;
+  box-shadow: none;
+  animation: circlesFadeIn 0.18s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
-body.is-header-visible .awwwards-version-switcher {
-  top: 5.15rem;
+.color-circles-menu[hidden] {
+  display: none !important;
 }
 
-.version-switch-link {
-  text-decoration: none;
-  font-family: var(--font-display);
-  font-size: 0.82rem;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  color: rgba(255, 255, 255, 0.72);
-  padding: 0.28rem 0.72rem;
-  border-radius: 999px;
-  transition: all 0.2s ease;
+@keyframes circlesFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-6px) scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
 }
 
-.version-switch-link:hover {
-  color: #FFFFFF;
-  background: rgba(255, 255, 255, 0.08);
+.color-circle-option {
+  width: 26px;
+  height: 26px;
+  padding: 0;
+  border-radius: 50%;
+  background: var(--ball-color);
+  border: 2px solid rgba(255, 255, 255, 0.78);
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.55);
+  cursor: pointer;
+  transition: transform 0.18s ease, border-color 0.18s ease;
 }
 
-.version-switch-link.is-active {
-  background: linear-gradient(135deg, var(--accent), var(--accent-magenta));
-  color: #090317;
-  font-weight: 700;
+.color-circle-option:hover {
+  transform: scale(1.18);
+  border-color: #FFFFFF;
+}
+
+.color-circle-option.is-current-color {
+  display: none !important;
+}
+
+body.is-direct-b2b-mode .hero-scroll-track {
+  height: 155vh;
+}
+
+@media (max-width: 768px) {
+  .color-circle-widget {
+    top: 0.7rem;
+    left: 0.7rem;
+  }
+
+  .color-circle-trigger {
+    width: 26px;
+    height: 26px;
+  }
+
+  .color-circle-option {
+    width: 24px;
+    height: 24px;
+  }
 }
 
 /* Interactive B2B Service Pills inside Versão Direta Hero Stage */
