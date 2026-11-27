@@ -4278,45 +4278,9 @@
     );
     hintTyper.setProgress(0);
 
-    // Build Scroll-Driven Typewriter for Section 2 (#habilidades — "O Que Eu Faço"):
-    // Box slides in from the right EMPTY, then writes out its header and each of the 4 skill cards as you scroll!
-    const section2Track = document.getElementById("section2-scroll-track");
-    const section2Card = document.getElementById("habilidades");
-    const section2Steps = [];
-    if (section2Card) {
-      const s2Head = section2Card.querySelector(".section-head");
-      if (s2Head) {
-        section2Steps.push({ type: "richText", el: s2Head });
-      }
-      const skillCards = Array.from(section2Card.querySelectorAll(".skill-card"));
-      skillCards.forEach((sc) => {
-        // First reveal the empty skill-card sliding in from the right, then write its contents on scroll
-        section2Steps.push({ type: "reveal", el: sc, weight: 10 });
-        section2Steps.push({ type: "richText", el: sc });
-      });
-    }
-    const section2Typer = createSequenceTypewriter(section2Steps);
-    section2Typer.setProgress(0);
-
-    // Also build scroll-driven typewriters for the headers/steps of Menu 2 (#exemplos), Menu 3 (#processo), Menu 4 (#contato)
-    const extraSectionTypers = ["exemplos", "processo", "contato"].map((secId) => {
-      const secEl = document.getElementById(secId);
-      if (!secEl) return null;
-      const steps = [];
-      const headEl = secEl.querySelector(".section-head") || secEl.querySelector(".contact-copy");
-      if (headEl) {
-        steps.push({ type: "richText", el: headEl });
-      }
-      if (secId === "processo") {
-        Array.from(secEl.querySelectorAll(".p-step")).forEach((pStep) => {
-          steps.push({ type: "reveal", el: pStep, weight: 8 });
-          steps.push({ type: "richText", el: pStep });
-        });
-      }
-      const typer = createSequenceTypewriter(steps);
-      typer.setProgress(0);
-      return { secEl, typer };
-    }).filter(Boolean);
+    // Keep all content sections 100% visible and legible at all times (no hidden untyped text or sideways offscreen cards)
+    const section2Typer = { setProgress() {} };
+    const extraSectionTypers = [];
 
     // Math helpers for smooth stage transitions
     const clamp01 = (v) => Math.min(Math.max(v, 0), 1);
@@ -4443,35 +4407,39 @@
       const vh = window.innerHeight || 800;
       const vw = window.innerWidth || 1280;
       const isMobile = vw <= 768;
-      const section2EnterScrollPx = vh * 1.15;
+      const hasHeroBoxes = Boolean(morphinDock || heroIntroBox);
+      const section2EnterScrollPx = hasHeroBoxes ? vh * 1.15 : vh * 0.15;
 
       const rawDeltaY = rawScrollY - prevRawScrollY;
       prevRawScrollY = rawScrollY;
 
       // Detect when user has reached Section 2 (#habilidades) and then scrolls UP back into Section 1 (#hero):
-      // Instead of playing the Hero boxes in reverse over the character's face and un-typing texts backwards,
-      // return Section 1 directly to the clean initial screen (Photo 1).
-      if (rawScrollY >= vh * 1.05) {
-        hasVisitedSection2 = true;
-        returningToPhoto1 = false;
-      } else if (hasVisitedSection2 && rawDeltaY < -0.5 && rawScrollY < vh * 1.05) {
-        returningToPhoto1 = true;
-        hasVisitedSection2 = false;
-        returnLowestScrollY = rawScrollY;
-        window.scrollTo({ top: 0, behavior: "smooth" });
-      }
-
-      if (returningToPhoto1) {
-        if (rawScrollY < returnLowestScrollY) {
-          returnLowestScrollY = rawScrollY;
-        }
-        if (rawScrollY <= 10 || rawScrollY > returnLowestScrollY + 24) {
+      if (hasHeroBoxes) {
+        if (rawScrollY >= vh * 1.05) {
+          hasVisitedSection2 = true;
           returningToPhoto1 = false;
+        } else if (hasVisitedSection2 && rawDeltaY < -0.5 && rawScrollY < vh * 1.05) {
+          returningToPhoto1 = true;
+          hasVisitedSection2 = false;
+          returnLowestScrollY = rawScrollY;
+          window.scrollTo({ top: 0, behavior: "smooth" });
         }
+
+        if (returningToPhoto1) {
+          if (rawScrollY < returnLowestScrollY) {
+            returnLowestScrollY = rawScrollY;
+          }
+          if (rawScrollY <= 10 || rawScrollY > returnLowestScrollY + 24) {
+            returningToPhoto1 = false;
+          }
+        }
+      } else {
+        returningToPhoto1 = false;
       }
 
-      // Auto-pause WebGL loop when Hero stage is completely covered by Section 2+
-      window.__isHeroStageVisible = isHeroLocked || scrollY <= vh * 2.35;
+      // Auto-pause WebGL loop when Hero stage is completely covered by content sections
+      const heroPauseThreshold = hasHeroBoxes ? vh * 2.35 : vh * 1.25;
+      window.__isHeroStageVisible = isHeroLocked || scrollY <= heroPauseThreshold;
 
       // 0. Initial Scroll Cue: visible at scrollY = 0 (or when returning to Photo 1)
       if (heroScrollCue) {
@@ -4573,26 +4541,28 @@
           heroFrameCard.style.setProperty("--char-lift-y", "0px");
         } else {
           const zoomComp = window.__uiZoomCompensation || 1;
-          const pFrame = easeInOutCubic(rangeProgress(scrollY, vh * 0.42, vh * 1.10));
-          const pHeroCovered = easeInOutCubic(rangeProgress(scrollY, section2EnterScrollPx, vh * 2.10));
-          const maxFramePx = (vw > 1100 ? 76 : vw > 680 ? 28 : 14) * zoomComp;
+          const frameStart = hasHeroBoxes ? vh * 0.42 : vh * 0.04;
+          const frameEnd = hasHeroBoxes ? vh * 1.10 : vh * 0.55;
+          const coverEnd = hasHeroBoxes ? vh * 2.10 : vh * 1.05;
+          const pFrame = easeInOutCubic(rangeProgress(scrollY, frameStart, frameEnd));
+          const pHeroCovered = easeInOutCubic(rangeProgress(scrollY, section2EnterScrollPx, coverEnd));
+          const maxFramePx = (vw > 1100 ? 48 : vw > 680 ? 22 : 10) * zoomComp;
           const padPx = (pFrame * maxFramePx).toFixed(1);
-          const radius = Math.round(pFrame * (vw > 680 ? 26 : 20) * zoomComp);
-          const borderW = (pFrame * 4 * zoomComp).toFixed(1);
+          const radius = Math.round(pFrame * (vw > 680 ? 24 : 16) * zoomComp);
+          const borderW = (pFrame * 1.5 * zoomComp).toFixed(1);
 
           heroFrameCard.style.setProperty("--char-lift-y", "0px");
 
-          const parallaxLiftPx = -Math.max(0, scrollY - section2EnterScrollPx) * 0.42;
-          const heroScale = 1 - pHeroCovered * 0.065;
-          const heroBright = 1 - pHeroCovered * 0.48;
+          const parallaxLiftPx = -Math.max(0, scrollY - section2EnterScrollPx) * 0.28;
+          const heroScale = 1 - pHeroCovered * 0.05;
 
           heroViewport.style.padding = `${padPx}px`;
-          heroViewport.style.visibility = scrollY > vh * 2.35 ? "hidden" : "visible";
+          heroViewport.style.visibility = scrollY > heroPauseThreshold ? "hidden" : "visible";
           heroFrameCard.style.borderRadius = `${radius}px`;
           heroFrameCard.style.borderWidth = `${borderW}px`;
           heroFrameCard.style.transform = `translate3d(0, ${parallaxLiftPx.toFixed(1)}px, 0) scale(${heroScale.toFixed(4)})`;
           heroFrameCard.style.filter = "none";
-          heroFrameCard.style.pointerEvents = scrollY > vh * 1.55 ? "none" : "auto";
+          heroFrameCard.style.pointerEvents = scrollY > vh * 0.85 ? "none" : "auto";
         }
       }
 
@@ -4699,32 +4669,14 @@
 
       menuCards.forEach((card, idx) => {
         const uTop = untransformedTops[idx];
-        const nextUTop = idx + 1 < untransformedTops.length ? untransformedTops[idx + 1] : null;
+        const enterP = easeOutCubic(rangeProgress(vh - uTop, 0, vh * 0.75));
+        const innerY = (1 - enterP) * 14;
 
-        // Slide in from the right (+48vw desktop / +12vw mobile -> 0px) as the card enters from the bottom
-        const slideEndVh = isMobile ? vh * 0.38 : vh * 0.62;
-        const pSlideIn = easeOutCubic(rangeProgress(vh - uTop, vh * 0.02, slideEndVh));
-        const slideXPx = (1 - pSlideIn) * (vw * (isMobile ? 0.12 : 0.48));
-
-        const enterP = easeOutCubic(rangeProgress(vh - uTop, 0, vh * 0.82));
-        const innerY = (1 - enterP) * 24;
-
-        let coverP = 0;
-        // Section 3 (#exemplos, idx === 1) connects cleanly BELOW Section 2 (#habilidades, idx === 0)!
-        // Therefore Section 2 does NOT get covered or dimmed by Section 3!
-        if (nextUTop !== null && idx !== 0) {
-          coverP = easeInOutCubic(rangeProgress(vh - nextUTop, vh * 0.04, vh * 0.88));
-        }
-
-        const cardParallaxY = coverP * (vh * 0.16);
-        const cardScale = 1 - coverP * 0.04;
-        const cardBrightness = 1 - coverP * 0.36;
-
-        card.__lastAppliedY = cardParallaxY;
+        card.__lastAppliedY = 0;
         card.style.setProperty("--inner-parallax-y", `${innerY.toFixed(1)}px`);
-        card.style.setProperty("--card-slide-x", `${slideXPx.toFixed(1)}px`);
-        card.style.setProperty("--card-parallax-y", `${cardParallaxY.toFixed(1)}px`);
-        card.style.setProperty("--card-parallax-scale", cardScale.toFixed(4));
+        card.style.setProperty("--card-slide-x", "0px");
+        card.style.setProperty("--card-parallax-y", "0px");
+        card.style.setProperty("--card-parallax-scale", "1");
         card.style.setProperty("--card-brightness", "1");
       });
 
@@ -5033,9 +4985,9 @@
             window.__setPortfolioRangerFromScroll(rangerKey);
           }
 
-          // Also sync with bottom briefing chips if present
+          // Sync directly with the WhatsApp briefing chips
           document.querySelectorAll("#service-selector .service-chip").forEach((chip) => {
-            if (chip.dataset.service && chip.dataset.service.toLowerCase().includes(serviceName.split(" ")[0].toLowerCase())) {
+            if (chip.dataset.service === serviceName || (chip.dataset.service && chip.dataset.service.toLowerCase().includes(serviceName.split(" ")[0].toLowerCase()))) {
               chip.classList.add("is-selected");
             }
           });

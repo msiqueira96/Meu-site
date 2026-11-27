@@ -2845,8 +2845,268 @@ html[data-quality-tier="high"] .morphin-dock {
   display: none !important;
 }
 
-body.is-direct-b2b-mode .hero-scroll-track {
-  height: 155vh;
+/* =========================================================================
+   Awwwards Clean Stage & Responsive B2B Layout Overhaul
+   ========================================================================= */
+
+.hero-scroll-track {
+  height: 105vh !important;
+}
+
+.parallax-sections-stack {
+  position: relative;
+  z-index: 25;
+  margin-top: 0 !important;
+  padding: 1.5rem 0 4rem;
+  display: flex;
+  flex-direction: column;
+  gap: 2.25rem;
+  background: linear-gradient(180deg, rgba(11, 5, 29, 0) 0%, rgba(8, 4, 20, 0.96) 140px, #070312 100%);
+}
+
+.section2-scroll-track {
+  width: 100%;
+}
+
+.parallax-menu-card {
+  position: relative;
+  z-index: var(--card-z, 21);
+  width: min(1220px, calc(100% - 2.5rem)) !important;
+  margin: 0 auto !important;
+  border-radius: 1.5rem !important;
+  background: rgba(13, 8, 30, 0.88) !important;
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.11) !important;
+  box-shadow:
+    0 24px 64px rgba(0, 0, 0, 0.75),
+    inset 0 1px 0 rgba(255, 255, 255, 0.12) !important;
+  overflow: hidden;
+  transform: none !important;
+}
+
+.section2-scroll-track + #exemplos.parallax-menu-card,
+#exemplos.parallax-menu-card + .parallax-menu-card,
+.parallax-menu-card + .parallax-menu-card {
+  margin-top: 0 !important;
+}
+
+.content-section {
+  padding: clamp(2.5rem, 5vw, 4.5rem) clamp(1.25rem, 4vw, 3.5rem) !important;
+  background: transparent !important;
+}
+
+/* Editorial Awwwards Stage Bottom Bar (Visible on the 3D Hero Stage) */
+.awwwards-stage-bar {
+  position: absolute;
+  bottom: 1.35rem;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 40;
+  width: min(920px, calc(100% - 2rem));
+  padding: 0.7rem 0.85rem 0.7rem 1.35rem;
+  border-radius: 999px;
+  background: rgba(9, 5, 22, 0.76);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.65), inset 0 1px 0 rgba(255, 255, 255, 0.14);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.stage-bar-identity {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  min-width: 0;
+}
+
+.stage-status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #00F59B;
+  box-shadow: 0 0 12px #00F59B;
+  flex-shrink: 0;
+}
+
+.stage-bar-text {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.stage-bar-text strong {
+  font-family: var(--font-display);
+  font-size: 1.08rem;
+  letter-spacing: 0.06em;
+  color: #FFFFFF;
+  line-height: 1.05;
+}
+
+.stage-bar-text span {
+  font-size: 0.74rem;
+  color: rgba(255, 255, 255, 0.68);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.stage-bar-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  flex-shrink: 0;
+}
+
+.stage-scroll-btn {
+  text-decoration: none;
+  font-family: var(--font-display);
+  font-size: 0.92rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.85);
+  padding: 0.58rem 1.05rem;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  transition: all 0.2s ease;
+}
+
+.stage-scroll-btn:hover {
+  background: rgba(255, 255, 255, 0.14);
+  color: #FFFFFF;
+}
+
+/* Executive B2B Pillars Grid inside Versão Direta (#contato) */
+.b2b-executive-grid {
+  display: grid;
+  grid-template-columns: 1.1fr 0.9fr;
+  gap: clamp(1.5rem, 3.5vw, 3rem);
+  align-items: start;
+}
+
+.b2b-pillars-list {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.85rem;
+  margin-top: 1.5rem;
+}
+
+.b2b-pillar-card {
+  text-align: left;
+  padding: 1.15rem;
+  border-radius: 1.1rem;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  color: var(--ink-light);
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  transition: all 0.22s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.b2b-pillar-card:hover {
+  background: rgba(255, 255, 255, 0.06);
+  border-color: rgba(255, 255, 255, 0.24);
+  transform: translateY(-2px);
+}
+
+.b2b-pillar-card.is-active {
+  background: linear-gradient(145deg, rgba(0, 240, 255, 0.11), rgba(255, 0, 122, 0.09));
+  border-color: var(--accent);
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.45);
+}
+
+.b2b-pillar-num {
+  font-family: var(--font-display);
+  font-size: 0.85rem;
+  letter-spacing: 0.1em;
+  color: var(--accent);
+}
+
+.b2b-pillar-card h3 {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 1.32rem;
+  letter-spacing: 0.03em;
+  color: #FFFFFF;
+  font-weight: 400;
+}
+
+.b2b-pillar-card p {
+  margin: 0;
+  font-size: 0.8rem;
+  line-height: 1.48;
+  color: var(--ink-secondary);
+}
+
+.b2b-direct-form-card {
+  padding: clamp(1.35rem, 3vw, 2.2rem);
+  border-radius: 1.35rem;
+  background: rgba(7, 4, 18, 0.78);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.55);
+}
+
+@media (max-width: 960px) {
+  .b2b-executive-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+@media (max-width: 768px) {
+  .parallax-menu-card {
+    width: calc(100% - 1.25rem) !important;
+    border-radius: 1.2rem !important;
+  }
+
+  .awwwards-stage-bar {
+    bottom: 0.85rem;
+    width: calc(100% - 1.25rem);
+    padding: 0.65rem 0.75rem;
+    border-radius: 1.1rem;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.6rem;
+  }
+
+  .stage-bar-text span {
+    white-space: normal;
+    font-size: 0.72rem;
+  }
+
+  .stage-bar-actions {
+    width: 100%;
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 0.45rem;
+  }
+
+  .stage-bar-actions .btn-whatsapp-b2b {
+    width: 100%;
+    padding: 0.56rem 0.85rem;
+    font-size: 0.92rem;
+  }
+
+  .stage-scroll-btn {
+    padding: 0.56rem 0.75rem;
+    font-size: 0.84rem;
+    text-align: center;
+  }
+
+  .b2b-pillars-list {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0.65rem;
+  }
+
+  .wa-floating-fab {
+    display: none !important;
+  }
 }
 
 @media (max-width: 768px) {
