@@ -10,9 +10,9 @@
   <link rel="icon" type="image/png" href="assets/icons/ms-favicon.png?v=14" />
   <link rel="shortcut icon" type="image/png" href="assets/icons/ms-favicon.png?v=14" />
   <link rel="apple-touch-icon" href="assets/icons/ms-favicon.png?v=14" />
-  <link rel="stylesheet" href="css/b2b-studio.css?v=72" />
-  <script defer src="js/three-vendor.min.js?v=72"></script>
-  <script defer src="js/liquid-motion.js?v=72"></script>
+  <link rel="stylesheet" href="css/b2b-studio.css?v=73" />
+  <script defer src="js/three-vendor.min.js?v=73"></script>
+  <script defer src="js/liquid-motion.js?v=73"></script>
 </head>
 
 <body>
@@ -82,32 +82,69 @@
       </div>
 
       <!-- =================================================================
-           CENA 1 (Camada de Trás, z-index: 10): Letreiro HTML Horizontal
-           passando da DIREITA para a ESQUERDA ATRÁS da moldura pequena!
+           CENA 1 (Camada de Trás, z-index: 10): Terminal Matrix no Fundo
+           Escreve código/comandos numa pegada Matrix até as letras começarem a cair!
       ================================================================== -->
-      <div class="scene1-behind-marquee" id="scene1-behind-marquee" aria-hidden="true">
-        <div class="marquee-track-line" id="marquee-line-primary">
-          MARCOS SIQUEIRA <span class="marquee-accent">•</span> ENGENHARIA JS <span class="marquee-accent">•</span> WEB DESIGN 3D <span class="marquee-accent">•</span> AUTOMAÇÕES IA <span class="marquee-accent">•</span> TRÁFEGO PAGO B2B
+      <div class="scene1-matrix-terminal" id="scene1-matrix-terminal" aria-hidden="true">
+        <div class="matrix-terminal-topbar">
+          <div class="matrix-terminal-dots"><span></span><span></span><span></span></div>
+          <span class="matrix-terminal-title">ROOT@MS-B2B-MATRIX:~# ./INIT_NEURAL_PIPELINE --OVERDRIVE</span>
+          <span class="matrix-terminal-status" id="matrix-terminal-status">TYPING_BUFFER // 120HZ</span>
         </div>
-        <div class="marquee-track-line marquee-track-line--outline" id="marquee-line-secondary">
-          SOFTWARES SOB MEDIDA • EXPERIÊNCIAS AWWWARDS • ATENDIMENTO IA 24H • ESCALA COMERCIAL
-        </div>
+        <canvas class="matrix-terminal-canvas" id="matrix-terminal-canvas"></canvas>
+        <div class="matrix-terminal-scanlines"></div>
       </div>
 
       <!-- =================================================================
-           CENA 1 (Camada da Frente, z-index: 20): Moldura Lando Norris
-           Encolhe no scroll, troca para a foto no centro e some suavemente no fim do letreiro!
+           CENA 1 (Camada da Frente, z-index: 20): Notebook Central com a
+           Primeira Cena Congelada em Imagem Estática até o Corte do Notebook!
       ================================================================== -->
-      <div class="hero-frame-card" id="hero-frame-card">
-        <div data-gl="head" class="gl-canvas" aria-hidden="true"></div>
-        <div class="gl-wrap" aria-hidden="true">
-          <canvas class="gl"></canvas>
+      <div class="notebook-rig" id="notebook-rig">
+        <div class="notebook-lid" id="notebook-lid">
+          <!-- Moldura Superior / Webcam Notch do Notebook -->
+          <div class="notebook-camera-notch" id="notebook-camera-notch" aria-hidden="true">
+            <span class="notebook-camera-lens"></span>
+            <span class="notebook-camera-led"></span>
+          </div>
+
+          <!-- Tela do Notebook (Inicia 100vw x 100dvh na Cena 1 e congela em imagem estática no scroll) -->
+          <div class="hero-frame-card" id="hero-frame-card">
+            <div data-gl="head" class="gl-canvas" aria-hidden="true"></div>
+            <div class="gl-wrap" aria-hidden="true">
+              <canvas class="gl"></canvas>
+            </div>
+
+            <!-- Imagem Estática Capturada da Primeira Cena (Fica fixa na tela do notebook até o corte!) -->
+            <canvas class="notebook-static-screen" id="notebook-static-screen" aria-hidden="true"></canvas>
+
+            <!-- Reflexo de vidro sutil da tela do Notebook -->
+            <div class="notebook-screen-glare" id="notebook-screen-glare" aria-hidden="true"></div>
+          </div>
+
+          <!-- Chin / Barra Inferior da Tampa do Notebook -->
+          <div class="notebook-lid-chin" id="notebook-lid-chin" aria-hidden="true">
+            <span>MARCOS SIQUEIRA // PRO WORKSTATION</span>
+          </div>
         </div>
 
-        <!-- Foto em destaque que aparece suavemente quando a moldura fecha no centro -->
-        <div class="framed-portrait-photo" id="framed-portrait-photo" aria-hidden="true">
-          <img src="assets/gl/textures/head/webp/user-diffuse.png" alt="Marcos Siqueira" class="framed-photo-img" />
-          <span class="framed-photo-badge">MARCOS SIQUEIRA // B2B</span>
+        <!-- Base / Teclado em Perspectiva 3D do Notebook -->
+        <div class="notebook-base" id="notebook-base" aria-hidden="true">
+          <div class="notebook-hinge"></div>
+          <div class="notebook-deck-surface">
+            <div class="notebook-speaker notebook-speaker--left"></div>
+            <div class="notebook-keyboard-well">
+              <div class="notebook-key-row"></div>
+              <div class="notebook-key-row"></div>
+              <div class="notebook-key-row"></div>
+              <div class="notebook-key-row"></div>
+            </div>
+            <div class="notebook-speaker notebook-speaker--right"></div>
+            <div class="notebook-trackpad"></div>
+          </div>
+          <div class="notebook-front-lip">
+            <div class="notebook-thumb-notch"></div>
+          </div>
+          <div class="notebook-drop-shadow"></div>
         </div>
       </div>
 

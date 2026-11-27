@@ -3186,6 +3186,15 @@
           u.COLOR_CURSOR_OUTLINE.value.lerpColors(startCursorOutline, targetCursorOutlineColor, colorState.t);
           u.uRangerColor.value.lerpColors(startSuit, targetSuitColor, colorState.t);
           u.uColorHover.value.lerpColors(startHover, targetWaveColor, colorState.t);
+          if (window.__isHeroStageVisible === false && typeof window.__forceRenderAndSnapshot === "function") {
+            window.__forceRenderAndSnapshot();
+          }
+        },
+        onComplete: () => {
+          window.__needsNotebookSnapshot = true;
+          if (typeof window.__forceRenderAndSnapshot === "function") {
+            window.__forceRenderAndSnapshot();
+          }
         },
       });
 
@@ -3987,8 +3996,46 @@
       renderer.clear();
       renderer.render(mainScene, mainCamera);
 
+      // Keep a fresh static snapshot of Cena 1 ready for the Notebook screen when scrolling begins
+      snapshotFrameCounter = (snapshotFrameCounter + 1) | 0;
+      if (window.__needsNotebookSnapshot || !window.__hasNotebookSnapshot || snapshotFrameCounter % 24 === 0) {
+        captureNotebookStaticScreen();
+      }
+
       mouse.update();
     });
+
+    let snapshotFrameCounter = 0;
+    const notebookStaticCanvas = document.getElementById("notebook-static-screen");
+    const notebookStaticCtx = notebookStaticCanvas ? notebookStaticCanvas.getContext("2d") : null;
+
+    function captureNotebookStaticScreen() {
+      if (!notebookStaticCanvas || !notebookStaticCtx || !renderer || !renderer.domElement) return;
+      const src = renderer.domElement;
+      if (!src.width || !src.height) return;
+      if (notebookStaticCanvas.width !== src.width || notebookStaticCanvas.height !== src.height) {
+        notebookStaticCanvas.width = src.width;
+        notebookStaticCanvas.height = src.height;
+      }
+      try {
+        notebookStaticCtx.clearRect(0, 0, notebookStaticCanvas.width, notebookStaticCanvas.height);
+        notebookStaticCtx.drawImage(src, 0, 0, notebookStaticCanvas.width, notebookStaticCanvas.height);
+        window.__hasNotebookSnapshot = true;
+        window.__needsNotebookSnapshot = false;
+      } catch (_e) {
+        // Ignore transient context resize errors
+      }
+    }
+
+    window.__forceRenderAndSnapshot = function () {
+      if (!renderer || !mainScene || !mainCamera) return;
+      const elapsed = clock.getElapsedTime();
+      heroScene.update(elapsed, 1.6);
+      renderer.setRenderTarget(null);
+      renderer.clear();
+      renderer.render(mainScene, mainCamera);
+      captureNotebookStaticScreen();
+    };
   }
 
   // =========================================================================
@@ -4398,13 +4445,25 @@
       }
     }, { passive: true });
 
-    // Elements for Scene 1 (Lando Norris Frame + Behind-Frame Horizontal Marquee + Photo Swap)
-    // & Scene 2 (Top HTML Typewriter + Animated SVG Arrows + 4 Opening Work Windows)
+    // =========================================================================
+    // CENA 1: Matrix Background Terminal (Typing -> Falling Digital Rain)
+    // + Centered 3D Notebook Holding the Static First Scene Image Until the Cut
+    // & CENA 2: Top HTML Typewriter + Animated SVG Arrows + 4 Work Windows
+    // =========================================================================
     const scrollyTrack = document.getElementById("scrollytelling-track");
-    const scene1Marquee = document.getElementById("scene1-behind-marquee");
-    const marqueeLinePrimary = document.getElementById("marquee-line-primary");
-    const marqueeLineSecondary = document.getElementById("marquee-line-secondary");
-    const framedPortraitPhoto = document.getElementById("framed-portrait-photo");
+    const scene1MatrixTerminal = document.getElementById("scene1-matrix-terminal");
+    const matrixTerminalCanvas = document.getElementById("matrix-terminal-canvas");
+    const matrixTerminalStatus = document.getElementById("matrix-terminal-status");
+    const matrixCtx = matrixTerminalCanvas ? matrixTerminalCanvas.getContext("2d") : null;
+
+    const notebookRig = document.getElementById("notebook-rig");
+    const notebookLid = document.getElementById("notebook-lid");
+    const notebookCameraNotch = document.getElementById("notebook-camera-notch");
+    const notebookLidChin = document.getElementById("notebook-lid-chin");
+    const notebookScreenGlare = document.getElementById("notebook-screen-glare");
+    const notebookBase = document.getElementById("notebook-base");
+    const notebookStaticScreen = document.getElementById("notebook-static-screen");
+
     const scene2Layer = document.getElementById("scene2-stage-layer");
     const scene2TypewriterText = document.getElementById("scene2-typewriter-text");
     const scene2FullText = scene2TypewriterText
@@ -4414,6 +4473,196 @@
     const workWindows = [0, 1, 2, 3].map((i) => document.getElementById(`work-window-${i}`));
     const scene2BottomBar = document.getElementById("scene2-bottom-bar");
 
+    // Matrix Terminal Lines (Typed in Phase 1, then their letters detach and fall in Phase 2!)
+    const MATRIX_TERMINAL_LINES = [
+      { side: "left", row: 1, text: "> WAKE UP, DECISOR..." },
+      { side: "left", row: 2, text: "> THE MATRIX HAS YOUR PIPELINE." },
+      { side: "left", row: 3, text: "root@ms-b2b:~# ./init_neural_core --overdrive" },
+      { side: "left", row: 4, text: "[0x00A1] JS_ARCHITECTURE_V4.2 ...... [ONLINE]" },
+      { side: "left", row: 5, text: "[0x00B4] PDF_OCR_AI_EXTRACTOR ...... [0.7s OK]" },
+      { side: "left", row: 6, text: "[0x00C8] WEBGL_AWWWARDS_ENGINE ..... [120HZ]" },
+      { side: "left", row: 7, text: "[0x00D2] WHATSAPP_SDR_AUTOPILOT .... [24/7 ON]" },
+      { side: "left", row: 8, text: "[0x00E9] META_GOOGLE_B2B_FUNNEL .... [+60% ROI]" },
+      { side: "left", row: 9, text: "KATAKANA // ｱｲｳｴｵｶｷｸｹｺｻｼｽｾｿﾀﾁﾂﾃﾄﾅﾆﾇﾈﾉ" },
+      { side: "left", row: 10, text: "MEM_BUS  // 01001101 01010011 01000010 00110010" },
+      { side: "left", row: 11, text: "> OVERRIDING_GLYPH_GRAVITY_LOCK... [DROP]" },
+
+      { side: "right", row: 1, text: "SYS_MONITOR :: MARCOS_SIQUEIRA_PRO_OS" },
+      { side: "right", row: 2, text: "==========================================" },
+      { side: "right", row: 3, text: ">> MODULE_01: CUSTOM_SAAS_ERP_JS    [READY]" },
+      { side: "right", row: 4, text: ">> MODULE_02: 3D_INTERACTIVE_WEB    [READY]" },
+      { side: "right", row: 5, text: ">> MODULE_03: N8N_AI_SDR_AGENTS     [READY]" },
+      { side: "right", row: 6, text: ">> MODULE_04: HIGH_TICKET_ADS_B2B   [READY]" },
+      { side: "right", row: 7, text: "CIPHER_KEY // ﾊﾋﾌﾍﾎﾏﾐﾑﾒﾓﾔﾕﾖﾗﾘﾙﾚﾛﾜﾝ010110" },
+      { side: "right", row: 8, text: "BUFFER_HASH // 7F 9A C4 0E 88 2B 19 D1 FF" },
+      { side: "right", row: 9, text: "NOTEBOOK_SCREEN: SCENE_01_STATIC_LOCK=TRUE" },
+      { side: "right", row: 10, text: "MATRIX_CASCADE: RELEASING TERMINAL LETTERS" },
+      { side: "right", row: 11, text: ">> EXECUTING DIGITAL_RAIN_PROTOCOL..." },
+    ];
+
+    const MATRIX_GLYPHS = "ｱｲｳｴｵｶｷｸｹｺｻｼｽｾｿﾀﾁﾂﾃﾄﾅﾆﾇﾈﾉﾊﾋﾌﾍﾎﾏﾐﾑﾒﾓﾔﾕﾖﾗﾘﾙﾚﾛﾜﾝ0123456789MSJSB2BAI><[]/*+";
+    let matrixCols = [];
+    let matrixW = 0;
+    let matrixH = 0;
+    let matrixRainClock = 0;
+    let lastMatrixTick = performance.now();
+    let currentScrollP = 0;
+    let wasInStaticLock = false;
+
+    function initMatrixCanvasSize() {
+      if (!matrixTerminalCanvas) return;
+      const dpr = Math.min(window.devicePixelRatio || 1, 1.5);
+      const rectW = window.innerWidth || 1280;
+      const rectH = Math.max((window.innerHeight || 800) - 36, 300);
+      if (matrixW === rectW && matrixH === rectH) return;
+      matrixW = rectW;
+      matrixH = rectH;
+      matrixTerminalCanvas.width = Math.round(rectW * dpr);
+      matrixTerminalCanvas.height = Math.round(rectH * dpr);
+      if (matrixCtx) {
+        matrixCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      }
+
+      const colStep = rectW <= 768 ? 16 : 20;
+      const numCols = Math.ceil(rectW / colStep);
+      matrixCols = [];
+      for (let c = 0; c < numCols; c++) {
+        // Deterministic pseudo-random per column so rain looks rich and organic
+        const seed = Math.sin(c * 12.9898 + 78.233) * 43758.5453;
+        const frac = seed - Math.floor(seed);
+        const seed2 = Math.sin(c * 93.989 + 12.45) * 24634.6345;
+        const frac2 = seed2 - Math.floor(seed2);
+        matrixCols.push({
+          x: c * colStep + 6,
+          speed: 0.85 + frac * 1.15,
+          delay: frac2 * 0.32,
+          trailLen: 12 + Math.floor(frac * 14),
+          phaseOffset: frac2 * 45,
+        });
+      }
+    }
+
+    initMatrixCanvasSize();
+    window.addEventListener("resize", () => {
+      initMatrixCanvasSize();
+      window.__needsNotebookSnapshot = true;
+    }, { passive: true });
+
+    function renderMatrixTerminal(pWrite, pRain, rainTimeSec) {
+      if (!matrixCtx || !matrixW || !matrixH) return;
+      const ctx = matrixCtx;
+      ctx.clearRect(0, 0, matrixW, matrixH);
+
+      const isMobile = matrixW <= 768;
+      const fontSize = isMobile ? 11.5 : 14;
+      const charW = isMobile ? 7.2 : 8.8;
+      const lineH = isMobile ? 22 : 28;
+      ctx.font = `600 ${fontSize}px "Consolas", "Monaco", "Courier New", monospace`;
+      ctx.textBaseline = "top";
+
+      // 1. Draw Background Matrix Digital Rain Columns once pRain > 0 ("ate comecar a cair as letras")
+      if (pRain > 0.001) {
+        const rainIntensity = clamp01(pRain * 1.35);
+        const cellH = isMobile ? 16 : 19;
+        const maxRows = Math.ceil(matrixH / cellH) + 2;
+
+        for (let c = 0; c < matrixCols.length; c++) {
+          const col = matrixCols[c];
+          const colProgress = clamp01((pRain - col.delay * 0.45) / (1 - col.delay * 0.45));
+          if (colProgress <= 0) continue;
+
+          // Head position drops with both scroll (pRain) AND continuous live rain clock
+          const dropUnits = colProgress * (maxRows * 0.95) * col.speed + rainTimeSec * (7.5 * col.speed) + col.phaseOffset * colProgress;
+          const headRow = Math.floor(dropUnits) % (maxRows + col.trailLen);
+
+          for (let t = 0; t < col.trailLen; t++) {
+            const rowIdx = headRow - t;
+            if (rowIdx < 0 || rowIdx > maxRows) continue;
+            const y = rowIdx * cellH;
+            const glyphIdx = Math.abs((c * 17 + rowIdx * 31 + Math.floor(rainTimeSec * 8)) % MATRIX_GLYPHS.length);
+            const ch = MATRIX_GLYPHS[glyphIdx];
+
+            if (t === 0) {
+              ctx.fillStyle = `rgba(230, 255, 240, ${(0.95 * rainIntensity).toFixed(2)})`;
+            } else if (t <= 2) {
+              ctx.fillStyle = `rgba(0, 255, 102, ${(0.88 * rainIntensity).toFixed(2)})`;
+            } else {
+              const fade = Math.max(0, 1 - t / col.trailLen);
+              ctx.fillStyle = `rgba(0, 210, 84, ${(fade * 0.58 * rainIntensity).toFixed(2)})`;
+            }
+            ctx.fillText(ch, col.x, y);
+          }
+        }
+      }
+
+      // 2. Draw Typed Matrix Terminal Lines (and make their individual letters detach & fall as pRain increases!)
+      const totalLines = MATRIX_TERMINAL_LINES.length;
+      const activeFloat = pWrite * totalLines;
+
+      for (let i = 0; i < totalLines; i++) {
+        const item = MATRIX_TERMINAL_LINES[i];
+        if (isMobile && item.side === "right" && item.row > 6) continue;
+
+        const lineProgress = clamp01(activeFloat - i * 0.72);
+        if (lineProgress <= 0) continue;
+
+        const str = item.text;
+        const visibleChars = Math.min(str.length, Math.ceil(lineProgress * str.length));
+        const isTypingThisLine = lineProgress > 0 && lineProgress < 1;
+
+        let baseX = isMobile ? 12 : 28;
+        let baseY = 18 + (item.row - 1) * lineH;
+        if (!isMobile && item.side === "right") {
+          baseX = Math.max(matrixW * 0.62, matrixW - 410);
+        } else if (isMobile && item.side === "right") {
+          baseY = 18 + (item.row + 10) * (lineH * 0.85);
+        }
+
+        for (let chIdx = 0; chIdx < visibleChars; chIdx++) {
+          const ch = str[chIdx];
+          if (ch === " ") continue;
+          const x = baseX + chIdx * charW;
+
+          // When pRain > 0, each letter detaches from its terminal line and falls vertically down!
+          let fallY = 0;
+          let charAlpha = 0.96;
+          if (pRain > 0.001) {
+            const seed = ((i * 37 + chIdx * 13) % 29) / 29;
+            const detachThreshold = seed * 0.38;
+            const localFall = clamp01((pRain - detachThreshold) / (1 - detachThreshold));
+            if (localFall > 0) {
+              const speedFactor = 0.75 + (((chIdx * 7 + i * 11) % 19) / 19) * 0.95;
+              fallY = Math.pow(localFall, 1.55) * (matrixH * 0.92) * speedFactor + (rainTimeSec * 48 * localFall * speedFactor) % (matrixH * 0.65);
+              charAlpha = Math.max(0.15, 1 - localFall * 0.65);
+
+              // Draw a glowing falling Matrix trail glyph right above the falling terminal letter
+              if (localFall > 0.08 && localFall < 0.88) {
+                ctx.fillStyle = `rgba(0, 255, 102, ${(charAlpha * 0.38).toFixed(2)})`;
+                const trailGlyph = MATRIX_GLYPHS[(chIdx + i + Math.floor(rainTimeSec * 10)) % MATRIX_GLYPHS.length];
+                ctx.fillText(trailGlyph, x, baseY + fallY - lineH * 0.75);
+              }
+            }
+          }
+
+          // Leading typed character glows bright white-green; settled characters glow Matrix phosphor green
+          const isHeadChar = isTypingThisLine && chIdx === visibleChars - 1 && pRain < 0.05;
+          if (isHeadChar || (pRain > 0.04 && ((chIdx + i) % 7 === 0))) {
+            ctx.fillStyle = `rgba(225, 255, 238, ${charAlpha.toFixed(2)})`;
+          } else {
+            ctx.fillStyle = `rgba(0, 255, 102, ${charAlpha.toFixed(2)})`;
+          }
+          ctx.fillText(ch, x, baseY + fallY);
+        }
+
+        // Draw blinking terminal block cursor at the end of the currently typing line
+        if (isTypingThisLine && pRain < 0.08) {
+          const cursorX = baseX + visibleChars * charW + 2;
+          ctx.fillStyle = "#00FF66";
+          ctx.fillRect(cursorX, baseY + 2, charW * 0.85, fontSize);
+        }
+      }
+    }
+
     function applyTimelineAt(rawScrollY, scrollY) {
       const vh = window.innerHeight || 800;
       const vw = window.innerWidth || 1280;
@@ -4422,6 +4671,7 @@
       const trackHeight = scrollyTrack ? scrollyTrack.offsetHeight : vh * 4.6;
       const maxScroll = Math.max(trackHeight - vh, 1);
       const p = clamp01(scrollY / maxScroll);
+      currentScrollP = p;
 
       // 0. Scroll Cue at scrollY = 0
       if (heroScrollCue) {
@@ -4430,55 +4680,90 @@
 
       // =====================================================================
       // CENA 1 (p: 0.00 -> 0.50):
-      // 1) Lando Norris Frame Shrinks to Center Portrait Frame (0.02 -> 0.20)
-      // 2) 3D Stage Crossfades to Framed Portrait Photo (0.06 -> 0.18)
-      // 3) Giant HTML Marquee Passes Horizontally Right-to-Left BEHIND Frame (0.07 -> 0.49)
-      // 4) Framed Photo Fades Out Smoothly as Marquee Reaches the End (0.38 -> 0.49)
+      // 1) First Scene Freezes into a Static Image inside the Notebook Screen (p > 0.012)
+      // 2) Full-Screen Stage Zooms Out into a Centered 3D Pro Notebook (0.015 -> 0.16)
+      // 3) Matrix Terminal in Background Writes Code (0.04 -> 0.25) Until Letters Fall (0.21 -> 0.48)
+      // 4) Static First Scene Remains Inside the Notebook Until the Notebook Cut (0.39 -> 0.48)
       // =====================================================================
-      const pShrink = easeInOutCubic(rangeProgress(p, 0.02, 0.20));
-      const pPhoto = easeInOutCubic(rangeProgress(p, 0.06, 0.18));
-      const pFadeOutFrame = easeInOutCubic(rangeProgress(p, 0.38, 0.49));
-
-      // Pause 3D WebGL loop once the photo inside the small frame is 100% opaque (saves 100% GPU during scroll!)
-      window.__isHeroStageVisible = pPhoto < 0.98 && p < 0.22;
-
-      if (framedPortraitPhoto) {
-        framedPortraitPhoto.style.opacity = pPhoto.toFixed(3);
-      }
-
-      if (heroFrameCard) {
-        const targetSmallScale = isMobile ? 0.56 : 0.44;
-        const shrinkScale = 1 - pShrink * (1 - targetSmallScale);
-        const finalScale = shrinkScale * (1 - pFadeOutFrame * 0.20);
-        const frameOpacity = 1 - pFadeOutFrame;
-        const radiusPx = Math.round(pShrink * 28);
-        const borderPx = (pShrink * 2.5).toFixed(2);
-
-        heroFrameCard.style.transform = `translate3d(0, 0, 0) scale(${finalScale.toFixed(4)})`;
-        heroFrameCard.style.borderRadius = `${radiusPx}px`;
-        heroFrameCard.style.borderWidth = `${borderPx}px`;
-        heroFrameCard.style.opacity = frameOpacity.toFixed(3);
-        heroFrameCard.style.visibility = frameOpacity <= 0.005 ? "hidden" : "visible";
-        heroFrameCard.style.pointerEvents = p < 0.08 ? "auto" : "none";
-      }
-
-      if (scene1Marquee) {
-        const pMarquee = rangeProgress(p, 0.06, 0.49);
-        const marqueeFadeIn = rangeProgress(p, 0.06, 0.13);
-        const marqueeFadeOut = 1 - rangeProgress(p, 0.42, 0.50);
-        const marqueeOp = marqueeFadeIn * marqueeFadeOut;
-
-        scene1Marquee.style.opacity = marqueeOp.toFixed(3);
-        scene1Marquee.style.visibility = marqueeOp <= 0.005 ? "hidden" : "visible";
-
-        // Move horizontally from Right (+85vw) to Left (-175vw) behind the small frame
-        const xPrimaryVw = 85 - pMarquee * 260;
-        const xSecondaryVw = 110 - pMarquee * 250;
-        if (marqueeLinePrimary) {
-          marqueeLinePrimary.style.transform = `translate3d(${xPrimaryVw.toFixed(2)}vw, 0, 0)`;
+      const shouldLockStaticScreen = p > 0.012;
+      if (shouldLockStaticScreen && !wasInStaticLock) {
+        if (typeof window.__forceRenderAndSnapshot === "function") {
+          window.__forceRenderAndSnapshot();
         }
-        if (marqueeLineSecondary) {
-          marqueeLineSecondary.style.transform = `translate3d(${xSecondaryVw.toFixed(2)}vw, 0, 0)`;
+        wasInStaticLock = true;
+      } else if (!shouldLockStaticScreen && wasInStaticLock) {
+        wasInStaticLock = false;
+      }
+
+      // Pause 3D WebGL loop as soon as the static image is locked inside the Notebook screen (0% GPU while scrolling!)
+      window.__isHeroStageVisible = !shouldLockStaticScreen;
+
+      if (notebookStaticScreen) {
+        notebookStaticScreen.style.opacity = shouldLockStaticScreen ? "1" : "0";
+      }
+
+      const pShrink = easeInOutCubic(rangeProgress(p, 0.015, 0.16));
+      const pBezel = easeOutCubic(rangeProgress(p, 0.025, 0.14));
+      const pNotebookCut = easeInOutCubic(rangeProgress(p, 0.39, 0.48));
+
+      if (notebookRig && notebookLid) {
+        const targetNotebookScale = isMobile ? 0.78 : (vw <= 1100 ? 0.56 : 0.48);
+        const baseScale = 1 - pShrink * (1 - targetNotebookScale);
+        const finalScale = baseScale * (1 - pNotebookCut * 0.22);
+        const notebookOpacity = 1 - pNotebookCut;
+
+        // Shift slightly upward so the 3D keyboard deck below the lid sits balanced in the center
+        const liftY = -pShrink * (isMobile ? vh * 0.03 : vh * 0.045) - pNotebookCut * 24;
+
+        notebookRig.style.transform = `translate3d(0, ${liftY.toFixed(1)}px, 0) scale(${finalScale.toFixed(4)})`;
+        notebookRig.style.opacity = notebookOpacity.toFixed(3);
+        notebookRig.style.visibility = notebookOpacity <= 0.005 ? "hidden" : "visible";
+        notebookRig.style.pointerEvents = p < 0.03 ? "auto" : "none";
+
+        // On mobile portrait screens, morph the lid height from 100dvh to 16:10 widescreen laptop proportions
+        if (vh > vw * 0.88) {
+          const targetLaptopH = Math.round(vw * 0.64);
+          const currentLidH = Math.round(vh - pShrink * (vh - targetLaptopH));
+          notebookLid.style.height = `${currentLidH}px`;
+        } else {
+          notebookLid.style.height = "100%";
+        }
+
+        const lidRadiusTop = Math.round(pBezel * 20);
+        const lidRadiusBottom = Math.round(pBezel * 6);
+        const lidBorder = (pBezel * 3.5).toFixed(2);
+        notebookLid.style.borderRadius = `${lidRadiusTop}px ${lidRadiusTop}px ${lidRadiusBottom}px ${lidRadiusBottom}px`;
+        notebookLid.style.borderWidth = `${lidBorder}px`;
+      }
+
+      const bezelAlphaStr = pBezel.toFixed(3);
+      if (notebookCameraNotch) notebookCameraNotch.style.opacity = bezelAlphaStr;
+      if (notebookLidChin) notebookLidChin.style.opacity = bezelAlphaStr;
+      if (notebookScreenGlare) notebookScreenGlare.style.opacity = bezelAlphaStr;
+      if (notebookBase) notebookBase.style.opacity = bezelAlphaStr;
+
+      // Background Matrix Terminal (Writes commands -> Letters fall like Matrix digital rain)
+      if (scene1MatrixTerminal) {
+        const termIn = easeOutCubic(rangeProgress(p, 0.025, 0.09));
+        const termOut = 1 - easeInOutCubic(rangeProgress(p, 0.44, 0.50));
+        const termOp = termIn * termOut;
+
+        scene1MatrixTerminal.style.opacity = termOp.toFixed(3);
+        scene1MatrixTerminal.style.visibility = termOp <= 0.005 ? "hidden" : "visible";
+
+        if (termOp > 0.005) {
+          const pWrite = rangeProgress(p, 0.035, 0.25);
+          const pRain = rangeProgress(p, 0.20, 0.48);
+
+          if (matrixTerminalStatus) {
+            if (pRain > 0.05) {
+              matrixTerminalStatus.textContent = `MATRIX_RAIN // LETTERS_FALLING [${Math.round(pRain * 100)}%]`;
+            } else {
+              matrixTerminalStatus.textContent = `MATRIX_TTY // WRITING_CODE [${Math.round(pWrite * 100)}%]`;
+            }
+          }
+
+          renderMatrixTerminal(pWrite, pRain, matrixRainClock);
         }
       }
 
@@ -4531,6 +4816,20 @@
         scene2BottomBar.style.transform = `translate3d(0, ${ctaY.toFixed(1)}px, 0)`;
       }
     }
+
+    // Continuous lightweight loop so Matrix letters keep actively falling while scrolled into the Matrix rain zone
+    function tickMatrixLiveRain(now) {
+      const dt = Math.min((now - lastMatrixTick) / 1000, 0.05);
+      lastMatrixTick = now;
+      if (!document.hidden && currentScrollP >= 0.19 && currentScrollP <= 0.50) {
+        matrixRainClock += dt;
+        const pWrite = rangeProgress(currentScrollP, 0.035, 0.25);
+        const pRain = rangeProgress(currentScrollP, 0.20, 0.48);
+        renderMatrixTerminal(pWrite, pRain, matrixRainClock);
+      }
+      requestAnimationFrame(tickMatrixLiveRain);
+    }
+    requestAnimationFrame(tickMatrixLiveRain);
 
     function tickTimeline(now) {
       const dtSec = Math.min((now - lastTickTime) / 1000, 0.1);

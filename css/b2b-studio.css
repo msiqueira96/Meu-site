@@ -314,63 +314,179 @@ body {
 }
 
 /* =========================================================================
-   4. CENA 1: Horizontal HTML Marquee Passing BEHIND the Small Frame (z-index: 10)
+   4. CENA 1 (Fundo, z-index: 10): Matrix Terminal & Falling Digital Rain
    ========================================================================= */
-.scene1-behind-marquee {
+.scene1-matrix-terminal {
   position: absolute;
   inset: 0;
   z-index: 10;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
   pointer-events: none;
   opacity: 0;
+  overflow: hidden;
+  background:
+    radial-gradient(circle at 50% 48%, rgba(0, 42, 18, 0.78) 0%, rgba(2, 12, 6, 0.96) 76%),
+    #020804;
   will-change: opacity;
 }
 
-.marquee-track-line {
+.matrix-terminal-topbar {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 36px;
+  z-index: 3;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 3.8rem;
+  background: rgba(1, 14, 6, 0.92);
+  border-bottom: 1px solid rgba(0, 255, 102, 0.28);
+  box-shadow: 0 4px 20px rgba(0, 255, 102, 0.08);
+  font-family: "Consolas", "Monaco", "Courier New", monospace;
+  font-size: 0.72rem;
+  letter-spacing: 0.08em;
+  color: #00FF66;
+}
+
+.matrix-terminal-dots {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.matrix-terminal-dots span {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: rgba(0, 255, 102, 0.35);
+  border: 1px solid rgba(0, 255, 102, 0.75);
+}
+
+.matrix-terminal-dots span:first-child {
+  background: #00FF66;
+  box-shadow: 0 0 8px #00FF66;
+}
+
+.matrix-terminal-title {
+  color: rgba(210, 255, 225, 0.92);
+  text-shadow: 0 0 10px rgba(0, 255, 102, 0.55);
   white-space: nowrap;
-  font-family: var(--font-display);
-  font-size: clamp(4.8rem, 14vw, 13.5rem);
-  line-height: 0.92;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-  color: #FFFFFF;
-  text-shadow:
-    0 0 36px rgba(0, 240, 255, 0.35),
-    0 0 70px rgba(255, 0, 122, 0.25);
-  will-change: transform;
-  transform: translate3d(100vw, 0, 0);
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
-.marquee-track-line--outline {
-  color: transparent;
-  -webkit-text-stroke: 1.5px rgba(0, 240, 255, 0.55);
-  text-shadow: none;
-  font-size: clamp(3.4rem, 10vw, 9.5rem);
-  margin-top: 0.15em;
+.matrix-terminal-status {
+  padding: 0.14rem 0.55rem;
+  border-radius: 4px;
+  background: rgba(0, 255, 102, 0.14);
+  border: 1px solid rgba(0, 255, 102, 0.45);
+  color: #00FF66;
+  font-weight: 700;
+  text-shadow: 0 0 8px rgba(0, 255, 102, 0.65);
+  white-space: nowrap;
 }
 
-.marquee-accent {
-  color: var(--accent);
-  -webkit-text-stroke: 0;
+.matrix-terminal-canvas {
+  position: absolute;
+  top: 36px;
+  left: 0;
+  width: 100%;
+  height: calc(100% - 36px);
+  display: block;
+  z-index: 1;
+}
+
+.matrix-terminal-scanlines {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+  background:
+    repeating-linear-gradient(
+      0deg,
+      rgba(0, 0, 0, 0.24) 0px,
+      rgba(0, 0, 0, 0.24) 1px,
+      transparent 1px,
+      transparent 3px
+    ),
+    radial-gradient(circle at 50% 50%, transparent 55%, rgba(0, 0, 0, 0.65) 100%);
 }
 
 /* =========================================================================
-   5. CENA 1: Lando Norris Shrinkable Frame Card (z-index: 20 — IN FRONT of Marquee)
+   5. CENA 1 (Frente, z-index: 20): 3D Pro Notebook com a Primeira Cena Estática
    ========================================================================= */
-.hero-frame-card {
+.notebook-rig {
   position: relative;
   z-index: 20;
   width: 100%;
   height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  transform-origin: center center;
+  will-change: transform, opacity;
+}
+
+.notebook-lid {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  background: #070510;
+  border: 0px solid rgba(255, 255, 255, 0.34);
+  border-radius: 0px;
+  box-shadow:
+    0 35px 95px rgba(0, 0, 0, 0.92),
+    0 0 55px rgba(0, 255, 102, 0.16);
+  overflow: hidden;
+  transition: box-shadow 0.25s ease;
+}
+
+/* Webcam Notch on Top Edge of Notebook Screen */
+.notebook-camera-notch {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 16;
+  width: 120px;
+  height: 22px;
+  border-radius: 0 0 11px 11px;
+  background: #05060B;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-top: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.notebook-camera-lens {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 35%, #38bdf8, #070b19 70%);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+}
+
+.notebook-camera-led {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: #00FF66;
+  box-shadow: 0 0 8px #00FF66;
+}
+
+.hero-frame-card {
+  position: relative;
+  z-index: 5;
+  width: 100%;
+  height: 100%;
   overflow: hidden;
   background: #080414;
-  border: 0px solid var(--accent);
-  border-radius: 0px;
-  box-shadow: 0 30px 90px rgba(0, 0, 0, 0.85);
-  transform-origin: center center;
-  will-change: transform, opacity, border-radius;
 }
 
 .gl-canvas,
@@ -387,62 +503,190 @@ canvas.gl {
   height: 100%;
 }
 
-/* Photo Layer inside the Lando Norris Frame (Crossfades in as the frame shrinks!) */
-.framed-portrait-photo {
+/* Static Snapshot Canvas of the First Scene inside the Notebook */
+.notebook-static-screen {
   position: absolute;
   inset: 0;
-  z-index: 5;
+  z-index: 6;
+  width: 100%;
+  height: 100%;
+  display: block;
   opacity: 0;
   pointer-events: none;
-  background:
-    radial-gradient(circle at 50% 35%, rgba(255, 0, 122, 0.42) 0%, rgba(16, 7, 38, 0.96) 72%),
-    linear-gradient(180deg, #160832 0%, #080316 100%);
-  display: flex;
-  align-items: flex-end;
-  justify-content: center;
-  overflow: hidden;
-  will-change: opacity, transform;
 }
 
-.framed-portrait-photo::before {
-  content: "";
+/* Glossy Laptop Display Reflection */
+.notebook-screen-glare {
   position: absolute;
-  width: 72%;
-  aspect-ratio: 1 / 1;
-  top: 14%;
+  inset: 0;
+  z-index: 9;
+  pointer-events: none;
+  opacity: 0;
+  background: linear-gradient(
+    116deg,
+    rgba(255, 255, 255, 0.12) 0%,
+    rgba(255, 255, 255, 0.03) 28%,
+    transparent 36%,
+    transparent 74%,
+    rgba(0, 255, 102, 0.06) 100%
+  );
+}
+
+/* Bottom Bezel Chin of Notebook Screen */
+.notebook-lid-chin {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 26px;
+  z-index: 16;
+  background: linear-gradient(180deg, #0b0d14 0%, #05060b 100%);
+  border-top: 1px solid rgba(255, 255, 255, 0.14);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-display);
+  font-size: 0.8rem;
+  letter-spacing: 0.24em;
+  color: rgba(255, 255, 255, 0.65);
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* Lower Aluminum Base / Keyboard Deck of the Notebook */
+.notebook-base {
+  position: absolute;
+  top: 100%;
   left: 50%;
   transform: translateX(-50%);
-  border-radius: 50%;
-  background: linear-gradient(180deg, #FF007A 0%, #7B1FA2 65%, transparent 100%);
-  filter: blur(2px);
-  opacity: 0.85;
+  width: 118%;
+  z-index: 18;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  pointer-events: none;
+  opacity: 0;
 }
 
-.framed-photo-img {
+.notebook-hinge {
+  width: 36%;
+  height: 10px;
+  background: linear-gradient(180deg, #040507 0%, #2a2f3d 52%, #0a0c12 100%);
+  border-radius: 0 0 4px 4px;
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.85);
+}
+
+.notebook-deck-surface {
+  position: relative;
+  width: 100%;
+  height: 82px;
+  background: linear-gradient(180deg, #2d3242 0%, #191c26 58%, #0e1017 100%);
+  border-top: 1px solid rgba(255, 255, 255, 0.34);
+  border-left: 2px solid rgba(255, 255, 255, 0.22);
+  border-right: 2px solid rgba(255, 255, 255, 0.22);
+  border-radius: 8px 8px 16px 16px;
+  transform: perspective(750px) rotateX(60deg);
+  transform-origin: top center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 8% 6px;
+  box-shadow: inset 0 2px 10px rgba(255, 255, 255, 0.1);
+}
+
+.notebook-speaker {
+  position: absolute;
+  top: 10px;
+  bottom: 24px;
+  width: 5%;
+  background-image: radial-gradient(rgba(0, 0, 0, 0.75) 1px, transparent 1px);
+  background-size: 4px 4px;
+  opacity: 0.65;
+}
+
+.notebook-speaker--left {
+  left: 2.2%;
+}
+
+.notebook-speaker--right {
+  right: 2.2%;
+}
+
+.notebook-keyboard-well {
+  width: 84%;
+  height: 44px;
+  background: #06070c;
+  border-radius: 5px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  padding: 4px 6px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  box-shadow:
+    inset 0 0 14px rgba(0, 255, 102, 0.18),
+    0 1px 0 rgba(255, 255, 255, 0.12);
+}
+
+.notebook-key-row {
+  width: 100%;
+  height: 6px;
+  border-radius: 2px;
+  background: repeating-linear-gradient(
+    90deg,
+    #151823 0px,
+    #151823 18px,
+    rgba(0, 255, 102, 0.42) 18px,
+    rgba(0, 255, 102, 0.42) 20px
+  );
+}
+
+.notebook-trackpad {
+  width: 25%;
+  height: 16px;
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.notebook-front-lip {
   position: relative;
   z-index: 2;
-  width: 100%;
-  height: 94%;
-  object-fit: cover;
-  object-position: center top;
-  filter: contrast(1.08) saturate(1.1);
+  width: 102%;
+  height: 16px;
+  margin-top: -27px;
+  background: linear-gradient(180deg, #434960 0%, #202432 52%, #0a0c12 100%);
+  border-radius: 3px 3px 20px 20px;
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  box-shadow:
+    0 18px 36px rgba(0, 0, 0, 0.92),
+    0 0 30px rgba(0, 255, 102, 0.16);
 }
 
-.framed-photo-badge {
-  position: absolute;
-  bottom: 1.1rem;
-  left: 50%;
-  transform: translateX(-50%);
-  z-index: 4;
-  padding: 0.32rem 0.9rem;
-  border-radius: 999px;
-  background: rgba(6, 4, 14, 0.85);
-  border: 1px solid rgba(0, 240, 255, 0.45);
-  font-family: var(--font-display);
-  font-size: 0.95rem;
-  letter-spacing: 0.08em;
-  color: #FFFFFF;
-  white-space: nowrap;
+.notebook-thumb-notch {
+  width: 13%;
+  height: 7px;
+  background: #0b0d14;
+  border-radius: 0 0 9px 9px;
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  border-top: none;
+}
+
+.notebook-drop-shadow {
+  width: 96%;
+  height: 34px;
+  margin-top: 6px;
+  border-radius: 50%;
+  background: radial-gradient(
+    ellipse at center,
+    rgba(0, 0, 0, 0.95) 0%,
+    rgba(0, 255, 102, 0.18) 45%,
+    transparent 78%
+  );
+  filter: blur(10px);
 }
 
 /* Minimal Scroll Prompt at scrollY = 0 */
