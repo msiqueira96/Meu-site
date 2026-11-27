@@ -550,6 +550,203 @@ canvas.gl {
   pointer-events: none;
 }
 
+/* =========================================================================
+   5A. Desktop Browser + Website UI Frame INSIDE the Notebook Screen
+       (Makes Cena 1 look like a Desktop Website open inside the Laptop!)
+   ========================================================================= */
+.notebook-site-ui {
+  position: absolute;
+  inset: 18px 18px 32px 18px;
+  z-index: 8;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  pointer-events: none;
+  opacity: 0;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.14);
+  will-change: opacity;
+}
+
+/* Row 1: Desktop Browser Chrome / Address Bar */
+.nb-browser-bar {
+  height: 34px;
+  padding: 0 14px;
+  background: linear-gradient(180deg, #181A24 0%, #10121A 100%);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-shrink: 0;
+}
+
+.nb-browser-dots {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.nb-browser-dots span {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+}
+
+.nb-browser-dots span:nth-child(1) { background: #FF5F56; }
+.nb-browser-dots span:nth-child(2) { background: #FFBD2E; }
+.nb-browser-dots span:nth-child(3) { background: #27C93F; }
+
+.nb-browser-nav {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.75rem;
+  color: rgba(255, 255, 255, 0.48);
+}
+
+.nb-url-pill {
+  flex: 1;
+  max-width: 460px;
+  margin: 0 auto;
+  height: 22px;
+  padding: 0 12px;
+  border-radius: 6px;
+  background: rgba(5, 6, 11, 0.85);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  font-family: "Consolas", "Monaco", monospace;
+  font-size: 0.68rem;
+  color: rgba(255, 255, 255, 0.85);
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+.nb-lock {
+  font-size: 0.62rem;
+}
+
+.nb-browser-meta {
+  font-family: var(--font-display);
+  font-size: 0.72rem;
+  letter-spacing: 0.08em;
+  color: #00FF66;
+  padding: 2px 7px;
+  border-radius: 4px;
+  background: rgba(0, 255, 102, 0.12);
+  border: 1px solid rgba(0, 255, 102, 0.35);
+}
+
+/* Row 2: Desktop Website Navbar & Menus inside the Browser */
+.nb-website-header {
+  height: 44px;
+  padding: 0 20px;
+  background: rgba(8, 6, 20, 0.82);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-shrink: 0;
+}
+
+.nb-site-brand {
+  font-family: var(--font-display);
+  font-size: 1.05rem;
+  letter-spacing: 0.08em;
+  color: #FFFFFF;
+}
+
+.nb-site-brand span {
+  color: var(--accent);
+}
+
+.nb-site-menu {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.72);
+}
+
+.nb-site-menu span.is-active {
+  color: var(--accent);
+  padding: 3px 9px;
+  border-radius: 999px;
+  background: rgba(0, 240, 255, 0.14);
+  border: 1px solid rgba(0, 240, 255, 0.38);
+}
+
+.nb-site-cta {
+  padding: 5px 12px;
+  border-radius: 999px;
+  background: linear-gradient(135deg, #00F59B 0%, #00E5FF 100%);
+  color: #050811;
+  font-family: var(--font-display);
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+}
+
+/* Framed Website Hero Section inside the Computer Browser */
+.nb-website-viewport-frame {
+  position: relative;
+  flex: 1;
+  margin: 12px 16px;
+  border-radius: 10px;
+  border: 1.5px solid rgba(0, 240, 255, 0.42);
+  box-shadow:
+    0 0 0 20px rgba(7, 5, 16, 0.76),
+    inset 0 0 24px rgba(0, 240, 255, 0.16);
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  padding: 12px 16px;
+}
+
+.nb-viewport-hud-left,
+.nb-viewport-hud-right {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 10px;
+  border-radius: 6px;
+  background: rgba(6, 4, 16, 0.82);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  font-family: "Consolas", "Monaco", monospace;
+  font-size: 0.64rem;
+  letter-spacing: 0.08em;
+  color: rgba(255, 255, 255, 0.85);
+}
+
+.nb-viewport-hud-right {
+  color: #00FF66;
+  border-color: rgba(0, 255, 102, 0.4);
+}
+
+/* Bottom Website Status Footer inside Browser */
+.nb-website-footerbar {
+  height: 26px;
+  padding: 0 18px;
+  background: rgba(8, 6, 18, 0.9);
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-family: "Consolas", "Monaco", monospace;
+  font-size: 0.62rem;
+  letter-spacing: 0.08em;
+  color: rgba(255, 255, 255, 0.6);
+  flex-shrink: 0;
+}
+
 /* Anti-Reflective Glass Display Sheen */
 .notebook-screen-glare {
   position: absolute;
@@ -696,7 +893,8 @@ canvas.gl {
 }
 
 /* =========================================================================
-   6. CENA 2: Top HTML Typewriter + Animated SVG Arrows + Opening Work Windows
+   6. CENA 2: Black Terminal Program Maximizing on Screen
+      (Top Program Bar + Pure Black Terminal Workspace + Bottom Iniciar Footer)
    ========================================================================= */
 .scene2-stage-layer {
   position: absolute;
@@ -706,13 +904,194 @@ canvas.gl {
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  padding: clamp(3.4rem, 5.5vh, 4.8rem) clamp(1rem, 3.5vw, 3.5rem) clamp(1.1rem, 2.5vh, 2rem);
+  background: #020305;
+  border: 1px solid rgba(0, 255, 102, 0.35);
+  box-shadow: 0 30px 90px rgba(0, 0, 0, 0.95);
+  overflow: hidden;
   opacity: 0;
-  will-change: opacity;
+  transform-origin: center center;
+  will-change: transform, opacity, border-radius;
 }
 
 .scene2-stage-layer.is-interactive {
   pointer-events: auto;
+}
+
+/* Top Window Title Bar of the Maximized Terminal Program */
+.os-terminal-topbar {
+  height: 36px;
+  padding: 0 1rem;
+  background: linear-gradient(180deg, #12161F 0%, #090B10 100%);
+  border-bottom: 1px solid rgba(0, 255, 102, 0.28);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-shrink: 0;
+  z-index: 40;
+  user-select: none;
+}
+
+.os-terminal-app-id {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  overflow: hidden;
+}
+
+.os-terminal-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.1rem 0.38rem;
+  border-radius: 4px;
+  background: rgba(0, 255, 102, 0.16);
+  border: 1px solid rgba(0, 255, 102, 0.5);
+  font-family: "Consolas", "Monaco", monospace;
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: #00FF66;
+}
+
+.os-terminal-title {
+  font-family: "Consolas", "Monaco", "Courier New", monospace;
+  font-size: 0.74rem;
+  letter-spacing: 0.05em;
+  color: rgba(230, 255, 240, 0.9);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.os-terminal-win-controls {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.win-ctrl {
+  width: 24px;
+  height: 22px;
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-family: sans-serif;
+  font-size: 0.68rem;
+  color: rgba(255, 255, 255, 0.78);
+}
+
+.win-ctrl--close {
+  background: rgba(255, 30, 55, 0.22);
+  border-color: rgba(255, 60, 80, 0.45);
+  color: #FF8A98;
+}
+
+/* Main Pure Black Terminal Workspace (Between Top Bar and Bottom Iniciar Footer) */
+.os-terminal-workspace {
+  position: relative;
+  flex: 1;
+  width: 100%;
+  background:
+    radial-gradient(circle at 50% 35%, rgba(0, 255, 102, 0.04) 0%, transparent 65%),
+    #020305;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: clamp(0.85rem, 2vh, 1.5rem) clamp(1rem, 3.2vw, 3.2rem);
+  overflow: hidden;
+}
+
+/* Bottom OS Taskbar Footer with "INICIAR" Button */
+.os-taskbar-footer {
+  height: 40px;
+  padding: 0 0.85rem;
+  background: linear-gradient(180deg, #0E121A 0%, #07090E 100%);
+  border-top: 1px solid rgba(0, 255, 102, 0.28);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-shrink: 0;
+  z-index: 40;
+}
+
+.os-taskbar-left {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.os-start-btn {
+  height: 28px;
+  padding: 0 0.85rem;
+  border-radius: 6px;
+  background: linear-gradient(135deg, #00FF66 0%, #00D9F5 100%);
+  border: 1px solid rgba(255, 255, 255, 0.6);
+  color: #03070B;
+  font-family: var(--font-display);
+  font-size: 0.92rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  cursor: pointer;
+  box-shadow: 0 0 14px rgba(0, 255, 102, 0.4);
+  transition: transform 0.18s ease, box-shadow 0.18s ease;
+}
+
+.os-start-btn:hover {
+  transform: scale(1.04);
+  box-shadow: 0 0 22px rgba(0, 255, 102, 0.7);
+}
+
+.os-start-logo {
+  font-size: 0.9rem;
+}
+
+.os-taskbar-active-app {
+  height: 28px;
+  padding: 0 0.75rem;
+  border-radius: 5px;
+  background: rgba(0, 255, 102, 0.1);
+  border: 1px solid rgba(0, 255, 102, 0.35);
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  font-family: "Consolas", "Monaco", monospace;
+  font-size: 0.72rem;
+  color: #E2F8EC;
+}
+
+.os-taskbar-app-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #00FF66;
+  box-shadow: 0 0 8px #00FF66;
+}
+
+.os-taskbar-tray {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-family: "Consolas", "Monaco", monospace;
+  font-size: 0.68rem;
+  color: rgba(255, 255, 255, 0.72);
+}
+
+.os-tray-pill {
+  padding: 0.15rem 0.48rem;
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: #00F0FF;
+}
+
+.os-tray-clock {
+  color: #00FF66;
+  font-weight: 700;
 }
 
 /* Top Typewriter Banner */
@@ -1003,7 +1382,21 @@ canvas.gl {
   }
 
   .scene2-stage-layer {
-    padding: 2.9rem 0.65rem 0.75rem;
+    padding: 0;
+  }
+
+  .os-terminal-workspace {
+    padding: 0.55rem 0.6rem;
+  }
+
+  .os-terminal-title {
+    font-size: 0.62rem;
+  }
+
+  .os-taskbar-active-app,
+  .os-tray-pill,
+  .nb-site-menu {
+    display: none;
   }
 
   .scene2-eyebrow {

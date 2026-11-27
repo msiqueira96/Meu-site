@@ -4463,11 +4463,14 @@
     const notebookCameraNotch = document.getElementById("notebook-camera-notch");
     const notebookLidChin = document.getElementById("notebook-lid-chin");
     const notebookScreenGlare = document.getElementById("notebook-screen-glare");
+    const notebookSiteUi = document.getElementById("notebook-site-ui");
     const notebookBase = document.getElementById("notebook-base");
     const notebookStaticScreen = document.getElementById("notebook-static-screen");
     const notebookTvFx = document.getElementById("notebook-tv-fx");
     const tvOffScanbeam = document.getElementById("tv-off-scanbeam");
     const tvOffPhosphorDot = document.getElementById("tv-off-phosphor-dot");
+    const colorCircleWidget = document.getElementById("color-circle-widget");
+    const qualityGearWidget = document.getElementById("quality-gear-widget");
 
     const scene2Layer = document.getElementById("scene2-stage-layer");
     const scene2Eyebrow = document.getElementById("scene2-eyebrow");
@@ -4801,7 +4804,19 @@
       if (notebookCameraNotch) notebookCameraNotch.style.opacity = bezelAlphaStr;
       if (notebookLidChin) notebookLidChin.style.opacity = bezelAlphaStr;
       if (notebookScreenGlare) notebookScreenGlare.style.opacity = bezelAlphaStr;
+      if (notebookSiteUi) notebookSiteUi.style.opacity = bezelAlphaStr;
       if (notebookBase) notebookBase.style.opacity = bezelAlphaStr;
+
+      // Hide corner 3D widgets once the Notebook shuts off and the Maximized Terminal takes over the screen
+      const cornerWidgetsOp = 1 - easeOutCubic(rangeProgress(p, 0.38, 0.44));
+      if (colorCircleWidget) {
+        colorCircleWidget.style.opacity = cornerWidgetsOp.toFixed(3);
+        colorCircleWidget.style.pointerEvents = cornerWidgetsOp > 0.1 ? "auto" : "none";
+      }
+      if (qualityGearWidget) {
+        qualityGearWidget.style.opacity = cornerWidgetsOp.toFixed(3);
+        qualityGearWidget.style.pointerEvents = cornerWidgetsOp > 0.1 ? "auto" : "none";
+      }
 
       // Background Matrix Terminal (Writes commands -> Letters fall -> Turns off TOGETHER with the Notebook like a TV!)
       if (scene1MatrixTerminal) {
@@ -4834,35 +4849,41 @@
       }
 
       // =====================================================================
-      // BIOS BOOT SEQUENCE (p: 0.45 -> 0.56):
-      // Pitch-black screen with ONLY the blinking BIOS "_" cursor!
-      // Followed by CENA 2 (p: 0.56 -> 1.00):
-      // 1) The blinking "_" begins typing the Top HTML Headline (0.56 -> 0.75)
-      // 2) Vector SVG Arrows Draw Down from Top Header (0.62 -> 0.85)
-      // 3) 4 Work Windows Open Smoothly as Arrows Arrive (0.66 -> 0.91)
+      // REBOOT -> BLACK TERMINAL PROGRAM MAXIMIZING ON SCREEN (p: 0.44 -> 0.51)
+      // + BIOS "_" BLINKING ALONE ON THE BLACK TERMINAL (p: 0.48 -> 0.58)
+      // + CENA 2 (p: 0.58 -> 1.00):
+      // 1) The blinking "_" begins typing the Top HTML Headline (0.58 -> 0.76)
+      // 2) Vector SVG Arrows Draw Down from Top Header (0.63 -> 0.86)
+      // 3) 4 Work Windows Open Smoothly as Arrows Arrive (0.67 -> 0.91)
       // 4) Direct WhatsApp Bottom CTA Appears (0.81 -> 0.94)
       // =====================================================================
       if (scene2Layer) {
-        const s2Op = easeOutCubic(rangeProgress(p, 0.445, 0.465));
-        scene2Layer.style.opacity = s2Op.toFixed(3);
-        scene2Layer.style.visibility = s2Op <= 0.005 ? "hidden" : "visible";
-        scene2Layer.classList.toggle("is-interactive", p >= 0.60);
+        const pTermAppear = easeOutCubic(rangeProgress(p, 0.44, 0.47));
+        const pTermMaximize = easeOutCubic(rangeProgress(p, 0.445, 0.515));
+        const termScale = 0.22 + pTermMaximize * 0.78;
+        const termRadius = Math.round((1 - pTermMaximize) * 16);
+
+        scene2Layer.style.opacity = pTermAppear.toFixed(3);
+        scene2Layer.style.visibility = pTermAppear <= 0.005 ? "hidden" : "visible";
+        scene2Layer.style.transform = `translate3d(0, 0, 0) scale(${termScale.toFixed(4)})`;
+        scene2Layer.style.borderRadius = `${termRadius}px`;
+        scene2Layer.classList.toggle("is-interactive", p >= 0.52);
       }
 
       if (scene2Eyebrow) {
-        const eyebrowOp = easeOutCubic(rangeProgress(p, 0.58, 0.65));
+        const eyebrowOp = easeOutCubic(rangeProgress(p, 0.59, 0.66));
         scene2Eyebrow.style.opacity = eyebrowOp.toFixed(3);
       }
 
       if (scene2TypewriterText && scene2FullText) {
-        const pType = rangeProgress(p, 0.56, 0.75);
+        const pType = rangeProgress(p, 0.58, 0.76);
         const charCount = Math.round(pType * scene2FullText.length);
         scene2TypewriterText.textContent = scene2FullText.slice(0, charCount);
       }
 
       arrowPaths.forEach((pathEl, idx) => {
         if (!pathEl) return;
-        const aStart = 0.62 + idx * 0.038;
+        const aStart = 0.63 + idx * 0.038;
         const aEnd = aStart + 0.11;
         const pArrow = easeOutCubic(rangeProgress(p, aStart, aEnd));
         pathEl.style.strokeDashoffset = (1 - pArrow).toFixed(3);
@@ -4871,7 +4892,7 @@
 
       workWindows.forEach((winEl, idx) => {
         if (!winEl) return;
-        const wStart = 0.66 + idx * 0.042;
+        const wStart = 0.67 + idx * 0.042;
         const wEnd = wStart + 0.13;
         const pWin = easeOutCubic(rangeProgress(p, wStart, wEnd));
         const scaleY = 0.12 + pWin * 0.88;

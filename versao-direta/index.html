@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="pt-BR" data-ranger-theme="silver" data-asset-root="../">
 
 <head>
@@ -10,12 +10,13 @@
   <link rel="icon" type="image/png" href="../assets/icons/ms-favicon.png?v=14" />
   <link rel="shortcut icon" type="image/png" href="../assets/icons/ms-favicon.png?v=14" />
   <link rel="apple-touch-icon" href="../assets/icons/ms-favicon.png?v=14" />
-  <link rel="stylesheet" href="../css/b2b-studio.css?v=75" />
-  <script defer src="../js/three-vendor.min.js?v=75"></script>
-  <script defer src="../js/liquid-motion.js?v=75"></script>
+  <link rel="stylesheet" href="../css/b2b-studio.css?v=76" />
+  <script defer src="../js/three-vendor.min.js?v=76"></script>
+  <script defer src="../js/liquid-motion.js?v=76"></script>
 </head>
 
 <body>
+  <!-- 1. Loading Overlay -->
   <div class="liquid-loader" aria-live="polite">
     <div class="liquid-loader-inner">
       <div class="liquid-loader-title">MARCOS SIQUEIRA<span class="dot-accent">.</span></div>
@@ -30,6 +31,7 @@
     </div>
   </div>
 
+  <!-- 2. Top-Left: Single Selected Color Circle + Popover Menu of Other Colors -->
   <aside class="color-circle-widget" id="color-circle-widget" aria-label="Trocar Cor do Tema">
     <button type="button" class="color-circle-trigger" id="color-circle-trigger" aria-expanded="false"
       aria-controls="color-circles-menu" title="Trocar cor"></button>
@@ -51,6 +53,7 @@
     </div>
   </aside>
 
+  <!-- 3. Top-Right: Flat White Gear Icon (Fraco / Normal / Forte) -->
   <aside class="quality-gear-widget" id="quality-gear-widget" aria-label="Qualidade Gráfica">
     <button type="button" class="quality-gear-btn" id="quality-gear-btn" aria-expanded="false"
       aria-controls="quality-gear-panel" title="Qualidade">
@@ -67,14 +70,21 @@
     </div>
   </aside>
 
+  <!-- =====================================================================
+       MASTER SCROLLYTELLING STAGE (CENA 1 -> CENA 2)
+  ====================================================================== -->
   <main class="scrollytelling-master-track" id="scrollytelling-track">
     <div class="scrollytelling-sticky-stage" id="scrollytelling-stage">
 
+      <!-- Layer 0: Deep Ambient Stage Backdrop (Desliga no TV-Off para o boot de BIOS e religa na Cena 2) -->
       <div class="stage-ambient-bg" id="stage-ambient-bg" aria-hidden="true">
         <div class="stage-ambient-grid"></div>
       </div>
 
-      <!-- CENA 1 (Fundo): Terminal Matrix escrevendo até as letras caírem -->
+      <!-- =================================================================
+           CENA 1 (Camada de Trás, z-index: 10): Terminal Matrix no Fundo
+           Escreve código/comandos numa pegada Matrix até as letras começarem a cair!
+      ================================================================== -->
       <div class="scene1-matrix-terminal" id="scene1-matrix-terminal" aria-hidden="true">
         <div class="matrix-terminal-topbar">
           <div class="matrix-terminal-dots"><span></span><span></span><span></span></div>
@@ -85,34 +95,91 @@
         <div class="matrix-terminal-scanlines"></div>
       </div>
 
-      <!-- CENA 1 (Frente): MacBook Pro 16" Realista com Imagem Estática da Primeira Cena + Efeito TV Desligando -->
+      <!-- =================================================================
+           CENA 1 (Camada da Frente, z-index: 20): MacBook Pro 16" Realista
+           com a Primeira Cena Estática até o Efeito de TV Desligando!
+      ================================================================== -->
       <div class="notebook-rig" id="notebook-rig">
         <div class="notebook-lid" id="notebook-lid">
+          <!-- Moldura de Vidro Black Piano + Aro de Alumínio Usinado CNC -->
           <div class="notebook-glass-bezel" id="notebook-glass-bezel" aria-hidden="true"></div>
 
+          <!-- Webcam Notch Realista estilo MacBook Pro 16" -->
           <div class="notebook-camera-notch" id="notebook-camera-notch" aria-hidden="true">
             <span class="notebook-camera-sensor"></span>
             <span class="notebook-camera-lens"></span>
             <span class="notebook-camera-led"></span>
           </div>
 
+          <!-- Tela do Notebook (Inicia 100vw x 100dvh na Cena 1 e congela em imagem estática no scroll) -->
           <div class="hero-frame-card" id="hero-frame-card">
             <div data-gl="head" class="gl-canvas" aria-hidden="true"></div>
             <div class="gl-wrap" aria-hidden="true">
               <canvas class="gl"></canvas>
             </div>
+
+            <!-- Imagem Estática Capturada da Primeira Cena (Fica fixa na tela do notebook até desligar!) -->
             <canvas class="notebook-static-screen" id="notebook-static-screen" aria-hidden="true"></canvas>
+
+            <!-- Moldura de Site Desktop (Browser + Menus + UI de Site de Computador) dentro da tela do Notebook -->
+            <div class="notebook-site-ui" id="notebook-site-ui" aria-hidden="true">
+              <!-- Barra do Navegador Desktop -->
+              <div class="nb-browser-bar">
+                <div class="nb-browser-dots"><span></span><span></span><span></span></div>
+                <div class="nb-browser-nav"><span>←</span><span>→</span><span>↻</span></div>
+                <div class="nb-url-pill">
+                  <span class="nb-lock">🔒</span>
+                  <span>https://marcossiqueira.com.br/studio-3d</span>
+                </div>
+                <div class="nb-browser-meta">WEBGL 2.0 · 120FPS</div>
+              </div>
+
+              <!-- Menu & Header de Site de Computador dentro do Notebook -->
+              <div class="nb-website-header">
+                <div class="nb-site-brand">MS<span>.</span> MARCOS SIQUEIRA</div>
+                <div class="nb-site-menu">
+                  <span class="is-active">Início</span>
+                  <span>Softwares JS</span>
+                  <span>Web Design 3D</span>
+                  <span>Automações IA</span>
+                  <span>Tráfego B2B</span>
+                </div>
+                <div class="nb-site-cta">WhatsApp Comercial ↗</div>
+              </div>
+
+              <!-- Moldura Interna da Primeira Section dentro do Site -->
+              <div class="nb-website-viewport-frame">
+                <div class="nb-viewport-hud-left">
+                  <span>01 // HERO 3D STAGE</span>
+                  <span>INTERACTIVE WEBGL</span>
+                </div>
+                <div class="nb-viewport-hud-right">
+                  <span>● SISTEMA B2B ONLINE</span>
+                </div>
+              </div>
+
+              <!-- Rodapé da UI do Site dentro do Notebook -->
+              <div class="nb-website-footerbar">
+                <span>© MARCOS SIQUEIRA — ENGENHARIA DE SOFTWARE &amp; PROSPECÇÃO B2B</span>
+                <span>ROLE PARA INICIAR ↓</span>
+              </div>
+            </div>
+
+            <!-- Reflexo antirreflexo de vidro sutil da tela do MacBook Pro -->
             <div class="notebook-screen-glare" id="notebook-screen-glare" aria-hidden="true"></div>
           </div>
 
+          <!-- Chin Inferior de Vidro com Gravação Metálica -->
           <div class="notebook-lid-chin" id="notebook-lid-chin" aria-hidden="true">
             <span>MARCOS SIQUEIRA PRO</span>
           </div>
         </div>
 
+        <!-- Base Unibody em Alumínio Space-Black / Titanium (SVG Vetorial Fotorealista) -->
         <div class="notebook-base" id="notebook-base" aria-hidden="true">
           <svg class="notebook-base-svg" viewBox="0 0 1200 124" fill="none" xmlns="http://www.w3.org/2000/svg">
             <defs>
+              <!-- Gradiente de Alumínio Anodizado do Top Case em Perspectiva -->
               <linearGradient id="mbpDeckGrad" x1="0" y1="10" x2="1200" y2="66" gradientUnits="userSpaceOnUse">
                 <stop offset="0%" stop-color="#1D2028" />
                 <stop offset="12%" stop-color="#353A47" />
@@ -122,6 +189,7 @@
                 <stop offset="88%" stop-color="#373C4A" />
                 <stop offset="100%" stop-color="#1B1E26" />
               </linearGradient>
+              <!-- Gradiente Metálico Cilíndrico da Borda Frontal Usinada CNC -->
               <linearGradient id="mbpFrontLipGrad" x1="14" y1="74" x2="1186" y2="74" gradientUnits="userSpaceOnUse">
                 <stop offset="0%" stop-color="#111318" />
                 <stop offset="3.5%" stop-color="#586073" />
@@ -135,6 +203,7 @@
                 <stop offset="96.5%" stop-color="#586073" />
                 <stop offset="100%" stop-color="#111318" />
               </linearGradient>
+              <!-- Gradiente da Tampa Inferior (Bottom Case) -->
               <linearGradient id="mbpBottomCaseGrad" x1="40" y1="88" x2="1160" y2="104" gradientUnits="userSpaceOnUse">
                 <stop offset="0%" stop-color="#090A0E" />
                 <stop offset="20%" stop-color="#1B1E26" />
@@ -142,6 +211,7 @@
                 <stop offset="80%" stop-color="#1B1E26" />
                 <stop offset="100%" stop-color="#090A0E" />
               </linearGradient>
+              <!-- Gradiente do Entalhe Central de Abertura (Thumb Notch) -->
               <linearGradient id="mbpNotchGrad" x1="520" y1="68" x2="680" y2="68" gradientUnits="userSpaceOnUse">
                 <stop offset="0%" stop-color="#0D0F14" />
                 <stop offset="15%" stop-color="#222630" />
@@ -149,6 +219,7 @@
                 <stop offset="85%" stop-color="#222630" />
                 <stop offset="100%" stop-color="#0D0F14" />
               </linearGradient>
+              <!-- Sombra Realista de Contato na Mesa -->
               <radialGradient id="mbpShadowGrad" cx="50%" cy="50%" r="50%">
                 <stop offset="0%" stop-color="#000000" stop-opacity="0.95" />
                 <stop offset="55%" stop-color="#000000" stop-opacity="0.65" />
@@ -156,26 +227,53 @@
                 <stop offset="100%" stop-color="#000000" stop-opacity="0" />
               </radialGradient>
             </defs>
+
+            <!-- 1. Sombra de Contato & Oclusão Ambiental sob o MacBook -->
             <ellipse cx="600" cy="110" rx="585" ry="13" fill="url(#mbpShadowGrad)" />
             <ellipse cx="600" cy="104" rx="535" ry="6" fill="rgba(0,0,0,0.88)" />
+
+            <!-- 2. Pés de Borracha Inferiores (Left & Right Feet) -->
             <rect x="96" y="97" width="76" height="5" rx="2.5" fill="#07080B" stroke="#222630" stroke-width="0.6" />
             <rect x="1028" y="97" width="76" height="5" rx="2.5" fill="#07080B" stroke="#222630" stroke-width="0.6" />
-            <path d="M 28 86 L 1172 86 L 1132 99 C 1118 101, 1090 101, 1060 101 L 140 101 C 110 101, 82 101, 68 99 Z" fill="url(#mbpBottomCaseGrad)" />
+
+            <!-- 3. Bottom Case Taper (Fundo chanfrado do Unibody) -->
+            <path d="M 28 86 L 1172 86 L 1132 99 C 1118 101, 1090 101, 1060 101 L 140 101 C 110 101, 82 101, 68 99 Z"
+              fill="url(#mbpBottomCaseGrad)" />
+
+            <!-- 4. Dobradiça Central Cilíndrica (Display Hinge Clutch) -->
             <path d="M 94 2 L 1106 2 L 1114 11 L 86 11 Z" fill="#090B0F" />
             <rect x="235" y="1" width="730" height="10" rx="2" fill="#0D0F15" stroke="#262B36" stroke-width="0.7" />
             <line x1="235" y1="4" x2="965" y2="4" stroke="rgba(255,255,255,0.14)" stroke-width="0.8" />
-            <path d="M 84 10 L 1116 10 L 1184 68 L 16 68 Z" fill="url(#mbpDeckGrad)" stroke="#7C8599" stroke-width="1.1" />
+
+            <!-- 5. Superfície Superior em Perspectiva do Top Case (Alumínio Usinado) -->
+            <path d="M 84 10 L 1116 10 L 1184 68 L 16 68 Z"
+              fill="url(#mbpDeckGrad)" stroke="#7C8599" stroke-width="1.1" />
+
+            <!-- Grades de Som Laterais Microperfuradas em Perspectiva -->
             <polygon points="94,16 138,16 106,50 56,50" fill="#13161D" opacity="0.85" />
             <polygon points="1062,16 1106,16 1144,50 1094,50" fill="#13161D" opacity="0.85" />
-            <polygon points="152,14 1048,14 1084,51 116,51" fill="#07080C" stroke="#393F4D" stroke-width="0.9" />
+
+            <!-- 6. Berço Rebaixado do Teclado Magic Keyboard (Matte Black Well) -->
+            <polygon points="152,14 1048,14 1084,51 116,51"
+              fill="#07080C" stroke="#393F4D" stroke-width="0.9" />
+
+            <!-- Fileiras de Teclas Esculpidas em Perspectiva com Backlight Branco/Ciano Sutil -->
+            <!-- Row 1 (ESC + Function Keys + Touch ID) -->
             <polygon points="160,16 1040,16 1044,20 156,20" fill="#13161E" stroke="rgba(210,235,255,0.22)" stroke-width="0.45" />
+            <!-- Row 2 (Numbers) -->
             <polygon points="155,21.5 1045,21.5 1051,26.5 149,26.5" fill="#141720" stroke="rgba(210,235,255,0.25)" stroke-width="0.5" />
+            <!-- Row 3 (QWERTY) -->
             <polygon points="148,28 1052,28 1059,33.2 141,33.2" fill="#151822" stroke="rgba(210,235,255,0.26)" stroke-width="0.5" />
+            <!-- Row 4 (ASDF) -->
             <polygon points="140,34.7 1060,34.7 1067,40.2 133,40.2" fill="#151822" stroke="rgba(210,235,255,0.28)" stroke-width="0.5" />
+            <!-- Row 5 (ZXCV) -->
             <polygon points="132,41.7 1068,41.7 1074,46.2 126,46.2" fill="#161923" stroke="rgba(210,235,255,0.28)" stroke-width="0.5" />
+            <!-- Row 6 (Modifiers + Barra de Espaço Centralizada) -->
             <polygon points="125,47.2 435,47.2 433,50.2 121,50.2" fill="#161A24" stroke="rgba(210,235,255,0.26)" stroke-width="0.5" />
             <polygon points="440,47.2 760,47.2 762,50.2 438,50.2" fill="#191D28" stroke="rgba(220,245,255,0.38)" stroke-width="0.6" />
             <polygon points="765,47.2 1075,47.2 1079,50.2 767,50.2" fill="#161A24" stroke="rgba(210,235,255,0.26)" stroke-width="0.5" />
+
+            <!-- Divisórias Verticais das Teclas para Textura Realista de Teclado -->
             <g stroke="#07080C" stroke-width="1.6" opacity="0.92">
               <line x1="220" y1="16" x2="195" y2="50" />
               <line x1="285" y1="16" x2="265" y2="50" />
@@ -191,14 +289,25 @@
               <line x1="915" y1="16" x2="935" y2="50" />
               <line x1="980" y1="16" x2="1005" y2="50" />
             </g>
-            <polygon points="445,53.5 755,53.5 768,66 432,66" fill="#1E222C" stroke="#5E6678" stroke-width="0.85" />
-            <path d="M 14 68 L 1186 68 L 1186 79 C 1186 84.5, 1177 87, 1164 87 L 36 87 C 23 87, 14 84.5, 14 79 Z" fill="url(#mbpFrontLipGrad)" stroke="#636C7E" stroke-width="0.7" />
+
+            <!-- 7. Trackpad Force Touch em Vidro Fosco Centralizado -->
+            <polygon points="445,53.5 755,53.5 768,66 432,66"
+              fill="#1E222C" stroke="#5E6678" stroke-width="0.85" />
+
+            <!-- 8. Borda Frontal Cilíndrica em Alumínio CNC (Front Lip Profile) -->
+            <path d="M 14 68 L 1186 68 L 1186 79 C 1186 84.5, 1177 87, 1164 87 L 36 87 C 23 87, 14 84.5, 14 79 Z"
+              fill="url(#mbpFrontLipGrad)" stroke="#636C7E" stroke-width="0.7" />
+            <!-- Highlight especular na quina superior do Front Lip -->
             <line x1="16" y1="68.6" x2="1184" y2="68.6" stroke="rgba(255,255,255,0.58)" stroke-width="1.1" />
-            <path d="M 516 68 L 684 68 L 676 76 C 672 79, 662 80, 650 80 L 550 80 C 538 80, 528 79, 524 76 Z" fill="url(#mbpNotchGrad)" stroke="rgba(255,255,255,0.28)" stroke-width="0.7" />
+
+            <!-- 9. Entalhe Côncavo Central para Abrir a Tampa (CNC Thumb Scoop Notch) -->
+            <path d="M 516 68 L 684 68 L 676 76 C 672 79, 662 80, 650 80 L 550 80 C 538 80, 528 79, 524 76 Z"
+              fill="url(#mbpNotchGrad)" stroke="rgba(255,255,255,0.28)" stroke-width="0.7" />
           </svg>
         </div>
       </div>
 
+      <!-- Efeito CRT de TV Desligando no Corte Final do Notebook (Feixe Horizontal + Ponto de Fósforo) -->
       <div class="notebook-tv-fx" id="notebook-tv-fx" aria-hidden="true">
         <div class="tv-off-scanbeam" id="tv-off-scanbeam"></div>
         <div class="tv-off-phosphor-dot" id="tv-off-phosphor-dot"></div>
@@ -209,128 +318,184 @@
         <span>↓</span>
       </div>
 
-      <!-- CENA 2: Letreiro Superior + Setas Animadas + 4 Janelas de Trabalho -->
-      <section class="scene2-stage-layer" id="scene2-stage-layer" aria-label="Vitrine de Trabalhos e Contato">
-        <header class="scene2-top-header">
-          <span class="scene2-eyebrow" id="scene2-eyebrow">ENGENHARIA DIGITAL &amp; PROSPECÇÃO B2B</span>
-          <h1 class="scene2-typewriter-heading">
-            <span id="scene2-typewriter-text" data-full-text="SOLUÇÕES QUE AUTOMATIZAM E ESCALAM SUA EMPRESA"></span><span class="scene2-caret" id="scene2-bios-caret" aria-hidden="true">_</span>
-          </h1>
-        </header>
+      <!-- =================================================================
+           CENA 2 (z-index: 30): Após o Reboot, Programa de Terminal (Tela Preta)
+           Maximizando na Tela com Barra no Topo + Botão Iniciar no Footer!
+      ================================================================== -->
+      <section class="scene2-stage-layer" id="scene2-stage-layer" aria-label="Terminal Maximizado e Vitrine de Trabalhos">
 
-        <svg class="scene2-arrows-svg" viewBox="0 0 1000 600" preserveAspectRatio="none" aria-hidden="true">
-          <defs>
-            <marker id="scene2ArrowHead" markerWidth="8" markerHeight="8" refX="6" refY="4" orient="auto">
-              <path d="M0,0 L8,4 L0,8 Z" fill="#00F0FF" />
-            </marker>
-          </defs>
-          <path class="scene2-arrow-path" id="arrow-path-0" pathLength="1"
-            d="M 460 88 C 360 95, 290 120, 260 158" marker-end="url(#scene2ArrowHead)" />
-          <path class="scene2-arrow-path" id="arrow-path-1" pathLength="1"
-            d="M 540 88 C 640 95, 710 120, 740 158" marker-end="url(#scene2ArrowHead)" />
-          <path class="scene2-arrow-path" id="arrow-path-2" pathLength="1"
-            d="M 480 94 C 440 210, 340 295, 260 355" marker-end="url(#scene2ArrowHead)" />
-          <path class="scene2-arrow-path" id="arrow-path-3" pathLength="1"
-            d="M 520 94 C 560 210, 660 295, 740 355" marker-end="url(#scene2ArrowHead)" />
-        </svg>
-
-        <div class="scene2-windows-grid">
-          <article class="work-window" id="work-window-0" data-ranger-preview="blue">
-            <div class="window-titlebar">
-              <div class="window-dots"><span></span><span></span><span></span></div>
-              <span class="window-code">01 // SOFTWARES_JS.APP</span>
-              <span class="window-badge">SaaS · ERPs · IA</span>
-            </div>
-            <div class="window-body">
-              <div>
-                <h3>Criação de Softwares &amp; Sistemas JS</h3>
-                <p>Painéis financeiros, CRMs sob medida e sistemas que leem notas fiscais e PDFs sozinhos com IA em menos de 1 segundo.</p>
-              </div>
-              <div class="window-preview-strip">
-                <span>Leitura IA de Nota Fiscal.pdf</span>
-                <strong>✓ Extraído em 0,7s</strong>
-              </div>
-              <button type="button" class="window-wa-btn" data-wa-direct="Olá Marcos Siqueira! Vi sua vitrine interativa e quero conversar sobre um *Software / Sistema em JS* para minha empresa.">
-                <span>Orçar Sistema no WhatsApp</span>
-                <span aria-hidden="true">↗</span>
-              </button>
-            </div>
-          </article>
-
-          <article class="work-window" id="work-window-1" data-ranger-preview="red">
-            <div class="window-titlebar">
-              <div class="window-dots"><span></span><span></span><span></span></div>
-              <span class="window-code">02 // WEB_DESIGN_3D.GL</span>
-              <span class="window-badge">Padrão Awwwards</span>
-            </div>
-            <div class="window-body">
-              <div>
-                <h3>Web Design 3D &amp; Landing Pages B2B</h3>
-                <p>Páginas interativas de alto impacto (como esta animação) otimizadas para qualquer celular ou PC, feitas para converter decisores.</p>
-              </div>
-              <div class="window-preview-strip">
-                <span>Performance WebGL Adaptativa</span>
-                <strong>60–120Hz Fluido</strong>
-              </div>
-              <button type="button" class="window-wa-btn" data-wa-direct="Olá Marcos Siqueira! Vi sua vitrine interativa e quero criar um *Site 3D / Landing Page de Alta Conversão* para minha empresa.">
-                <span>Orçar Site no WhatsApp</span>
-                <span aria-hidden="true">↗</span>
-              </button>
-            </div>
-          </article>
-
-          <article class="work-window" id="work-window-2" data-ranger-preview="green">
-            <div class="window-titlebar">
-              <div class="window-dots"><span></span><span></span><span></span></div>
-              <span class="window-code">03 // AUTOMACAO_IA.N8N</span>
-              <span class="window-badge">WhatsApp 24/7</span>
-            </div>
-            <div class="window-body">
-              <div>
-                <h3>Automações com IA &amp; SDR no WhatsApp</h3>
-                <p>Robôs inteligentes que atendem seus leads em 2 segundos, tiram dúvidas, agendam reuniões e atualizam seu CRM automaticamente.</p>
-              </div>
-              <div class="window-preview-strip">
-                <span>Agente SDR IA no WhatsApp</span>
-                <strong>✓ Reunião Agendada (1,2s)</strong>
-              </div>
-              <button type="button" class="window-wa-btn" data-wa-direct="Olá Marcos Siqueira! Vi sua vitrine interativa e quero implantar *Automações com IA no WhatsApp* na minha operação.">
-                <span>Orçar Automação no WhatsApp</span>
-                <span aria-hidden="true">↗</span>
-              </button>
-            </div>
-          </article>
-
-          <article class="work-window" id="work-window-3" data-ranger-preview="yellow">
-            <div class="window-titlebar">
-              <div class="window-dots"><span></span><span></span><span></span></div>
-              <span class="window-code">04 // TRAFEGO_B2B.ADS</span>
-              <span class="window-badge">Meta &amp; Google Ads</span>
-            </div>
-            <div class="window-body">
-              <div>
-                <h3>Gestão de Tráfego Pago &amp; Escala B2B</h3>
-                <p>Anúncios estratégicos com rastreamento avançado levando clientes qualificados todos os dias direto para o seu funil automatizado.</p>
-              </div>
-              <div class="window-preview-strip">
-                <span>Tráfego + Site Rápido + IA 24h</span>
-                <strong>+60% Leads Qualificados</strong>
-              </div>
-              <button type="button" class="window-wa-btn" data-wa-direct="Olá Marcos Siqueira! Vi sua vitrine interativa e quero escalar minhas vendas com *Gestão de Tráfego Pago B2B*.">
-                <span>Orçar Tráfego no WhatsApp</span>
-                <span aria-hidden="true">↗</span>
-              </button>
-            </div>
-          </article>
+        <!-- Barra Superior do Programa de Terminal Maximizado -->
+        <div class="os-terminal-topbar">
+          <div class="os-terminal-app-id">
+            <span class="os-terminal-icon">&gt;_</span>
+            <span class="os-terminal-title">C:\MARCOS_SIQUEIRA\B2B_OS\terminal.exe — [BIOS_REBOOT // ROOT@MS-STUDIO]</span>
+          </div>
+          <div class="os-terminal-win-controls" aria-hidden="true">
+            <span class="win-ctrl">—</span>
+            <span class="win-ctrl">□</span>
+            <span class="win-ctrl win-ctrl--close">✕</span>
+          </div>
         </div>
 
-        <div class="scene2-bottom-bar" id="scene2-bottom-bar">
-          <a href="#whatsapp" class="btn-wa-primary" data-wa-direct="Olá Marcos Siqueira! Vi sua apresentação interativa e quero conversar sobre um projeto para minha empresa.">
-            <span class="live-pulse-dot" aria-hidden="true"></span>
-            <span>Falar com Marcos no WhatsApp Agora</span>
-            <span aria-hidden="true">↗</span>
-          </a>
+        <!-- Área Principal Preta do Terminal (Onde o _ pisca e depois abre o letreiro, setas e janelas) -->
+        <div class="os-terminal-workspace">
+
+          <!-- Inicialização estilo BIOS (só o _ piscando no escuro) que depois escreve o letreiro da Cena 2 -->
+          <header class="scene2-top-header">
+            <span class="scene2-eyebrow" id="scene2-eyebrow">ENGENHARIA DIGITAL &amp; PROSPECÇÃO B2B</span>
+            <h1 class="scene2-typewriter-heading">
+              <span id="scene2-typewriter-text" data-full-text="SOLUÇÕES QUE AUTOMATIZAM E ESCALAM SUA EMPRESA"></span><span class="scene2-caret" id="scene2-bios-caret" aria-hidden="true">_</span>
+            </h1>
+          </header>
+
+          <!-- Setas Vetoriais Animadas que saem do topo e abrem as 4 janelas -->
+          <svg class="scene2-arrows-svg" viewBox="0 0 1000 600" preserveAspectRatio="none" aria-hidden="true">
+            <defs>
+              <marker id="scene2ArrowHead" markerWidth="8" markerHeight="8" refX="6" refY="4" orient="auto">
+                <path d="M0,0 L8,4 L0,8 Z" fill="#00F0FF" />
+              </marker>
+            </defs>
+            <!-- Seta 1 -> Janela Superior Esquerda -->
+            <path class="scene2-arrow-path" id="arrow-path-0" pathLength="1"
+              d="M 460 88 C 360 95, 290 120, 260 158" marker-end="url(#scene2ArrowHead)" />
+            <!-- Seta 2 -> Janela Superior Direita -->
+            <path class="scene2-arrow-path" id="arrow-path-1" pathLength="1"
+              d="M 540 88 C 640 95, 710 120, 740 158" marker-end="url(#scene2ArrowHead)" />
+            <!-- Seta 3 -> Janela Inferior Esquerda -->
+            <path class="scene2-arrow-path" id="arrow-path-2" pathLength="1"
+              d="M 480 94 C 440 210, 340 295, 260 355" marker-end="url(#scene2ArrowHead)" />
+            <!-- Seta 4 -> Janela Inferior Direita -->
+            <path class="scene2-arrow-path" id="arrow-path-3" pathLength="1"
+              d="M 520 94 C 560 210, 660 295, 740 355" marker-end="url(#scene2ArrowHead)" />
+          </svg>
+
+          <!-- 4 Janelas que se abrem mostrando o trabalho -->
+          <div class="scene2-windows-grid">
+
+            <!-- Janela 01 -->
+            <article class="work-window" id="work-window-0" data-ranger-preview="blue">
+              <div class="window-titlebar">
+                <div class="window-dots"><span></span><span></span><span></span></div>
+                <span class="window-code">01 // SOFTWARES_JS.APP</span>
+                <span class="window-badge">SaaS · ERPs · IA</span>
+              </div>
+              <div class="window-body">
+                <div>
+                  <h3>Criação de Softwares &amp; Sistemas JS</h3>
+                  <p>Painéis financeiros, CRMs sob medida e sistemas que leem notas fiscais e PDFs sozinhos com IA em menos de 1 segundo.</p>
+                </div>
+                <div class="window-preview-strip">
+                  <span>Leitura IA de Nota Fiscal.pdf</span>
+                  <strong>✓ Extraído em 0,7s</strong>
+                </div>
+                <button type="button" class="window-wa-btn" data-wa-direct="Olá Marcos Siqueira! Vi sua vitrine interativa e quero conversar sobre um *Software / Sistema em JS* para minha empresa.">
+                  <span>Orçar Sistema no WhatsApp</span>
+                  <span aria-hidden="true">↗</span>
+                </button>
+              </div>
+            </article>
+
+            <!-- Janela 02 -->
+            <article class="work-window" id="work-window-1" data-ranger-preview="red">
+              <div class="window-titlebar">
+                <div class="window-dots"><span></span><span></span><span></span></div>
+                <span class="window-code">02 // WEB_DESIGN_3D.GL</span>
+                <span class="window-badge">Padrão Awwwards</span>
+              </div>
+              <div class="window-body">
+                <div>
+                  <h3>Web Design 3D &amp; Landing Pages B2B</h3>
+                  <p>Páginas interativas de alto impacto (como esta animação) otimizadas para qualquer celular ou PC, feitas para converter decisores.</p>
+                </div>
+                <div class="window-preview-strip">
+                  <span>Performance WebGL Adaptativa</span>
+                  <strong>60–120Hz Fluido</strong>
+                </div>
+                <button type="button" class="window-wa-btn" data-wa-direct="Olá Marcos Siqueira! Vi sua vitrine interativa e quero criar um *Site 3D / Landing Page de Alta Conversão* para minha empresa.">
+                  <span>Orçar Site no WhatsApp</span>
+                  <span aria-hidden="true">↗</span>
+                </button>
+              </div>
+            </article>
+
+            <!-- Janela 03 -->
+            <article class="work-window" id="work-window-2" data-ranger-preview="green">
+              <div class="window-titlebar">
+                <div class="window-dots"><span></span><span></span><span></span></div>
+                <span class="window-code">03 // AUTOMACAO_IA.N8N</span>
+                <span class="window-badge">WhatsApp 24/7</span>
+              </div>
+              <div class="window-body">
+                <div>
+                  <h3>Automações com IA &amp; SDR no WhatsApp</h3>
+                  <p>Robôs inteligentes que atendem seus leads em 2 segundos, tiram dúvidas, agendam reuniões e atualizam seu CRM automaticamente.</p>
+                </div>
+                <div class="window-preview-strip">
+                  <span>Agente SDR IA no WhatsApp</span>
+                  <strong>✓ Reunião Agendada (1,2s)</strong>
+                </div>
+                <button type="button" class="window-wa-btn" data-wa-direct="Olá Marcos Siqueira! Vi sua vitrine interativa e quero implantar *Automações com IA no WhatsApp* na minha operação.">
+                  <span>Orçar Automação no WhatsApp</span>
+                  <span aria-hidden="true">↗</span>
+                </button>
+              </div>
+            </article>
+
+            <!-- Janela 04 -->
+            <article class="work-window" id="work-window-3" data-ranger-preview="yellow">
+              <div class="window-titlebar">
+                <div class="window-dots"><span></span><span></span><span></span></div>
+                <span class="window-code">04 // TRAFEGO_B2B.ADS</span>
+                <span class="window-badge">Meta &amp; Google Ads</span>
+              </div>
+              <div class="window-body">
+                <div>
+                  <h3>Gestão de Tráfego Pago &amp; Escala B2B</h3>
+                  <p>Anúncios estratégicos com rastreamento avançado levando clientes qualificados todos os dias direto para o seu funil automatizado.</p>
+                </div>
+                <div class="window-preview-strip">
+                  <span>Tráfego + Site Rápido + IA 24h</span>
+                  <strong>+60% Leads Qualificados</strong>
+                </div>
+                <button type="button" class="window-wa-btn" data-wa-direct="Olá Marcos Siqueira! Vi sua vitrine interativa e quero escalar minhas vendas com *Gestão de Tráfego Pago B2B*.">
+                  <span>Orçar Tráfego no WhatsApp</span>
+                  <span aria-hidden="true">↗</span>
+                </button>
+              </div>
+            </article>
+
+          </div>
+
+          <!-- Botão Principal Direto para o WhatsApp -->
+          <div class="scene2-bottom-bar" id="scene2-bottom-bar">
+            <a href="#whatsapp" class="btn-wa-primary" data-wa-direct="Olá Marcos Siqueira! Vi sua apresentação interativa e quero conversar sobre um projeto para minha empresa.">
+              <span class="live-pulse-dot" aria-hidden="true"></span>
+              <span>Falar com Marcos no WhatsApp Agora</span>
+              <span aria-hidden="true">↗</span>
+            </a>
+          </div>
+
         </div>
+
+        <!-- Barra de Tarefas Inferior (Footer) com Botão INICIAR -->
+        <footer class="os-taskbar-footer">
+          <div class="os-taskbar-left">
+            <button type="button" class="os-start-btn" data-wa-direct="Olá Marcos Siqueira! Vi sua apresentação interativa e quero conversar sobre um projeto para minha empresa.">
+              <span class="os-start-logo" aria-hidden="true">❖</span>
+              <span>INICIAR</span>
+            </button>
+            <div class="os-taskbar-active-app">
+              <span class="os-taskbar-app-dot"></span>
+              <span>&gt;_ terminal.exe — Vitrine B2B</span>
+            </div>
+          </div>
+          <div class="os-taskbar-tray">
+            <span class="os-tray-pill">IA 24/7</span>
+            <span class="os-tray-pill">120Hz</span>
+            <span class="os-tray-clock">MS_OS // ONLINE</span>
+          </div>
+        </footer>
+
       </section>
 
     </div>
@@ -338,3 +503,4 @@
 </body>
 
 </html>
+

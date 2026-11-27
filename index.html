@@ -10,9 +10,9 @@
   <link rel="icon" type="image/png" href="assets/icons/ms-favicon.png?v=14" />
   <link rel="shortcut icon" type="image/png" href="assets/icons/ms-favicon.png?v=14" />
   <link rel="apple-touch-icon" href="assets/icons/ms-favicon.png?v=14" />
-  <link rel="stylesheet" href="css/b2b-studio.css?v=75" />
-  <script defer src="js/three-vendor.min.js?v=75"></script>
-  <script defer src="js/liquid-motion.js?v=75"></script>
+  <link rel="stylesheet" href="css/b2b-studio.css?v=76" />
+  <script defer src="js/three-vendor.min.js?v=76"></script>
+  <script defer src="js/liquid-motion.js?v=76"></script>
 </head>
 
 <body>
@@ -120,6 +120,50 @@
 
             <!-- Imagem Estática Capturada da Primeira Cena (Fica fixa na tela do notebook até desligar!) -->
             <canvas class="notebook-static-screen" id="notebook-static-screen" aria-hidden="true"></canvas>
+
+            <!-- Moldura de Site Desktop (Browser + Menus + UI de Site de Computador) dentro da tela do Notebook -->
+            <div class="notebook-site-ui" id="notebook-site-ui" aria-hidden="true">
+              <!-- Barra do Navegador Desktop -->
+              <div class="nb-browser-bar">
+                <div class="nb-browser-dots"><span></span><span></span><span></span></div>
+                <div class="nb-browser-nav"><span>←</span><span>→</span><span>↻</span></div>
+                <div class="nb-url-pill">
+                  <span class="nb-lock">🔒</span>
+                  <span>https://marcossiqueira.com.br/studio-3d</span>
+                </div>
+                <div class="nb-browser-meta">WEBGL 2.0 · 120FPS</div>
+              </div>
+
+              <!-- Menu & Header de Site de Computador dentro do Notebook -->
+              <div class="nb-website-header">
+                <div class="nb-site-brand">MS<span>.</span> MARCOS SIQUEIRA</div>
+                <div class="nb-site-menu">
+                  <span class="is-active">Início</span>
+                  <span>Softwares JS</span>
+                  <span>Web Design 3D</span>
+                  <span>Automações IA</span>
+                  <span>Tráfego B2B</span>
+                </div>
+                <div class="nb-site-cta">WhatsApp Comercial ↗</div>
+              </div>
+
+              <!-- Moldura Interna da Primeira Section dentro do Site -->
+              <div class="nb-website-viewport-frame">
+                <div class="nb-viewport-hud-left">
+                  <span>01 // HERO 3D STAGE</span>
+                  <span>INTERACTIVE WEBGL</span>
+                </div>
+                <div class="nb-viewport-hud-right">
+                  <span>● SISTEMA B2B ONLINE</span>
+                </div>
+              </div>
+
+              <!-- Rodapé da UI do Site dentro do Notebook -->
+              <div class="nb-website-footerbar">
+                <span>© MARCOS SIQUEIRA — ENGENHARIA DE SOFTWARE &amp; PROSPECÇÃO B2B</span>
+                <span>ROLE PARA INICIAR ↓</span>
+              </div>
+            </div>
 
             <!-- Reflexo antirreflexo de vidro sutil da tela do MacBook Pro -->
             <div class="notebook-screen-glare" id="notebook-screen-glare" aria-hidden="true"></div>
@@ -275,145 +319,182 @@
       </div>
 
       <!-- =================================================================
-           CENA 2 (z-index: 30): Letreiro HTML se escrevendo acima +
-           Setas Vetoriais Animadas + 4 Janelas Abrindo com o Trabalho!
+           CENA 2 (z-index: 30): Após o Reboot, Programa de Terminal (Tela Preta)
+           Maximizando na Tela com Barra no Topo + Botão Iniciar no Footer!
       ================================================================== -->
-      <section class="scene2-stage-layer" id="scene2-stage-layer" aria-label="Vitrine de Trabalhos e Contato">
+      <section class="scene2-stage-layer" id="scene2-stage-layer" aria-label="Terminal Maximizado e Vitrine de Trabalhos">
 
-        <!-- Inicialização estilo BIOS (só o _ piscando no escuro) que depois escreve o letreiro da Cena 2 -->
-        <header class="scene2-top-header">
-          <span class="scene2-eyebrow" id="scene2-eyebrow">ENGENHARIA DIGITAL &amp; PROSPECÇÃO B2B</span>
-          <h1 class="scene2-typewriter-heading">
-            <span id="scene2-typewriter-text" data-full-text="SOLUÇÕES QUE AUTOMATIZAM E ESCALAM SUA EMPRESA"></span><span class="scene2-caret" id="scene2-bios-caret" aria-hidden="true">_</span>
-          </h1>
-        </header>
+        <!-- Barra Superior do Programa de Terminal Maximizado -->
+        <div class="os-terminal-topbar">
+          <div class="os-terminal-app-id">
+            <span class="os-terminal-icon">&gt;_</span>
+            <span class="os-terminal-title">C:\MARCOS_SIQUEIRA\B2B_OS\terminal.exe — [BIOS_REBOOT // ROOT@MS-STUDIO]</span>
+          </div>
+          <div class="os-terminal-win-controls" aria-hidden="true">
+            <span class="win-ctrl">—</span>
+            <span class="win-ctrl">□</span>
+            <span class="win-ctrl win-ctrl--close">✕</span>
+          </div>
+        </div>
 
-        <!-- Setas Vetoriais Animadas que saem do topo e abrem as 4 janelas -->
-        <svg class="scene2-arrows-svg" viewBox="0 0 1000 600" preserveAspectRatio="none" aria-hidden="true">
-          <defs>
-            <marker id="scene2ArrowHead" markerWidth="8" markerHeight="8" refX="6" refY="4" orient="auto">
-              <path d="M0,0 L8,4 L0,8 Z" fill="#00F0FF" />
-            </marker>
-          </defs>
-          <!-- Seta 1 -> Janela Superior Esquerda -->
-          <path class="scene2-arrow-path" id="arrow-path-0" pathLength="1"
-            d="M 460 88 C 360 95, 290 120, 260 158" marker-end="url(#scene2ArrowHead)" />
-          <!-- Seta 2 -> Janela Superior Direita -->
-          <path class="scene2-arrow-path" id="arrow-path-1" pathLength="1"
-            d="M 540 88 C 640 95, 710 120, 740 158" marker-end="url(#scene2ArrowHead)" />
-          <!-- Seta 3 -> Janela Inferior Esquerda -->
-          <path class="scene2-arrow-path" id="arrow-path-2" pathLength="1"
-            d="M 480 94 C 440 210, 340 295, 260 355" marker-end="url(#scene2ArrowHead)" />
-          <!-- Seta 4 -> Janela Inferior Direita -->
-          <path class="scene2-arrow-path" id="arrow-path-3" pathLength="1"
-            d="M 520 94 C 560 210, 660 295, 740 355" marker-end="url(#scene2ArrowHead)" />
-        </svg>
+        <!-- Área Principal Preta do Terminal (Onde o _ pisca e depois abre o letreiro, setas e janelas) -->
+        <div class="os-terminal-workspace">
 
-        <!-- 4 Janelas que se abrem mostrando o trabalho -->
-        <div class="scene2-windows-grid">
+          <!-- Inicialização estilo BIOS (só o _ piscando no escuro) que depois escreve o letreiro da Cena 2 -->
+          <header class="scene2-top-header">
+            <span class="scene2-eyebrow" id="scene2-eyebrow">ENGENHARIA DIGITAL &amp; PROSPECÇÃO B2B</span>
+            <h1 class="scene2-typewriter-heading">
+              <span id="scene2-typewriter-text" data-full-text="SOLUÇÕES QUE AUTOMATIZAM E ESCALAM SUA EMPRESA"></span><span class="scene2-caret" id="scene2-bios-caret" aria-hidden="true">_</span>
+            </h1>
+          </header>
 
-          <!-- Janela 01 -->
-          <article class="work-window" id="work-window-0" data-ranger-preview="blue">
-            <div class="window-titlebar">
-              <div class="window-dots"><span></span><span></span><span></span></div>
-              <span class="window-code">01 // SOFTWARES_JS.APP</span>
-              <span class="window-badge">SaaS · ERPs · IA</span>
-            </div>
-            <div class="window-body">
-              <div>
-                <h3>Criação de Softwares &amp; Sistemas JS</h3>
-                <p>Painéis financeiros, CRMs sob medida e sistemas que leem notas fiscais e PDFs sozinhos com IA em menos de 1 segundo.</p>
-              </div>
-              <div class="window-preview-strip">
-                <span>Leitura IA de Nota Fiscal.pdf</span>
-                <strong>✓ Extraído em 0,7s</strong>
-              </div>
-              <button type="button" class="window-wa-btn" data-wa-direct="Olá Marcos Siqueira! Vi sua vitrine interativa e quero conversar sobre um *Software / Sistema em JS* para minha empresa.">
-                <span>Orçar Sistema no WhatsApp</span>
-                <span aria-hidden="true">↗</span>
-              </button>
-            </div>
-          </article>
+          <!-- Setas Vetoriais Animadas que saem do topo e abrem as 4 janelas -->
+          <svg class="scene2-arrows-svg" viewBox="0 0 1000 600" preserveAspectRatio="none" aria-hidden="true">
+            <defs>
+              <marker id="scene2ArrowHead" markerWidth="8" markerHeight="8" refX="6" refY="4" orient="auto">
+                <path d="M0,0 L8,4 L0,8 Z" fill="#00F0FF" />
+              </marker>
+            </defs>
+            <!-- Seta 1 -> Janela Superior Esquerda -->
+            <path class="scene2-arrow-path" id="arrow-path-0" pathLength="1"
+              d="M 460 88 C 360 95, 290 120, 260 158" marker-end="url(#scene2ArrowHead)" />
+            <!-- Seta 2 -> Janela Superior Direita -->
+            <path class="scene2-arrow-path" id="arrow-path-1" pathLength="1"
+              d="M 540 88 C 640 95, 710 120, 740 158" marker-end="url(#scene2ArrowHead)" />
+            <!-- Seta 3 -> Janela Inferior Esquerda -->
+            <path class="scene2-arrow-path" id="arrow-path-2" pathLength="1"
+              d="M 480 94 C 440 210, 340 295, 260 355" marker-end="url(#scene2ArrowHead)" />
+            <!-- Seta 4 -> Janela Inferior Direita -->
+            <path class="scene2-arrow-path" id="arrow-path-3" pathLength="1"
+              d="M 520 94 C 560 210, 660 295, 740 355" marker-end="url(#scene2ArrowHead)" />
+          </svg>
 
-          <!-- Janela 02 -->
-          <article class="work-window" id="work-window-1" data-ranger-preview="red">
-            <div class="window-titlebar">
-              <div class="window-dots"><span></span><span></span><span></span></div>
-              <span class="window-code">02 // WEB_DESIGN_3D.GL</span>
-              <span class="window-badge">Padrão Awwwards</span>
-            </div>
-            <div class="window-body">
-              <div>
-                <h3>Web Design 3D &amp; Landing Pages B2B</h3>
-                <p>Páginas interativas de alto impacto (como esta animação) otimizadas para qualquer celular ou PC, feitas para converter decisores.</p>
-              </div>
-              <div class="window-preview-strip">
-                <span>Performance WebGL Adaptativa</span>
-                <strong>60–120Hz Fluido</strong>
-              </div>
-              <button type="button" class="window-wa-btn" data-wa-direct="Olá Marcos Siqueira! Vi sua vitrine interativa e quero criar um *Site 3D / Landing Page de Alta Conversão* para minha empresa.">
-                <span>Orçar Site no WhatsApp</span>
-                <span aria-hidden="true">↗</span>
-              </button>
-            </div>
-          </article>
+          <!-- 4 Janelas que se abrem mostrando o trabalho -->
+          <div class="scene2-windows-grid">
 
-          <!-- Janela 03 -->
-          <article class="work-window" id="work-window-2" data-ranger-preview="green">
-            <div class="window-titlebar">
-              <div class="window-dots"><span></span><span></span><span></span></div>
-              <span class="window-code">03 // AUTOMACAO_IA.N8N</span>
-              <span class="window-badge">WhatsApp 24/7</span>
-            </div>
-            <div class="window-body">
-              <div>
-                <h3>Automações com IA &amp; SDR no WhatsApp</h3>
-                <p>Robôs inteligentes que atendem seus leads em 2 segundos, tiram dúvidas, agendam reuniões e atualizam seu CRM automaticamente.</p>
+            <!-- Janela 01 -->
+            <article class="work-window" id="work-window-0" data-ranger-preview="blue">
+              <div class="window-titlebar">
+                <div class="window-dots"><span></span><span></span><span></span></div>
+                <span class="window-code">01 // SOFTWARES_JS.APP</span>
+                <span class="window-badge">SaaS · ERPs · IA</span>
               </div>
-              <div class="window-preview-strip">
-                <span>Agente SDR IA no WhatsApp</span>
-                <strong>✓ Reunião Agendada (1,2s)</strong>
+              <div class="window-body">
+                <div>
+                  <h3>Criação de Softwares &amp; Sistemas JS</h3>
+                  <p>Painéis financeiros, CRMs sob medida e sistemas que leem notas fiscais e PDFs sozinhos com IA em menos de 1 segundo.</p>
+                </div>
+                <div class="window-preview-strip">
+                  <span>Leitura IA de Nota Fiscal.pdf</span>
+                  <strong>✓ Extraído em 0,7s</strong>
+                </div>
+                <button type="button" class="window-wa-btn" data-wa-direct="Olá Marcos Siqueira! Vi sua vitrine interativa e quero conversar sobre um *Software / Sistema em JS* para minha empresa.">
+                  <span>Orçar Sistema no WhatsApp</span>
+                  <span aria-hidden="true">↗</span>
+                </button>
               </div>
-              <button type="button" class="window-wa-btn" data-wa-direct="Olá Marcos Siqueira! Vi sua vitrine interativa e quero implantar *Automações com IA no WhatsApp* na minha operação.">
-                <span>Orçar Automação no WhatsApp</span>
-                <span aria-hidden="true">↗</span>
-              </button>
-            </div>
-          </article>
+            </article>
 
-          <!-- Janela 04 -->
-          <article class="work-window" id="work-window-3" data-ranger-preview="yellow">
-            <div class="window-titlebar">
-              <div class="window-dots"><span></span><span></span><span></span></div>
-              <span class="window-code">04 // TRAFEGO_B2B.ADS</span>
-              <span class="window-badge">Meta &amp; Google Ads</span>
-            </div>
-            <div class="window-body">
-              <div>
-                <h3>Gestão de Tráfego Pago &amp; Escala B2B</h3>
-                <p>Anúncios estratégicos com rastreamento avançado levando clientes qualificados todos os dias direto para o seu funil automatizado.</p>
+            <!-- Janela 02 -->
+            <article class="work-window" id="work-window-1" data-ranger-preview="red">
+              <div class="window-titlebar">
+                <div class="window-dots"><span></span><span></span><span></span></div>
+                <span class="window-code">02 // WEB_DESIGN_3D.GL</span>
+                <span class="window-badge">Padrão Awwwards</span>
               </div>
-              <div class="window-preview-strip">
-                <span>Tráfego + Site Rápido + IA 24h</span>
-                <strong>+60% Leads Qualificados</strong>
+              <div class="window-body">
+                <div>
+                  <h3>Web Design 3D &amp; Landing Pages B2B</h3>
+                  <p>Páginas interativas de alto impacto (como esta animação) otimizadas para qualquer celular ou PC, feitas para converter decisores.</p>
+                </div>
+                <div class="window-preview-strip">
+                  <span>Performance WebGL Adaptativa</span>
+                  <strong>60–120Hz Fluido</strong>
+                </div>
+                <button type="button" class="window-wa-btn" data-wa-direct="Olá Marcos Siqueira! Vi sua vitrine interativa e quero criar um *Site 3D / Landing Page de Alta Conversão* para minha empresa.">
+                  <span>Orçar Site no WhatsApp</span>
+                  <span aria-hidden="true">↗</span>
+                </button>
               </div>
-              <button type="button" class="window-wa-btn" data-wa-direct="Olá Marcos Siqueira! Vi sua vitrine interativa e quero escalar minhas vendas com *Gestão de Tráfego Pago B2B*.">
-                <span>Orçar Tráfego no WhatsApp</span>
-                <span aria-hidden="true">↗</span>
-              </button>
-            </div>
-          </article>
+            </article>
+
+            <!-- Janela 03 -->
+            <article class="work-window" id="work-window-2" data-ranger-preview="green">
+              <div class="window-titlebar">
+                <div class="window-dots"><span></span><span></span><span></span></div>
+                <span class="window-code">03 // AUTOMACAO_IA.N8N</span>
+                <span class="window-badge">WhatsApp 24/7</span>
+              </div>
+              <div class="window-body">
+                <div>
+                  <h3>Automações com IA &amp; SDR no WhatsApp</h3>
+                  <p>Robôs inteligentes que atendem seus leads em 2 segundos, tiram dúvidas, agendam reuniões e atualizam seu CRM automaticamente.</p>
+                </div>
+                <div class="window-preview-strip">
+                  <span>Agente SDR IA no WhatsApp</span>
+                  <strong>✓ Reunião Agendada (1,2s)</strong>
+                </div>
+                <button type="button" class="window-wa-btn" data-wa-direct="Olá Marcos Siqueira! Vi sua vitrine interativa e quero implantar *Automações com IA no WhatsApp* na minha operação.">
+                  <span>Orçar Automação no WhatsApp</span>
+                  <span aria-hidden="true">↗</span>
+                </button>
+              </div>
+            </article>
+
+            <!-- Janela 04 -->
+            <article class="work-window" id="work-window-3" data-ranger-preview="yellow">
+              <div class="window-titlebar">
+                <div class="window-dots"><span></span><span></span><span></span></div>
+                <span class="window-code">04 // TRAFEGO_B2B.ADS</span>
+                <span class="window-badge">Meta &amp; Google Ads</span>
+              </div>
+              <div class="window-body">
+                <div>
+                  <h3>Gestão de Tráfego Pago &amp; Escala B2B</h3>
+                  <p>Anúncios estratégicos com rastreamento avançado levando clientes qualificados todos os dias direto para o seu funil automatizado.</p>
+                </div>
+                <div class="window-preview-strip">
+                  <span>Tráfego + Site Rápido + IA 24h</span>
+                  <strong>+60% Leads Qualificados</strong>
+                </div>
+                <button type="button" class="window-wa-btn" data-wa-direct="Olá Marcos Siqueira! Vi sua vitrine interativa e quero escalar minhas vendas com *Gestão de Tráfego Pago B2B*.">
+                  <span>Orçar Tráfego no WhatsApp</span>
+                  <span aria-hidden="true">↗</span>
+                </button>
+              </div>
+            </article>
+
+          </div>
+
+          <!-- Botão Principal Direto para o WhatsApp -->
+          <div class="scene2-bottom-bar" id="scene2-bottom-bar">
+            <a href="#whatsapp" class="btn-wa-primary" data-wa-direct="Olá Marcos Siqueira! Vi sua apresentação interativa e quero conversar sobre um projeto para minha empresa.">
+              <span class="live-pulse-dot" aria-hidden="true"></span>
+              <span>Falar com Marcos no WhatsApp Agora</span>
+              <span aria-hidden="true">↗</span>
+            </a>
+          </div>
 
         </div>
 
-        <!-- Botão Principal Direto para o WhatsApp -->
-        <div class="scene2-bottom-bar" id="scene2-bottom-bar">
-          <a href="#whatsapp" class="btn-wa-primary" data-wa-direct="Olá Marcos Siqueira! Vi sua apresentação interativa e quero conversar sobre um projeto para minha empresa.">
-            <span class="live-pulse-dot" aria-hidden="true"></span>
-            <span>Falar com Marcos no WhatsApp Agora</span>
-            <span aria-hidden="true">↗</span>
-          </a>
-        </div>
+        <!-- Barra de Tarefas Inferior (Footer) com Botão INICIAR -->
+        <footer class="os-taskbar-footer">
+          <div class="os-taskbar-left">
+            <button type="button" class="os-start-btn" data-wa-direct="Olá Marcos Siqueira! Vi sua apresentação interativa e quero conversar sobre um projeto para minha empresa.">
+              <span class="os-start-logo" aria-hidden="true">❖</span>
+              <span>INICIAR</span>
+            </button>
+            <div class="os-taskbar-active-app">
+              <span class="os-taskbar-app-dot"></span>
+              <span>&gt;_ terminal.exe — Vitrine B2B</span>
+            </div>
+          </div>
+          <div class="os-taskbar-tray">
+            <span class="os-tray-pill">IA 24/7</span>
+            <span class="os-tray-pill">120Hz</span>
+            <span class="os-tray-clock">MS_OS // ONLINE</span>
+          </div>
+        </footer>
 
       </section>
 
