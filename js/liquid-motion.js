@@ -4451,6 +4451,7 @@
     // & CENA 2: Top HTML Typewriter + Animated SVG Arrows + 4 Work Windows
     // =========================================================================
     const scrollyTrack = document.getElementById("scrollytelling-track");
+    const stageAmbientBg = document.getElementById("stage-ambient-bg");
     const scene1MatrixTerminal = document.getElementById("scene1-matrix-terminal");
     const matrixTerminalCanvas = document.getElementById("matrix-terminal-canvas");
     const matrixTerminalStatus = document.getElementById("matrix-terminal-status");
@@ -4469,6 +4470,7 @@
     const tvOffPhosphorDot = document.getElementById("tv-off-phosphor-dot");
 
     const scene2Layer = document.getElementById("scene2-stage-layer");
+    const scene2Eyebrow = document.getElementById("scene2-eyebrow");
     const scene2TypewriterText = document.getElementById("scene2-typewriter-text");
     const scene2FullText = scene2TypewriterText
       ? scene2TypewriterText.getAttribute("data-full-text") || "SOLUÇÕES QUE AUTOMATIZAM E ESCALAM SUA EMPRESA"
@@ -4708,61 +4710,70 @@
 
       const pShrink = easeInOutCubic(rangeProgress(p, 0.015, 0.16));
       const pBezel = easeOutCubic(rangeProgress(p, 0.025, 0.14));
-      // Classic 3-Stage CRT TV Power-Off Transition at the end of the Notebook (p: 0.37 -> 0.49)
-      const pTvOff = rangeProgress(p, 0.37, 0.49);
+      // Classic 3-Stage CRT TV Power-Off Transition: Notebook AND Matrix Background Turn Off Together (p: 0.36 -> 0.45)
+      const pTvOff = rangeProgress(p, 0.36, 0.45);
+
+      // Compute shared CRT TV Power-Off vertical collapse (Stage 1) -> horizontal collapse (Stage 2)
+      let tvScaleX = 1;
+      let tvScaleY = 1;
+      let tvPowerOpacity = 1;
+      let brightnessBoost = 1;
+
+      if (pTvOff > 0) {
+        // Stage 1 (0.00 -> 0.44): Vertical implosion into a razor-thin bright horizontal scanline
+        const pVert = easeInOutCubic(rangeProgress(pTvOff, 0.0, 0.44));
+        // Stage 2 (0.40 -> 0.78): Horizontal implosion of the line into a center phosphor dot
+        const pHoriz = easeInOutCubic(rangeProgress(pTvOff, 0.40, 0.78));
+
+        tvScaleY = Math.max(0.003, 1 - pVert * 0.997);
+        tvScaleX = (1 + pVert * 0.06 * (1 - pHoriz)) * Math.max(0.004, 1 - pHoriz * 0.996);
+        tvPowerOpacity = 1 - easeOutCubic(rangeProgress(pTvOff, 0.68, 0.82));
+        brightnessBoost = 1 + pVert * 2.6;
+      }
+
+      // Power off the ambient stage background when the TV turns off so the BIOS boot screen is 100% pitch-black,
+      // then power it back on smoothly as Cena 2 begins typing after the blinking BIOS "_" phase
+      if (stageAmbientBg) {
+        const bgPowerOff = 1 - easeInOutCubic(rangeProgress(p, 0.36, 0.42));
+        const bgPowerOnScene2 = easeInOutCubic(rangeProgress(p, 0.58, 0.68));
+        const ambientOp = p < 0.48 ? bgPowerOff : bgPowerOnScene2;
+        stageAmbientBg.style.opacity = ambientOp.toFixed(3);
+      }
 
       if (notebookRig && notebookLid) {
         const targetNotebookScale = isMobile ? 0.78 : (vw <= 1100 ? 0.56 : 0.48);
         const baseScale = 1 - pShrink * (1 - targetNotebookScale);
 
         // Shift slightly upward so the Unibody base below the lid sits balanced in the center
-        const liftY = -pShrink * (isMobile ? vh * 0.032 : vh * 0.046);
-
-        // Compute CRT TV Power-Off vertical collapse (Stage 1) -> horizontal collapse (Stage 2)
-        let tvScaleX = 1;
-        let tvScaleY = 1;
-        let notebookOpacity = 1;
-        let brightnessBoost = 1;
-
-        if (pTvOff > 0) {
-          // Stage 1 (0.00 -> 0.44): Vertical implosion into a razor-thin bright horizontal scanline
-          const pVert = easeInOutCubic(rangeProgress(pTvOff, 0.0, 0.44));
-          // Stage 2 (0.40 -> 0.78): Horizontal implosion of the line into a center phosphor dot
-          const pHoriz = easeInOutCubic(rangeProgress(pTvOff, 0.40, 0.78));
-
-          tvScaleY = Math.max(0.004, 1 - pVert * 0.996);
-          tvScaleX = (1 + pVert * 0.08 * (1 - pHoriz)) * Math.max(0.005, 1 - pHoriz * 0.995);
-          notebookOpacity = 1 - easeOutCubic(rangeProgress(pTvOff, 0.68, 0.82));
-          brightnessBoost = 1 + pVert * 2.6;
-        }
+        const liftY = -pShrink * (isMobile ? vh * 0.032 : vh * 0.046) * (1 - easeInOutCubic(rangeProgress(pTvOff, 0.0, 0.42)));
 
         const finalScaleX = baseScale * tvScaleX;
         const finalScaleY = baseScale * tvScaleY;
 
         notebookRig.style.transform = `translate3d(0, ${liftY.toFixed(1)}px, 0) scaleX(${finalScaleX.toFixed(4)}) scaleY(${finalScaleY.toFixed(4)})`;
-        notebookRig.style.opacity = notebookOpacity.toFixed(3);
-        notebookRig.style.visibility = notebookOpacity <= 0.005 ? "hidden" : "visible";
+        notebookRig.style.opacity = tvPowerOpacity.toFixed(3);
+        notebookRig.style.visibility = tvPowerOpacity <= 0.005 ? "hidden" : "visible";
         notebookRig.style.filter = pTvOff > 0.005 ? `brightness(${brightnessBoost.toFixed(2)}) contrast(${(1 + pTvOff * 0.6).toFixed(2)})` : "none";
         notebookRig.style.pointerEvents = p < 0.03 ? "auto" : "none";
 
-        // Drive CRT TV Power-Off Scanbeam & Phosphor Center Dot Overlay
+        // Drive Full-Screen CRT TV Power-Off Scanbeam & Phosphor Center Dot Overlay
         if (notebookTvFx && tvOffScanbeam && tvOffPhosphorDot) {
           if (pTvOff > 0.02 && pTvOff < 0.995) {
             notebookTvFx.style.visibility = "visible";
             notebookTvFx.style.opacity = "1";
-            notebookTvFx.style.transform = `translate3d(0, ${liftY.toFixed(1)}px, 0)`;
+            notebookTvFx.style.transform = "translate3d(0, 0, 0)";
 
-            // Horizontal cathode beam flares as vertical collapse finishes, then pinches inward to center
+            // Horizontal cathode beam flares across the whole screen as vertical collapse finishes, then pinches to center
             const beamAppear = easeOutCubic(rangeProgress(pTvOff, 0.14, 0.40));
             const beamCollapseX = 1 - easeInOutCubic(rangeProgress(pTvOff, 0.42, 0.76));
             const beamOp = beamAppear * clamp01(beamCollapseX * 1.4);
             tvOffScanbeam.style.opacity = beamOp.toFixed(3);
-            tvOffScanbeam.style.transform = `scaleX(${Math.max(0.01, beamCollapseX).toFixed(3)}) scaleY(${(0.5 + beamAppear * 0.9).toFixed(2)})`;
+            tvOffScanbeam.style.transform = `scaleX(${Math.max(0.008, beamCollapseX).toFixed(3)}) scaleY(${(0.5 + beamAppear * 1.0).toFixed(2)})`;
 
-            // Center phosphor spark flares when horizontal beam collapses to center, then pops out
+            // Center phosphor spark flares when horizontal beam collapses to center, then pops out to pitch black
             const dotIn = easeOutCubic(rangeProgress(pTvOff, 0.36, 0.58));
             const dotOut = 1 - easeInOutCubic(rangeProgress(pTvOff, 0.68, 0.99));
-            const dotScale = dotIn * dotOut * (1 + Math.sin(dotIn * Math.PI) * 0.65);
+            const dotScale = dotIn * dotOut * (1 + Math.sin(dotIn * Math.PI) * 0.75);
             tvOffPhosphorDot.style.opacity = (dotIn * dotOut).toFixed(3);
             tvOffPhosphorDot.style.transform = `scale(${dotScale.toFixed(3)})`;
           } else {
@@ -4792,18 +4803,23 @@
       if (notebookScreenGlare) notebookScreenGlare.style.opacity = bezelAlphaStr;
       if (notebookBase) notebookBase.style.opacity = bezelAlphaStr;
 
-      // Background Matrix Terminal (Writes commands -> Letters fall like Matrix digital rain)
+      // Background Matrix Terminal (Writes commands -> Letters fall -> Turns off TOGETHER with the Notebook like a TV!)
       if (scene1MatrixTerminal) {
         const termIn = easeOutCubic(rangeProgress(p, 0.025, 0.09));
-        const termOut = 1 - easeInOutCubic(rangeProgress(p, 0.44, 0.50));
-        const termOp = termIn * termOut;
+        const termOp = termIn * tvPowerOpacity;
 
         scene1MatrixTerminal.style.opacity = termOp.toFixed(3);
         scene1MatrixTerminal.style.visibility = termOp <= 0.005 ? "hidden" : "visible";
+        scene1MatrixTerminal.style.transform = pTvOff > 0.001
+          ? `scaleX(${tvScaleX.toFixed(4)}) scaleY(${tvScaleY.toFixed(4)})`
+          : "none";
+        scene1MatrixTerminal.style.filter = pTvOff > 0.005
+          ? `brightness(${brightnessBoost.toFixed(2)}) contrast(${(1 + pTvOff * 0.6).toFixed(2)})`
+          : "none";
 
         if (termOp > 0.005) {
           const pWrite = rangeProgress(p, 0.035, 0.25);
-          const pRain = rangeProgress(p, 0.20, 0.48);
+          const pRain = rangeProgress(p, 0.20, 0.45);
 
           if (matrixTerminalStatus) {
             if (pRain > 0.05) {
@@ -4818,29 +4834,36 @@
       }
 
       // =====================================================================
-      // CENA 2 (p: 0.50 -> 1.00):
-      // 1) Top HTML Marquee/Headline Writes Itself Above (0.51 -> 0.72)
-      // 2) Vector SVG Arrows Draw Down from Top Header (0.55 -> 0.82)
-      // 3) 4 Work Windows Open Smoothly as Arrows Arrive (0.60 -> 0.88)
-      // 4) Direct WhatsApp Bottom CTA Appears (0.78 -> 0.92)
+      // BIOS BOOT SEQUENCE (p: 0.45 -> 0.56):
+      // Pitch-black screen with ONLY the blinking BIOS "_" cursor!
+      // Followed by CENA 2 (p: 0.56 -> 1.00):
+      // 1) The blinking "_" begins typing the Top HTML Headline (0.56 -> 0.75)
+      // 2) Vector SVG Arrows Draw Down from Top Header (0.62 -> 0.85)
+      // 3) 4 Work Windows Open Smoothly as Arrows Arrive (0.66 -> 0.91)
+      // 4) Direct WhatsApp Bottom CTA Appears (0.81 -> 0.94)
       // =====================================================================
       if (scene2Layer) {
-        const s2Op = easeOutCubic(rangeProgress(p, 0.49, 0.55));
+        const s2Op = easeOutCubic(rangeProgress(p, 0.445, 0.465));
         scene2Layer.style.opacity = s2Op.toFixed(3);
         scene2Layer.style.visibility = s2Op <= 0.005 ? "hidden" : "visible";
-        scene2Layer.classList.toggle("is-interactive", p >= 0.53);
+        scene2Layer.classList.toggle("is-interactive", p >= 0.60);
+      }
+
+      if (scene2Eyebrow) {
+        const eyebrowOp = easeOutCubic(rangeProgress(p, 0.58, 0.65));
+        scene2Eyebrow.style.opacity = eyebrowOp.toFixed(3);
       }
 
       if (scene2TypewriterText && scene2FullText) {
-        const pType = rangeProgress(p, 0.51, 0.72);
+        const pType = rangeProgress(p, 0.56, 0.75);
         const charCount = Math.round(pType * scene2FullText.length);
         scene2TypewriterText.textContent = scene2FullText.slice(0, charCount);
       }
 
       arrowPaths.forEach((pathEl, idx) => {
         if (!pathEl) return;
-        const aStart = 0.55 + idx * 0.04;
-        const aEnd = aStart + 0.12;
+        const aStart = 0.62 + idx * 0.038;
+        const aEnd = aStart + 0.11;
         const pArrow = easeOutCubic(rangeProgress(p, aStart, aEnd));
         pathEl.style.strokeDashoffset = (1 - pArrow).toFixed(3);
         pathEl.style.opacity = pArrow > 0.01 ? "1" : "0";
@@ -4848,8 +4871,8 @@
 
       workWindows.forEach((winEl, idx) => {
         if (!winEl) return;
-        const wStart = 0.59 + idx * 0.045;
-        const wEnd = wStart + 0.14;
+        const wStart = 0.66 + idx * 0.042;
+        const wEnd = wStart + 0.13;
         const pWin = easeOutCubic(rangeProgress(p, wStart, wEnd));
         const scaleY = 0.12 + pWin * 0.88;
         const scaleX = 0.90 + pWin * 0.10;
@@ -4860,7 +4883,7 @@
       });
 
       if (scene2BottomBar) {
-        const pCta = easeOutCubic(rangeProgress(p, 0.78, 0.92));
+        const pCta = easeOutCubic(rangeProgress(p, 0.81, 0.94));
         const ctaY = (1 - pCta) * 16;
         scene2BottomBar.style.opacity = pCta.toFixed(3);
         scene2BottomBar.style.transform = `translate3d(0, ${ctaY.toFixed(1)}px, 0)`;

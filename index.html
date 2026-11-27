@@ -10,9 +10,9 @@
   <link rel="icon" type="image/png" href="assets/icons/ms-favicon.png?v=14" />
   <link rel="shortcut icon" type="image/png" href="assets/icons/ms-favicon.png?v=14" />
   <link rel="apple-touch-icon" href="assets/icons/ms-favicon.png?v=14" />
-  <link rel="stylesheet" href="css/b2b-studio.css?v=74" />
-  <script defer src="js/three-vendor.min.js?v=74"></script>
-  <script defer src="js/liquid-motion.js?v=74"></script>
+  <link rel="stylesheet" href="css/b2b-studio.css?v=75" />
+  <script defer src="js/three-vendor.min.js?v=75"></script>
+  <script defer src="js/liquid-motion.js?v=75"></script>
 </head>
 
 <body>
@@ -76,8 +76,8 @@
   <main class="scrollytelling-master-track" id="scrollytelling-track">
     <div class="scrollytelling-sticky-stage" id="scrollytelling-stage">
 
-      <!-- Layer 0: Deep Ambient Stage Backdrop (Stays when framed photo fades out) -->
-      <div class="stage-ambient-bg" aria-hidden="true">
+      <!-- Layer 0: Deep Ambient Stage Backdrop (Desliga no TV-Off para o boot de BIOS e religa na Cena 2) -->
+      <div class="stage-ambient-bg" id="stage-ambient-bg" aria-hidden="true">
         <div class="stage-ambient-grid"></div>
       </div>
 
@@ -280,11 +280,11 @@
       ================================================================== -->
       <section class="scene2-stage-layer" id="scene2-stage-layer" aria-label="Vitrine de Trabalhos e Contato">
 
-        <!-- Letreiro em HTML que vai se escrevendo acima no scroll -->
+        <!-- Inicialização estilo BIOS (só o _ piscando no escuro) que depois escreve o letreiro da Cena 2 -->
         <header class="scene2-top-header">
-          <span class="scene2-eyebrow">ENGENHARIA DIGITAL &amp; PROSPECÇÃO B2B</span>
+          <span class="scene2-eyebrow" id="scene2-eyebrow">ENGENHARIA DIGITAL &amp; PROSPECÇÃO B2B</span>
           <h1 class="scene2-typewriter-heading">
-            <span id="scene2-typewriter-text" data-full-text="SOLUÇÕES QUE AUTOMATIZAM E ESCALAM SUA EMPRESA"></span><span class="scene2-caret" aria-hidden="true"></span>
+            <span id="scene2-typewriter-text" data-full-text="SOLUÇÕES QUE AUTOMATIZAM E ESCALAM SUA EMPRESA"></span><span class="scene2-caret" id="scene2-bios-caret" aria-hidden="true">_</span>
           </h1>
         </header>
 

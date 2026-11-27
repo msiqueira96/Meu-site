@@ -290,9 +290,10 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
+  background: #010103;
 }
 
-/* Deep Ambient Stage Background (Remains visible when the framed photo fades out!) */
+/* Deep Ambient Stage Background (Powers off during CRT TV-off & BIOS boot, powers back on in Cena 2) */
 .stage-ambient-bg {
   position: absolute;
   inset: 0;
@@ -300,6 +301,7 @@ body {
   background:
     radial-gradient(circle at 50% 42%, rgba(255, 0, 122, 0.16) 0%, rgba(18, 8, 44, 0.92) 48%, #06030F 85%);
   overflow: hidden;
+  will-change: opacity;
 }
 
 .stage-ambient-grid {
@@ -326,7 +328,8 @@ body {
   background:
     radial-gradient(circle at 50% 48%, rgba(0, 42, 18, 0.78) 0%, rgba(2, 12, 6, 0.96) 76%),
     #020804;
-  will-change: opacity;
+  transform-origin: center center;
+  will-change: transform, opacity, filter;
 }
 
 .matrix-terminal-topbar {
@@ -629,14 +632,14 @@ canvas.gl {
 
 .tv-off-scanbeam {
   position: absolute;
-  width: min(56vw, 820px);
-  height: 5px;
+  width: 100vw;
+  height: 6px;
   border-radius: 999px;
   background: #FFFFFF;
   box-shadow:
-    0 0 12px 3px #FFFFFF,
-    0 0 28px 8px rgba(0, 240, 255, 0.92),
-    0 0 65px 16px rgba(0, 255, 102, 0.78);
+    0 0 14px 4px #FFFFFF,
+    0 0 36px 10px rgba(0, 240, 255, 0.94),
+    0 0 80px 22px rgba(0, 255, 102, 0.85);
   transform: scaleX(0) scaleY(1);
   opacity: 0;
   will-change: transform, opacity;
@@ -733,6 +736,8 @@ canvas.gl {
   background: rgba(0, 240, 255, 0.1);
   border: 1px solid rgba(0, 240, 255, 0.32);
   margin-bottom: 0.45rem;
+  opacity: 0;
+  will-change: opacity;
 }
 
 .scene2-typewriter-heading {
@@ -747,13 +752,14 @@ canvas.gl {
 
 .scene2-caret {
   display: inline-block;
-  width: 3px;
-  height: 0.85em;
-  background: var(--accent);
-  margin-left: 4px;
-  vertical-align: -0.08em;
-  box-shadow: 0 0 10px var(--accent);
-  animation: caretBlink 0.9s infinite;
+  font-family: "Consolas", "Monaco", "Courier New", monospace;
+  font-weight: 700;
+  color: #00FF66;
+  margin-left: 3px;
+  text-shadow:
+    0 0 10px #00FF66,
+    0 0 22px rgba(0, 255, 102, 0.85);
+  animation: caretBlink 0.75s steps(1, end) infinite;
 }
 
 @keyframes caretBlink {
