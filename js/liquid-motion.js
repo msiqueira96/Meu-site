@@ -4466,6 +4466,7 @@
     const notebookSiteUi = document.getElementById("notebook-site-ui");
     const notebookBase = document.getElementById("notebook-base");
     const notebookStaticScreen = document.getElementById("notebook-static-screen");
+    const heroGlWrap = heroFrameCard ? heroFrameCard.querySelector(".gl-wrap") : null;
     const notebookTvFx = document.getElementById("notebook-tv-fx");
     const tvOffScanbeam = document.getElementById("tv-off-scanbeam");
     const tvOffPhosphorDot = document.getElementById("tv-off-phosphor-dot");
@@ -4744,11 +4745,11 @@
       }
 
       if (notebookRig && notebookLid) {
-        const targetNotebookScale = isMobile ? 0.78 : (vw <= 1100 ? 0.56 : 0.48);
+        const targetNotebookScale = isMobile ? 0.84 : (vw <= 1100 ? 0.56 : 0.48);
         const baseScale = 1 - pShrink * (1 - targetNotebookScale);
 
         // Shift slightly upward so the Unibody base below the lid sits balanced in the center
-        const liftY = -pShrink * (isMobile ? vh * 0.032 : vh * 0.046) * (1 - easeInOutCubic(rangeProgress(pTvOff, 0.0, 0.42)));
+        const liftY = -pShrink * (isMobile ? vh * 0.025 : vh * 0.046) * (1 - easeInOutCubic(rangeProgress(pTvOff, 0.0, 0.42)));
 
         const finalScaleX = baseScale * tvScaleX;
         const finalScaleY = baseScale * tvScaleY;
@@ -4785,17 +4786,43 @@
           }
         }
 
-        // On mobile portrait screens, morph the lid height from 100dvh to 16:10 widescreen laptop proportions
-        if (vh > vw * 0.88) {
-          const targetLaptopH = Math.round(vw * 0.64);
+        // On mobile portrait screens, morph the lid height from 100dvh to widescreen laptop proportions
+        // while keeping both the live WebGL wrap and static 3D canvas at their true un-squished aspect ratio!
+        const isPortraitMobile = vh > vw * 0.88;
+        if (isPortraitMobile) {
+          const targetLaptopH = Math.round(vw * 0.68);
           const currentLidH = Math.round(vh - pShrink * (vh - targetLaptopH));
           notebookLid.style.height = `${currentLidH}px`;
+          const innerFitScale = 1 - pShrink * 0.14;
+          const innerTransform = `translate(-50%, -48%) scale(${innerFitScale.toFixed(3)})`;
+          if (notebookStaticScreen) {
+            notebookStaticScreen.style.width = `${vw}px`;
+            notebookStaticScreen.style.height = `${vh}px`;
+            notebookStaticScreen.style.transform = innerTransform;
+          }
+          if (heroGlWrap) {
+            heroGlWrap.style.width = `${vw}px`;
+            heroGlWrap.style.height = `${vh}px`;
+            heroGlWrap.style.transform = innerTransform;
+          }
         } else {
           notebookLid.style.height = "100%";
+          if (notebookStaticScreen) {
+            notebookStaticScreen.style.width = "100%";
+            notebookStaticScreen.style.height = "100%";
+            notebookStaticScreen.style.transform = "translate(-50%, -50%)";
+          }
+          if (heroGlWrap) {
+            heroGlWrap.style.width = "100%";
+            heroGlWrap.style.height = "100%";
+            heroGlWrap.style.transform = "translate(-50%, -50%)";
+          }
         }
 
-        const lidRadiusTop = Math.round(pBezel * 22);
-        const lidRadiusBottom = Math.round(pBezel * 6);
+        const maxRadiusTop = isMobile ? 11 : 22;
+        const maxRadiusBottom = isMobile ? 4 : 6;
+        const lidRadiusTop = Math.round(pBezel * maxRadiusTop);
+        const lidRadiusBottom = Math.round(pBezel * maxRadiusBottom);
         notebookLid.style.borderRadius = `${lidRadiusTop}px ${lidRadiusTop}px ${lidRadiusBottom}px ${lidRadiusBottom}px`;
       }
 
@@ -4805,7 +4832,11 @@
       if (notebookLidChin) notebookLidChin.style.opacity = bezelAlphaStr;
       if (notebookScreenGlare) notebookScreenGlare.style.opacity = bezelAlphaStr;
       if (notebookSiteUi) notebookSiteUi.style.opacity = bezelAlphaStr;
-      if (notebookBase) notebookBase.style.opacity = bezelAlphaStr;
+      if (notebookBase) {
+        notebookBase.style.opacity = bezelAlphaStr;
+        const baseExpandX = 0.86 + pBezel * 0.14;
+        notebookBase.style.transform = `scaleX(${baseExpandX.toFixed(3)})`;
+      }
 
       // Hide corner 3D widgets once the Notebook shuts off and the Maximized Terminal takes over the screen
       const cornerWidgetsOp = 1 - easeOutCubic(rangeProgress(p, 0.38, 0.44));

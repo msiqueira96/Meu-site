@@ -527,9 +527,11 @@ body {
 .gl-canvas,
 .gl-wrap {
   position: absolute;
-  inset: 0;
+  top: 50%;
+  left: 50%;
   width: 100%;
   height: 100%;
+  transform: translate(-50%, -50%);
 }
 
 canvas.gl {
@@ -538,13 +540,15 @@ canvas.gl {
   height: 100%;
 }
 
-/* Static Snapshot Canvas of the First Scene inside the Notebook */
+/* Static Snapshot Canvas of the First Scene inside the Notebook (Never squishes on mobile!) */
 .notebook-static-screen {
   position: absolute;
-  inset: 0;
+  top: 50%;
+  left: 50%;
   z-index: 6;
   width: 100%;
   height: 100%;
+  transform: translate(-50%, -50%);
   display: block;
   opacity: 0;
   pointer-events: none;
@@ -788,25 +792,27 @@ canvas.gl {
   pointer-events: none;
 }
 
-/* Photorealistic Vector SVG MacBook Pro 16" Unibody Base */
+/* Photorealistic Vector SVG MacBook Pro 16" Unibody Base
+   (Flex child with height: 0 so it ALWAYS stays attached to the bottom of .notebook-lid on both mobile and desktop!) */
 .notebook-base {
-  position: absolute;
-  top: calc(100% - 2px);
-  left: 50%;
-  transform: translateX(-50%);
+  position: relative;
   width: 122%;
+  height: 0;
+  margin-top: -2px;
   z-index: 18;
   display: flex;
   flex-direction: column;
   align-items: center;
   pointer-events: none;
   opacity: 0;
+  overflow: visible;
 }
 
 .notebook-base-svg {
   width: 100%;
   height: auto;
   display: block;
+  flex-shrink: 0;
   overflow: visible;
   filter: drop-shadow(0 24px 42px rgba(0, 0, 0, 0.92));
 }
@@ -1381,6 +1387,175 @@ canvas.gl {
     right: 0.75rem;
   }
 
+  /* Matrix Terminal Topbar Mobile Fit */
+  .matrix-terminal-topbar {
+    height: 28px;
+    padding: 0 2.75rem;
+    font-size: 0.52rem;
+    gap: 6px;
+  }
+
+  .matrix-terminal-dots span {
+    width: 6px;
+    height: 6px;
+  }
+
+  .matrix-terminal-status {
+    padding: 0.1rem 0.35rem;
+    font-size: 0.48rem;
+  }
+
+  .matrix-terminal-canvas {
+    top: 28px;
+    height: calc(100% - 28px);
+  }
+
+  /* Mobile Photorealistic MacBook Pro Proportions (No overflow, no squishing!) */
+  .notebook-glass-bezel {
+    border-top-width: 7px;
+    border-left-width: 7px;
+    border-right-width: 7px;
+    border-bottom-width: 14px;
+    box-shadow:
+      inset 0 0 0 1px rgba(255, 255, 255, 0.14),
+      0 0 0 1.5px #262A34,
+      0 -1px 0 1.5px #8B94A8,
+      0 0 0 2.5px #101218;
+  }
+
+  .notebook-camera-notch {
+    top: 6px;
+    width: 66px;
+    height: 11px;
+    border-radius: 0 0 5px 5px;
+    gap: 5px;
+  }
+
+  .notebook-camera-sensor {
+    width: 3px;
+    height: 3px;
+  }
+
+  .notebook-camera-lens {
+    width: 5px;
+    height: 5px;
+    border-width: 1px;
+  }
+
+  .notebook-camera-led {
+    width: 3px;
+    height: 3px;
+  }
+
+  .notebook-lid-chin {
+    height: 14px;
+    font-size: 0.38rem;
+    letter-spacing: 0.2em;
+  }
+
+  .notebook-base {
+    width: 112%;
+  }
+
+  /* Mobile Desktop Website UI Frame inside the Notebook Screen (Miniature Desktop Scale) */
+  .notebook-site-ui {
+    inset: 7px 7px 14px 7px;
+    border-radius: 4px;
+  }
+
+  .nb-browser-bar {
+    height: 17px;
+    padding: 0 6px;
+    gap: 5px;
+  }
+
+  .nb-browser-dots {
+    gap: 3px;
+  }
+
+  .nb-browser-dots span {
+    width: 5px;
+    height: 5px;
+  }
+
+  .nb-browser-nav {
+    gap: 3px;
+    font-size: 0.44rem;
+  }
+
+  .nb-url-pill {
+    height: 12px;
+    padding: 0 6px;
+    font-size: 0.42rem;
+    max-width: 165px;
+    border-radius: 3px;
+    gap: 3px;
+  }
+
+  .nb-lock {
+    font-size: 0.4rem;
+  }
+
+  .nb-browser-meta {
+    font-size: 0.38rem;
+    padding: 1px 4px;
+  }
+
+  .nb-website-header {
+    height: 20px;
+    padding: 0 6px;
+    gap: 4px;
+    white-space: nowrap;
+    overflow: hidden;
+  }
+
+  .nb-site-brand {
+    font-size: 0.46rem;
+    flex-shrink: 0;
+  }
+
+  .nb-site-menu {
+    display: flex;
+    gap: 4px;
+    font-size: 0.32rem;
+    white-space: nowrap;
+    overflow: hidden;
+  }
+
+  .nb-site-menu span.is-active {
+    padding: 1px 4px;
+  }
+
+  .nb-site-cta {
+    padding: 2px 5px;
+    font-size: 0.36rem;
+    flex-shrink: 0;
+  }
+
+  .nb-website-viewport-frame {
+    margin: 5px 6px;
+    padding: 5px 6px;
+    border-radius: 5px;
+    border-width: 1px;
+    box-shadow:
+      0 0 0 7px rgba(7, 5, 16, 0.78),
+      inset 0 0 12px rgba(0, 240, 255, 0.16);
+  }
+
+  .nb-viewport-hud-left,
+  .nb-viewport-hud-right {
+    padding: 2px 5px;
+    font-size: 0.36rem;
+    gap: 4px;
+    border-radius: 3px;
+  }
+
+  .nb-website-footerbar {
+    height: 13px;
+    padding: 0 7px;
+    font-size: 0.35rem;
+  }
+
   .scene2-stage-layer {
     padding: 0;
   }
@@ -1394,8 +1569,7 @@ canvas.gl {
   }
 
   .os-taskbar-active-app,
-  .os-tray-pill,
-  .nb-site-menu {
+  .os-tray-pill {
     display: none;
   }
 
