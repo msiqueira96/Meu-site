@@ -10,9 +10,9 @@
   <link rel="icon" type="image/png" href="assets/icons/ms-favicon.png?v=14" />
   <link rel="shortcut icon" type="image/png" href="assets/icons/ms-favicon.png?v=14" />
   <link rel="apple-touch-icon" href="assets/icons/ms-favicon.png?v=14" />
-  <link rel="stylesheet" href="css/b2b-studio.css?v=73" />
-  <script defer src="js/three-vendor.min.js?v=73"></script>
-  <script defer src="js/liquid-motion.js?v=73"></script>
+  <link rel="stylesheet" href="css/b2b-studio.css?v=74" />
+  <script defer src="js/three-vendor.min.js?v=74"></script>
+  <script defer src="js/liquid-motion.js?v=74"></script>
 </head>
 
 <body>
@@ -96,13 +96,17 @@
       </div>
 
       <!-- =================================================================
-           CENA 1 (Camada da Frente, z-index: 20): Notebook Central com a
-           Primeira Cena Congelada em Imagem Estática até o Corte do Notebook!
+           CENA 1 (Camada da Frente, z-index: 20): MacBook Pro 16" Realista
+           com a Primeira Cena Estática até o Efeito de TV Desligando!
       ================================================================== -->
       <div class="notebook-rig" id="notebook-rig">
         <div class="notebook-lid" id="notebook-lid">
-          <!-- Moldura Superior / Webcam Notch do Notebook -->
+          <!-- Moldura de Vidro Black Piano + Aro de Alumínio Usinado CNC -->
+          <div class="notebook-glass-bezel" id="notebook-glass-bezel" aria-hidden="true"></div>
+
+          <!-- Webcam Notch Realista estilo MacBook Pro 16" -->
           <div class="notebook-camera-notch" id="notebook-camera-notch" aria-hidden="true">
+            <span class="notebook-camera-sensor"></span>
             <span class="notebook-camera-lens"></span>
             <span class="notebook-camera-led"></span>
           </div>
@@ -114,38 +118,155 @@
               <canvas class="gl"></canvas>
             </div>
 
-            <!-- Imagem Estática Capturada da Primeira Cena (Fica fixa na tela do notebook até o corte!) -->
+            <!-- Imagem Estática Capturada da Primeira Cena (Fica fixa na tela do notebook até desligar!) -->
             <canvas class="notebook-static-screen" id="notebook-static-screen" aria-hidden="true"></canvas>
 
-            <!-- Reflexo de vidro sutil da tela do Notebook -->
+            <!-- Reflexo antirreflexo de vidro sutil da tela do MacBook Pro -->
             <div class="notebook-screen-glare" id="notebook-screen-glare" aria-hidden="true"></div>
           </div>
 
-          <!-- Chin / Barra Inferior da Tampa do Notebook -->
+          <!-- Chin Inferior de Vidro com Gravação Metálica -->
           <div class="notebook-lid-chin" id="notebook-lid-chin" aria-hidden="true">
-            <span>MARCOS SIQUEIRA // PRO WORKSTATION</span>
+            <span>MARCOS SIQUEIRA PRO</span>
           </div>
         </div>
 
-        <!-- Base / Teclado em Perspectiva 3D do Notebook -->
+        <!-- Base Unibody em Alumínio Space-Black / Titanium (SVG Vetorial Fotorealista) -->
         <div class="notebook-base" id="notebook-base" aria-hidden="true">
-          <div class="notebook-hinge"></div>
-          <div class="notebook-deck-surface">
-            <div class="notebook-speaker notebook-speaker--left"></div>
-            <div class="notebook-keyboard-well">
-              <div class="notebook-key-row"></div>
-              <div class="notebook-key-row"></div>
-              <div class="notebook-key-row"></div>
-              <div class="notebook-key-row"></div>
-            </div>
-            <div class="notebook-speaker notebook-speaker--right"></div>
-            <div class="notebook-trackpad"></div>
-          </div>
-          <div class="notebook-front-lip">
-            <div class="notebook-thumb-notch"></div>
-          </div>
-          <div class="notebook-drop-shadow"></div>
+          <svg class="notebook-base-svg" viewBox="0 0 1200 124" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+              <!-- Gradiente de Alumínio Anodizado do Top Case em Perspectiva -->
+              <linearGradient id="mbpDeckGrad" x1="0" y1="10" x2="1200" y2="66" gradientUnits="userSpaceOnUse">
+                <stop offset="0%" stop-color="#1D2028" />
+                <stop offset="12%" stop-color="#353A47" />
+                <stop offset="28%" stop-color="#232730" />
+                <stop offset="50%" stop-color="#2E3340" />
+                <stop offset="72%" stop-color="#22262F" />
+                <stop offset="88%" stop-color="#373C4A" />
+                <stop offset="100%" stop-color="#1B1E26" />
+              </linearGradient>
+              <!-- Gradiente Metálico Cilíndrico da Borda Frontal Usinada CNC -->
+              <linearGradient id="mbpFrontLipGrad" x1="14" y1="74" x2="1186" y2="74" gradientUnits="userSpaceOnUse">
+                <stop offset="0%" stop-color="#111318" />
+                <stop offset="3.5%" stop-color="#586073" />
+                <stop offset="8%" stop-color="#949EB4" />
+                <stop offset="15%" stop-color="#3A404E" />
+                <stop offset="32%" stop-color="#262A34" />
+                <stop offset="50%" stop-color="#323744" />
+                <stop offset="68%" stop-color="#262A34" />
+                <stop offset="85%" stop-color="#3A404E" />
+                <stop offset="92%" stop-color="#949EB4" />
+                <stop offset="96.5%" stop-color="#586073" />
+                <stop offset="100%" stop-color="#111318" />
+              </linearGradient>
+              <!-- Gradiente da Tampa Inferior (Bottom Case) -->
+              <linearGradient id="mbpBottomCaseGrad" x1="40" y1="88" x2="1160" y2="104" gradientUnits="userSpaceOnUse">
+                <stop offset="0%" stop-color="#090A0E" />
+                <stop offset="20%" stop-color="#1B1E26" />
+                <stop offset="50%" stop-color="#252934" />
+                <stop offset="80%" stop-color="#1B1E26" />
+                <stop offset="100%" stop-color="#090A0E" />
+              </linearGradient>
+              <!-- Gradiente do Entalhe Central de Abertura (Thumb Notch) -->
+              <linearGradient id="mbpNotchGrad" x1="520" y1="68" x2="680" y2="68" gradientUnits="userSpaceOnUse">
+                <stop offset="0%" stop-color="#0D0F14" />
+                <stop offset="15%" stop-color="#222630" />
+                <stop offset="50%" stop-color="#12151C" />
+                <stop offset="85%" stop-color="#222630" />
+                <stop offset="100%" stop-color="#0D0F14" />
+              </linearGradient>
+              <!-- Sombra Realista de Contato na Mesa -->
+              <radialGradient id="mbpShadowGrad" cx="50%" cy="50%" r="50%">
+                <stop offset="0%" stop-color="#000000" stop-opacity="0.95" />
+                <stop offset="55%" stop-color="#000000" stop-opacity="0.65" />
+                <stop offset="82%" stop-color="#001A0B" stop-opacity="0.25" />
+                <stop offset="100%" stop-color="#000000" stop-opacity="0" />
+              </radialGradient>
+            </defs>
+
+            <!-- 1. Sombra de Contato & Oclusão Ambiental sob o MacBook -->
+            <ellipse cx="600" cy="110" rx="585" ry="13" fill="url(#mbpShadowGrad)" />
+            <ellipse cx="600" cy="104" rx="535" ry="6" fill="rgba(0,0,0,0.88)" />
+
+            <!-- 2. Pés de Borracha Inferiores (Left & Right Feet) -->
+            <rect x="96" y="97" width="76" height="5" rx="2.5" fill="#07080B" stroke="#222630" stroke-width="0.6" />
+            <rect x="1028" y="97" width="76" height="5" rx="2.5" fill="#07080B" stroke="#222630" stroke-width="0.6" />
+
+            <!-- 3. Bottom Case Taper (Fundo chanfrado do Unibody) -->
+            <path d="M 28 86 L 1172 86 L 1132 99 C 1118 101, 1090 101, 1060 101 L 140 101 C 110 101, 82 101, 68 99 Z"
+              fill="url(#mbpBottomCaseGrad)" />
+
+            <!-- 4. Dobradiça Central Cilíndrica (Display Hinge Clutch) -->
+            <path d="M 94 2 L 1106 2 L 1114 11 L 86 11 Z" fill="#090B0F" />
+            <rect x="235" y="1" width="730" height="10" rx="2" fill="#0D0F15" stroke="#262B36" stroke-width="0.7" />
+            <line x1="235" y1="4" x2="965" y2="4" stroke="rgba(255,255,255,0.14)" stroke-width="0.8" />
+
+            <!-- 5. Superfície Superior em Perspectiva do Top Case (Alumínio Usinado) -->
+            <path d="M 84 10 L 1116 10 L 1184 68 L 16 68 Z"
+              fill="url(#mbpDeckGrad)" stroke="#7C8599" stroke-width="1.1" />
+
+            <!-- Grades de Som Laterais Microperfuradas em Perspectiva -->
+            <polygon points="94,16 138,16 106,50 56,50" fill="#13161D" opacity="0.85" />
+            <polygon points="1062,16 1106,16 1144,50 1094,50" fill="#13161D" opacity="0.85" />
+
+            <!-- 6. Berço Rebaixado do Teclado Magic Keyboard (Matte Black Well) -->
+            <polygon points="152,14 1048,14 1084,51 116,51"
+              fill="#07080C" stroke="#393F4D" stroke-width="0.9" />
+
+            <!-- Fileiras de Teclas Esculpidas em Perspectiva com Backlight Branco/Ciano Sutil -->
+            <!-- Row 1 (ESC + Function Keys + Touch ID) -->
+            <polygon points="160,16 1040,16 1044,20 156,20" fill="#13161E" stroke="rgba(210,235,255,0.22)" stroke-width="0.45" />
+            <!-- Row 2 (Numbers) -->
+            <polygon points="155,21.5 1045,21.5 1051,26.5 149,26.5" fill="#141720" stroke="rgba(210,235,255,0.25)" stroke-width="0.5" />
+            <!-- Row 3 (QWERTY) -->
+            <polygon points="148,28 1052,28 1059,33.2 141,33.2" fill="#151822" stroke="rgba(210,235,255,0.26)" stroke-width="0.5" />
+            <!-- Row 4 (ASDF) -->
+            <polygon points="140,34.7 1060,34.7 1067,40.2 133,40.2" fill="#151822" stroke="rgba(210,235,255,0.28)" stroke-width="0.5" />
+            <!-- Row 5 (ZXCV) -->
+            <polygon points="132,41.7 1068,41.7 1074,46.2 126,46.2" fill="#161923" stroke="rgba(210,235,255,0.28)" stroke-width="0.5" />
+            <!-- Row 6 (Modifiers + Barra de Espaço Centralizada) -->
+            <polygon points="125,47.2 435,47.2 433,50.2 121,50.2" fill="#161A24" stroke="rgba(210,235,255,0.26)" stroke-width="0.5" />
+            <polygon points="440,47.2 760,47.2 762,50.2 438,50.2" fill="#191D28" stroke="rgba(220,245,255,0.38)" stroke-width="0.6" />
+            <polygon points="765,47.2 1075,47.2 1079,50.2 767,50.2" fill="#161A24" stroke="rgba(210,235,255,0.26)" stroke-width="0.5" />
+
+            <!-- Divisórias Verticais das Teclas para Textura Realista de Teclado -->
+            <g stroke="#07080C" stroke-width="1.6" opacity="0.92">
+              <line x1="220" y1="16" x2="195" y2="50" />
+              <line x1="285" y1="16" x2="265" y2="50" />
+              <line x1="350" y1="16" x2="335" y2="50" />
+              <line x1="415" y1="16" x2="405" y2="50" />
+              <line x1="480" y1="16" x2="474" y2="46.5" />
+              <line x1="545" y1="16" x2="542" y2="46.5" />
+              <line x1="600" y1="16" x2="600" y2="46.5" />
+              <line x1="655" y1="16" x2="658" y2="46.5" />
+              <line x1="720" y1="16" x2="726" y2="46.5" />
+              <line x1="785" y1="16" x2="795" y2="50" />
+              <line x1="850" y1="16" x2="865" y2="50" />
+              <line x1="915" y1="16" x2="935" y2="50" />
+              <line x1="980" y1="16" x2="1005" y2="50" />
+            </g>
+
+            <!-- 7. Trackpad Force Touch em Vidro Fosco Centralizado -->
+            <polygon points="445,53.5 755,53.5 768,66 432,66"
+              fill="#1E222C" stroke="#5E6678" stroke-width="0.85" />
+
+            <!-- 8. Borda Frontal Cilíndrica em Alumínio CNC (Front Lip Profile) -->
+            <path d="M 14 68 L 1186 68 L 1186 79 C 1186 84.5, 1177 87, 1164 87 L 36 87 C 23 87, 14 84.5, 14 79 Z"
+              fill="url(#mbpFrontLipGrad)" stroke="#636C7E" stroke-width="0.7" />
+            <!-- Highlight especular na quina superior do Front Lip -->
+            <line x1="16" y1="68.6" x2="1184" y2="68.6" stroke="rgba(255,255,255,0.58)" stroke-width="1.1" />
+
+            <!-- 9. Entalhe Côncavo Central para Abrir a Tampa (CNC Thumb Scoop Notch) -->
+            <path d="M 516 68 L 684 68 L 676 76 C 672 79, 662 80, 650 80 L 550 80 C 538 80, 528 79, 524 76 Z"
+              fill="url(#mbpNotchGrad)" stroke="rgba(255,255,255,0.28)" stroke-width="0.7" />
+          </svg>
         </div>
+      </div>
+
+      <!-- Efeito CRT de TV Desligando no Corte Final do Notebook (Feixe Horizontal + Ponto de Fósforo) -->
+      <div class="notebook-tv-fx" id="notebook-tv-fx" aria-hidden="true">
+        <div class="tv-off-scanbeam" id="tv-off-scanbeam"></div>
+        <div class="tv-off-phosphor-dot" id="tv-off-phosphor-dot"></div>
       </div>
 
       <div class="hero-scroll-cue" id="hero-scroll-cue" aria-hidden="true">

@@ -414,7 +414,8 @@ body {
 }
 
 /* =========================================================================
-   5. CENA 1 (Frente, z-index: 20): 3D Pro Notebook com a Primeira Cena Estática
+   5. CENA 1 (Frente, z-index: 20): Photorealistic MacBook Pro 16" Unibody
+      + CRT TV Power-Off Transition
    ========================================================================= */
 .notebook-rig {
   position: relative;
@@ -426,58 +427,89 @@ body {
   align-items: center;
   justify-content: center;
   transform-origin: center center;
-  will-change: transform, opacity;
+  will-change: transform, opacity, filter;
 }
 
 .notebook-lid {
   position: relative;
   width: 100%;
   height: 100%;
-  background: #070510;
-  border: 0px solid rgba(255, 255, 255, 0.34);
+  background: #040407;
   border-radius: 0px;
   box-shadow:
-    0 35px 95px rgba(0, 0, 0, 0.92),
-    0 0 55px rgba(0, 255, 102, 0.16);
+    0 45px 110px rgba(0, 0, 0, 0.94),
+    0 0 60px rgba(0, 0, 0, 0.85);
   overflow: hidden;
-  transition: box-shadow 0.25s ease;
 }
 
-/* Webcam Notch on Top Edge of Notebook Screen */
+/* CNC Anodized Aluminum Outer Rim + Piano Black Glass Display Bezel */
+.notebook-glass-bezel {
+  position: absolute;
+  inset: 0;
+  z-index: 15;
+  pointer-events: none;
+  opacity: 0;
+  border-radius: inherit;
+  border-top: 18px solid #040508;
+  border-left: 18px solid #040508;
+  border-right: 18px solid #040508;
+  border-bottom: 32px solid #05060A;
+  box-shadow:
+    /* Outer CNC Aluminum Chamfer Rim */
+    inset 0 0 0 1px rgba(255, 255, 255, 0.14),
+    0 0 0 2px #262A34,
+    0 -1.5px 0 2px #8B94A8,
+    0 0 0 3.5px #101218,
+    /* Inner Screen Panel Hairline Edge */
+    inset 0 0 0 1px rgba(255, 255, 255, 0.08);
+}
+
+/* Realistic MacBook Pro 16" Camera Housing Notch */
 .notebook-camera-notch {
   position: absolute;
-  top: 0;
+  top: 15px;
   left: 50%;
   transform: translateX(-50%);
-  z-index: 16;
-  width: 120px;
-  height: 22px;
-  border-radius: 0 0 11px 11px;
-  background: #05060B;
-  border: 1px solid rgba(255, 255, 255, 0.16);
+  z-index: 17;
+  width: 152px;
+  height: 24px;
+  border-radius: 0 0 10px 10px;
+  background: #040508;
+  border: 1px solid rgba(255, 255, 255, 0.07);
   border-top: none;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 8px;
+  gap: 10px;
   opacity: 0;
   pointer-events: none;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.75);
 }
 
-.notebook-camera-lens {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: radial-gradient(circle at 35% 35%, #38bdf8, #070b19 70%);
-  border: 1px solid rgba(255, 255, 255, 0.25);
-}
-
-.notebook-camera-led {
+.notebook-camera-sensor {
   width: 5px;
   height: 5px;
   border-radius: 50%;
+  background: #0B0D14;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.notebook-camera-lens {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background:
+    radial-gradient(circle at 32% 32%, #60A5FA 0%, #1E3A8A 38%, #040711 72%);
+  border: 1.5px solid #161922;
+  box-shadow: inset 0 0 2px rgba(255, 255, 255, 0.35);
+}
+
+.notebook-camera-led {
+  width: 4.5px;
+  height: 4.5px;
+  border-radius: 50%;
   background: #00FF66;
-  box-shadow: 0 0 8px #00FF66;
+  box-shadow: 0 0 7px #00FF66;
 }
 
 .hero-frame-card {
@@ -515,51 +547,54 @@ canvas.gl {
   pointer-events: none;
 }
 
-/* Glossy Laptop Display Reflection */
+/* Anti-Reflective Glass Display Sheen */
 .notebook-screen-glare {
   position: absolute;
   inset: 0;
   z-index: 9;
   pointer-events: none;
   opacity: 0;
-  background: linear-gradient(
-    116deg,
-    rgba(255, 255, 255, 0.12) 0%,
-    rgba(255, 255, 255, 0.03) 28%,
-    transparent 36%,
-    transparent 74%,
-    rgba(0, 255, 102, 0.06) 100%
-  );
+  background:
+    linear-gradient(
+      118deg,
+      rgba(255, 255, 255, 0.085) 0%,
+      rgba(255, 255, 255, 0.025) 26%,
+      transparent 34%,
+      transparent 76%,
+      rgba(255, 255, 255, 0.03) 100%
+    );
 }
 
-/* Bottom Bezel Chin of Notebook Screen */
+/* Bottom Glass Bezel Chin with Metallic Engraved Wordmark */
 .notebook-lid-chin {
   position: absolute;
   bottom: 0;
   left: 0;
   right: 0;
-  height: 26px;
-  z-index: 16;
-  background: linear-gradient(180deg, #0b0d14 0%, #05060b 100%);
-  border-top: 1px solid rgba(255, 255, 255, 0.14);
+  height: 32px;
+  z-index: 17;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-family: var(--font-display);
-  font-size: 0.8rem;
-  letter-spacing: 0.24em;
-  color: rgba(255, 255, 255, 0.65);
+  font-family: var(--font-sans);
+  font-size: 0.68rem;
+  font-weight: 600;
+  letter-spacing: 0.28em;
+  background: linear-gradient(90deg, #646D80 0%, #B4BDD0 50%, #646D80 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
   opacity: 0;
   pointer-events: none;
 }
 
-/* Lower Aluminum Base / Keyboard Deck of the Notebook */
+/* Photorealistic Vector SVG MacBook Pro 16" Unibody Base */
 .notebook-base {
   position: absolute;
-  top: 100%;
+  top: calc(100% - 2px);
   left: 50%;
   transform: translateX(-50%);
-  width: 118%;
+  width: 122%;
   z-index: 18;
   display: flex;
   flex-direction: column;
@@ -568,125 +603,64 @@ canvas.gl {
   opacity: 0;
 }
 
-.notebook-hinge {
-  width: 36%;
-  height: 10px;
-  background: linear-gradient(180deg, #040507 0%, #2a2f3d 52%, #0a0c12 100%);
-  border-radius: 0 0 4px 4px;
-  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.85);
-}
-
-.notebook-deck-surface {
-  position: relative;
+.notebook-base-svg {
   width: 100%;
-  height: 82px;
-  background: linear-gradient(180deg, #2d3242 0%, #191c26 58%, #0e1017 100%);
-  border-top: 1px solid rgba(255, 255, 255, 0.34);
-  border-left: 2px solid rgba(255, 255, 255, 0.22);
-  border-right: 2px solid rgba(255, 255, 255, 0.22);
-  border-radius: 8px 8px 16px 16px;
-  transform: perspective(750px) rotateX(60deg);
-  transform-origin: top center;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: space-between;
-  padding: 8px 8% 6px;
-  box-shadow: inset 0 2px 10px rgba(255, 255, 255, 0.1);
+  height: auto;
+  display: block;
+  overflow: visible;
+  filter: drop-shadow(0 24px 42px rgba(0, 0, 0, 0.92));
 }
 
-.notebook-speaker {
+/* =========================================================================
+   5B. CRT TV Power-Off Effect Overlay (Horizontal Scanbeam + Phosphor Dot)
+   ========================================================================= */
+.notebook-tv-fx {
   position: absolute;
-  top: 10px;
-  bottom: 24px;
-  width: 5%;
-  background-image: radial-gradient(rgba(0, 0, 0, 0.75) 1px, transparent 1px);
-  background-size: 4px 4px;
-  opacity: 0.65;
-}
-
-.notebook-speaker--left {
-  left: 2.2%;
-}
-
-.notebook-speaker--right {
-  right: 2.2%;
-}
-
-.notebook-keyboard-well {
-  width: 84%;
-  height: 44px;
-  background: #06070c;
-  border-radius: 5px;
-  border: 1px solid rgba(255, 255, 255, 0.14);
-  padding: 4px 6px;
+  inset: 0;
+  z-index: 24;
   display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  box-shadow:
-    inset 0 0 14px rgba(0, 255, 102, 0.18),
-    0 1px 0 rgba(255, 255, 255, 0.12);
-}
-
-.notebook-key-row {
-  width: 100%;
-  height: 6px;
-  border-radius: 2px;
-  background: repeating-linear-gradient(
-    90deg,
-    #151823 0px,
-    #151823 18px,
-    rgba(0, 255, 102, 0.42) 18px,
-    rgba(0, 255, 102, 0.42) 20px
-  );
-}
-
-.notebook-trackpad {
-  width: 25%;
-  height: 16px;
-  border-radius: 4px;
-  background: rgba(255, 255, 255, 0.04);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-}
-
-.notebook-front-lip {
-  position: relative;
-  z-index: 2;
-  width: 102%;
-  height: 16px;
-  margin-top: -27px;
-  background: linear-gradient(180deg, #434960 0%, #202432 52%, #0a0c12 100%);
-  border-radius: 3px 3px 20px 20px;
-  border: 1px solid rgba(255, 255, 255, 0.28);
-  display: flex;
+  align-items: center;
   justify-content: center;
-  align-items: flex-start;
+  pointer-events: none;
+  opacity: 0;
+  visibility: hidden;
+  will-change: transform, opacity;
+}
+
+.tv-off-scanbeam {
+  position: absolute;
+  width: min(56vw, 820px);
+  height: 5px;
+  border-radius: 999px;
+  background: #FFFFFF;
   box-shadow:
-    0 18px 36px rgba(0, 0, 0, 0.92),
-    0 0 30px rgba(0, 255, 102, 0.16);
+    0 0 12px 3px #FFFFFF,
+    0 0 28px 8px rgba(0, 240, 255, 0.92),
+    0 0 65px 16px rgba(0, 255, 102, 0.78);
+  transform: scaleX(0) scaleY(1);
+  opacity: 0;
+  will-change: transform, opacity;
 }
 
-.notebook-thumb-notch {
-  width: 13%;
-  height: 7px;
-  background: #0b0d14;
-  border-radius: 0 0 9px 9px;
-  border: 1px solid rgba(255, 255, 255, 0.22);
-  border-top: none;
-}
-
-.notebook-drop-shadow {
-  width: 96%;
-  height: 34px;
-  margin-top: 6px;
+.tv-off-phosphor-dot {
+  position: absolute;
+  width: 22px;
+  height: 22px;
   border-radius: 50%;
   background: radial-gradient(
-    ellipse at center,
-    rgba(0, 0, 0, 0.95) 0%,
-    rgba(0, 255, 102, 0.18) 45%,
-    transparent 78%
+    circle,
+    #FFFFFF 0%,
+    #E6FFF2 38%,
+    #00F0FF 68%,
+    rgba(0, 255, 102, 0) 100%
   );
-  filter: blur(10px);
+  box-shadow:
+    0 0 18px 6px #FFFFFF,
+    0 0 42px 14px rgba(0, 240, 255, 0.95),
+    0 0 85px 26px rgba(0, 255, 102, 0.85);
+  transform: scale(0);
+  opacity: 0;
+  will-change: transform, opacity;
 }
 
 /* Minimal Scroll Prompt at scrollY = 0 */

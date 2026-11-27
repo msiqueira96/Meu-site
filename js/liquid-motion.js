@@ -4458,11 +4458,15 @@
 
     const notebookRig = document.getElementById("notebook-rig");
     const notebookLid = document.getElementById("notebook-lid");
+    const notebookGlassBezel = document.getElementById("notebook-glass-bezel");
     const notebookCameraNotch = document.getElementById("notebook-camera-notch");
     const notebookLidChin = document.getElementById("notebook-lid-chin");
     const notebookScreenGlare = document.getElementById("notebook-screen-glare");
     const notebookBase = document.getElementById("notebook-base");
     const notebookStaticScreen = document.getElementById("notebook-static-screen");
+    const notebookTvFx = document.getElementById("notebook-tv-fx");
+    const tvOffScanbeam = document.getElementById("tv-off-scanbeam");
+    const tvOffPhosphorDot = document.getElementById("tv-off-phosphor-dot");
 
     const scene2Layer = document.getElementById("scene2-stage-layer");
     const scene2TypewriterText = document.getElementById("scene2-typewriter-text");
@@ -4704,21 +4708,68 @@
 
       const pShrink = easeInOutCubic(rangeProgress(p, 0.015, 0.16));
       const pBezel = easeOutCubic(rangeProgress(p, 0.025, 0.14));
-      const pNotebookCut = easeInOutCubic(rangeProgress(p, 0.39, 0.48));
+      // Classic 3-Stage CRT TV Power-Off Transition at the end of the Notebook (p: 0.37 -> 0.49)
+      const pTvOff = rangeProgress(p, 0.37, 0.49);
 
       if (notebookRig && notebookLid) {
         const targetNotebookScale = isMobile ? 0.78 : (vw <= 1100 ? 0.56 : 0.48);
         const baseScale = 1 - pShrink * (1 - targetNotebookScale);
-        const finalScale = baseScale * (1 - pNotebookCut * 0.22);
-        const notebookOpacity = 1 - pNotebookCut;
 
-        // Shift slightly upward so the 3D keyboard deck below the lid sits balanced in the center
-        const liftY = -pShrink * (isMobile ? vh * 0.03 : vh * 0.045) - pNotebookCut * 24;
+        // Shift slightly upward so the Unibody base below the lid sits balanced in the center
+        const liftY = -pShrink * (isMobile ? vh * 0.032 : vh * 0.046);
 
-        notebookRig.style.transform = `translate3d(0, ${liftY.toFixed(1)}px, 0) scale(${finalScale.toFixed(4)})`;
+        // Compute CRT TV Power-Off vertical collapse (Stage 1) -> horizontal collapse (Stage 2)
+        let tvScaleX = 1;
+        let tvScaleY = 1;
+        let notebookOpacity = 1;
+        let brightnessBoost = 1;
+
+        if (pTvOff > 0) {
+          // Stage 1 (0.00 -> 0.44): Vertical implosion into a razor-thin bright horizontal scanline
+          const pVert = easeInOutCubic(rangeProgress(pTvOff, 0.0, 0.44));
+          // Stage 2 (0.40 -> 0.78): Horizontal implosion of the line into a center phosphor dot
+          const pHoriz = easeInOutCubic(rangeProgress(pTvOff, 0.40, 0.78));
+
+          tvScaleY = Math.max(0.004, 1 - pVert * 0.996);
+          tvScaleX = (1 + pVert * 0.08 * (1 - pHoriz)) * Math.max(0.005, 1 - pHoriz * 0.995);
+          notebookOpacity = 1 - easeOutCubic(rangeProgress(pTvOff, 0.68, 0.82));
+          brightnessBoost = 1 + pVert * 2.6;
+        }
+
+        const finalScaleX = baseScale * tvScaleX;
+        const finalScaleY = baseScale * tvScaleY;
+
+        notebookRig.style.transform = `translate3d(0, ${liftY.toFixed(1)}px, 0) scaleX(${finalScaleX.toFixed(4)}) scaleY(${finalScaleY.toFixed(4)})`;
         notebookRig.style.opacity = notebookOpacity.toFixed(3);
         notebookRig.style.visibility = notebookOpacity <= 0.005 ? "hidden" : "visible";
+        notebookRig.style.filter = pTvOff > 0.005 ? `brightness(${brightnessBoost.toFixed(2)}) contrast(${(1 + pTvOff * 0.6).toFixed(2)})` : "none";
         notebookRig.style.pointerEvents = p < 0.03 ? "auto" : "none";
+
+        // Drive CRT TV Power-Off Scanbeam & Phosphor Center Dot Overlay
+        if (notebookTvFx && tvOffScanbeam && tvOffPhosphorDot) {
+          if (pTvOff > 0.02 && pTvOff < 0.995) {
+            notebookTvFx.style.visibility = "visible";
+            notebookTvFx.style.opacity = "1";
+            notebookTvFx.style.transform = `translate3d(0, ${liftY.toFixed(1)}px, 0)`;
+
+            // Horizontal cathode beam flares as vertical collapse finishes, then pinches inward to center
+            const beamAppear = easeOutCubic(rangeProgress(pTvOff, 0.14, 0.40));
+            const beamCollapseX = 1 - easeInOutCubic(rangeProgress(pTvOff, 0.42, 0.76));
+            const beamOp = beamAppear * clamp01(beamCollapseX * 1.4);
+            tvOffScanbeam.style.opacity = beamOp.toFixed(3);
+            tvOffScanbeam.style.transform = `scaleX(${Math.max(0.01, beamCollapseX).toFixed(3)}) scaleY(${(0.5 + beamAppear * 0.9).toFixed(2)})`;
+
+            // Center phosphor spark flares when horizontal beam collapses to center, then pops out
+            const dotIn = easeOutCubic(rangeProgress(pTvOff, 0.36, 0.58));
+            const dotOut = 1 - easeInOutCubic(rangeProgress(pTvOff, 0.68, 0.99));
+            const dotScale = dotIn * dotOut * (1 + Math.sin(dotIn * Math.PI) * 0.65);
+            tvOffPhosphorDot.style.opacity = (dotIn * dotOut).toFixed(3);
+            tvOffPhosphorDot.style.transform = `scale(${dotScale.toFixed(3)})`;
+          } else {
+            notebookTvFx.style.opacity = "0";
+            notebookTvFx.style.visibility = "hidden";
+          }
+        }
 
         // On mobile portrait screens, morph the lid height from 100dvh to 16:10 widescreen laptop proportions
         if (vh > vw * 0.88) {
@@ -4729,14 +4780,13 @@
           notebookLid.style.height = "100%";
         }
 
-        const lidRadiusTop = Math.round(pBezel * 20);
+        const lidRadiusTop = Math.round(pBezel * 22);
         const lidRadiusBottom = Math.round(pBezel * 6);
-        const lidBorder = (pBezel * 3.5).toFixed(2);
         notebookLid.style.borderRadius = `${lidRadiusTop}px ${lidRadiusTop}px ${lidRadiusBottom}px ${lidRadiusBottom}px`;
-        notebookLid.style.borderWidth = `${lidBorder}px`;
       }
 
       const bezelAlphaStr = pBezel.toFixed(3);
+      if (notebookGlassBezel) notebookGlassBezel.style.opacity = bezelAlphaStr;
       if (notebookCameraNotch) notebookCameraNotch.style.opacity = bezelAlphaStr;
       if (notebookLidChin) notebookLidChin.style.opacity = bezelAlphaStr;
       if (notebookScreenGlare) notebookScreenGlare.style.opacity = bezelAlphaStr;
