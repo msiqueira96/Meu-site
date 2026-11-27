@@ -4514,7 +4514,6 @@
         : Math.max(easeOutCubic(hintEnterProgress), easeOutCubic(rangeProgress(scrollY, vh * 0.25, vh * 0.52)));
 
       // Sync mobile 3D character recession progress (only recede if bottom dock boxes actually exist in the DOM)
-      const hasHeroBoxes = Boolean(morphinDock || heroIntroBox);
       window.__mobileHeroRecedeProgress = hasHeroBoxes && isMobile && !isHeroLocked && !returningToPhoto1 ? pEnterR : 0;
 
       // Header follows Right Box entrance on first scroll
