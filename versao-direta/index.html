@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="pt-BR" data-ranger-theme="silver" data-asset-root="../">
+
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=5" />
+  <title>Marcos Siqueira — B2B Interactive Hub &amp; Contato Direto WhatsApp</title>
+  <meta name="description"
+    content="Marcos Siqueira — Programador JS, Web Design 3D Interativo, Automações com IA e Gestão de Tráfego Pago. Conecte-se direto no WhatsApp." />
+  <link rel="icon" type="image/png" href="../assets/icons/ms-favicon.png?v=14" />
+  <link rel="shortcut icon" type="image/png" href="../assets/icons/ms-favicon.png?v=14" />
+  <link rel="apple-touch-icon" href="../assets/icons/ms-favicon.png?v=14" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="../css/liquid-motion.css?v=63" />
+  <script defer src="../js/three-vendor.min.js?v=63"></script>
+  <script defer src="../js/liquid-motion.js?v=63"></script>
+</head>
+
+<body class="is-direct-b2b-mode">
+  <!-- Loading Overlay -->
+  <div class="liquid-loader" aria-live="polite">
+    <div class="liquid-loader-inner">
+      <div class="liquid-loader-title">MARCOS SIQUEIRA<span class="dot-accent">.</span></div>
+      <div class="liquid-loader-bar-track" id="loader-progressbar" role="progressbar" aria-valuemin="0"
+        aria-valuemax="100" aria-valuenow="0">
+        <div class="liquid-loader-bar-fill" id="loader-bar-fill"></div>
+      </div>
+      <div class="liquid-loader-meta">
+        <span class="liquid-loader-status" id="loader-status-text">Inicializando Palco 3D &amp; Hub B2B...</span>
+        <span class="liquid-loader-percent" id="loader-percent">0%</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Minimal Awwwards Top Header focused on Direct WhatsApp -->
+  <header class="site-header is-entrance-hidden" id="topo">
+    <a href="#hero" class="brand-logo" data-ranger-key="silver">
+      <span class="brand-dot" id="brand-dot"></span>
+      <span class="brand-name">MARCOS SIQUEIRA<span class="dot-accent">.</span></span>
+    </a>
+
+    <nav class="site-nav" aria-label="Pilares B2B">
+      <a href="#hero" class="nav-link is-active" data-ranger-key="silver" style="--nav-color:#C8D6E5">
+        <span class="nav-color-dot" style="background:linear-gradient(135deg,#FFFFFF,#8E9BAE)"></span>
+        <span>Palco 3D</span>
+      </a>
+      <a href="#contato" class="nav-link" data-ranger-key="blue" style="--nav-color:#0088FF">
+        <span class="nav-color-dot" style="background:#0088FF"></span>
+        <span>Softwares JS</span>
+      </a>
+      <a href="#contato" class="nav-link" data-ranger-key="red" style="--nav-color:#FF2233">
+        <span class="nav-color-dot" style="background:#FF2233"></span>
+        <span>Web Design 3D</span>
+      </a>
+      <a href="#contato" class="nav-link" data-ranger-key="green" style="--nav-color:#00E676">
+        <span class="nav-color-dot" style="background:#00E676"></span>
+        <span>Automações IA</span>
+      </a>
+      <a href="#contato" class="nav-link" data-ranger-key="yellow" style="--nav-color:#FFD000">
+        <span class="nav-color-dot" style="background:#FFD000"></span>
+        <span>Tráfego Pago</span>
+      </a>
+    </nav>
+
+    <div class="header-actions">
+      <a href="#contato" class="btn-whatsapp-b2b" data-wa-direct="Olá Marcos Siqueira! Vim pelo seu site 3D interativo e quero falar sobre uma solução B2B para minha empresa.">
+        <span class="wa-live-dot" aria-hidden="true"></span>
+        <span>Direto no WhatsApp</span>
+        <span aria-hidden="true">↗</span>
+      </a>
+    </div>
+  </header>
+
+  <!-- Floating Awwwards Version Switcher -->
+  <nav class="awwwards-version-switcher" aria-label="Alternar versão do site">
+    <a href="../versao-completa/" class="version-switch-link">1. Versão Completa</a>
+    <a href="../versao-direta/" class="version-switch-link is-active">2. Versão Direta WhatsApp</a>
+  </nav>
+
+  <!-- Floating Direct WhatsApp FAB -->
+  <a href="#contato" class="wa-floating-fab" data-wa-direct="Olá Marcos Siqueira! Vim pelo seu site interativo e quero conversar sobre um projeto B2B agora.">
+    <span class="wa-fab-pulse" aria-hidden="true"></span>
+    <span>Chamar no WhatsApp</span>
+    <span aria-hidden="true">↗</span>
+  </a>
+
+  <!-- Minimal Flat White Gear Icon & 3 Complete Quality Presets (Fraco / Normal / Forte) -->
+  <aside class="quality-gear-widget" id="quality-gear-widget" aria-label="Qualidade do Site">
+    <button type="button" class="quality-gear-btn" id="quality-gear-btn" aria-expanded="false"
+      aria-controls="quality-gear-panel" title="Qualidade">
+      <svg class="quality-gear-svg" viewBox="0 0 24 24" width="26" height="26" fill="#FFFFFF" aria-hidden="true">
+        <path d="M19.14 12.94c.04-.31.06-.63.06-.94 0-.31-.02-.63-.06-.94l2.03-1.58a.49.49 0 0 0 .12-.61l-1.92-3.32a.49.49 0 0 0-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54a.484.484 0 0 0-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96a.49.49 0 0 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.04.31-.06.63-.06.94s.02.63.06.94l-2.03 1.58a.49.49 0 0 0-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6A3.6 3.6 0 1 1 12 8.4a3.6 3.6 0 0 1 0 7.2z"/>
+      </svg>
+    </button>
+
+    <div class="quality-gear-panel" id="quality-gear-panel" hidden>
+      <div class="quality-options-row" role="radiogroup" aria-label="Qualidade do Site">
+        <button type="button" class="quality-option-btn" data-quality-tier="low" role="radio" aria-checked="false">Fraco</button>
+        <button type="button" class="quality-option-btn" data-quality-tier="medium" role="radio" aria-checked="false">Normal</button>
+        <button type="button" class="quality-option-btn" data-quality-tier="high" role="radio" aria-checked="false">Forte</button>
+      </div>
+    </div>
+  </aside>
+
+  <main class="portfolio-main">
+
+    <!-- ===================================================================
+         AWWWARDS 3D INTERACTIVE HERO + DIRECT B2B WHATSAPP HUB
+    ==================================================================== -->
+    <section id="hero" class="hero-scroll-track" data-section-ranger="silver">
+      <div class="hero-sticky-viewport">
+        <div class="hero-frame-card" id="hero-frame-card">
+          <div data-gl="head" class="gl-canvas" aria-hidden="true"></div>
+          <div class="gl-wrap" aria-hidden="true">
+            <canvas class="gl"></canvas>
+          </div>
+        </div>
+
+        <div class="hero-scroll-cue" id="hero-scroll-cue" aria-hidden="true">
+          <span>ROLE PARA ABRIR O HUB B2B &amp; WHATSAPP</span>
+          <span class="scroll-cue-arrow">↓</span>
+        </div>
+      </div>
+
+      <div class="hero-overlay-layout" id="hero-overlay-layout">
+
+        <!-- Left Interactive B2B Configurator & Direct WhatsApp Trigger -->
+        <div class="hero-intro-box is-entrance-hidden" id="hero-intro-box">
+          <div class="status-pill">
+            <span class="status-pulse"></span>
+            <span>PROSPECÇÃO &amp; SOLUÇÕES B2B • MARCOS SIQUEIRA</span>
+          </div>
+
+          <h1 class="hero-headline">
+            ENGENHARIA JS, WEB 3D,<br />
+            AUTOMAÇÕES IA &amp; <span class="text-accent">TRÁFEGO</span>
+          </h1>
+
+          <!-- Interactive 4-Service Selector Pills that Morph the 3D Stage & Pre-fill WhatsApp -->
+          <div class="b2b-interactive-pills" role="group" aria-label="Selecione o serviço B2B">
+            <button type="button" class="b2b-pill-btn is-active"
+              data-b2b-pill="Softwares & Sistemas em JS"
+              data-b2b-ranger="blue"
+              data-b2b-title="01. Softwares & Sistemas Web em JS"
+              data-b2b-metric="SaaS • Dashboards • ERPs"
+              data-b2b-desc="Desenvolvimento de sistemas personalizados, painéis financeiros e ferramentas internas integradas via API.">
+              <span>01. Softwares JS</span>
+              <span aria-hidden="true">⚡</span>
+            </button>
+            <button type="button" class="b2b-pill-btn"
+              data-b2b-pill="Web Design 3D & Landing Pages"
+              data-b2b-ranger="red"
+              data-b2b-title="02. Web Design 3D & Sites Awwwards"
+              data-b2b-metric="Alta Conversão B2B"
+              data-b2b-desc="Páginas interativas em WebGL que impressionam decisores no primeiro segundo e multiplicam sua autoridade.">
+              <span>02. Web Design 3D</span>
+              <span aria-hidden="true">✦</span>
+            </button>
+            <button type="button" class="b2b-pill-btn"
+              data-b2b-pill="Automações IA & WhatsApp 24h"
+              data-b2b-ranger="green"
+              data-b2b-title="03. Agentes de IA & Automação n8n"
+              data-b2b-metric="Atendimento em 2s (24/7)"
+              data-b2b-desc="Robôs inteligentes no WhatsApp que qualificam leads, agendam reuniões, leem PDFs e alimentam seu CRM sozinhos.">
+              <span>03. Automações IA</span>
+              <span aria-hidden="true">🤖</span>
+            </button>
+            <button type="button" class="b2b-pill-btn"
+              data-b2b-pill="Gestão de Tráfego Pago B2B"
+              data-b2b-ranger="yellow"
+              data-b2b-title="04. Tráfego Pago & Aquisição B2B"
+              data-b2b-metric="Meta Ads & Google Ads"
+              data-b2b-desc="Campanhas estratégicas com rastreamento avançado para colocar clientes qualificados todos os dias no seu WhatsApp.">
+              <span>04. Tráfego Pago</span>
+              <span aria-hidden="true">📈</span>
+            </button>
+          </div>
+
+          <div class="b2b-live-pitch-card">
+            <div class="b2b-live-pitch-top">
+              <strong id="b2b-live-pitch-title">01. Softwares &amp; Sistemas Web em JS</strong>
+              <span class="b2b-roi-badge" id="b2b-live-pitch-metric">SaaS • Dashboards • ERPs</span>
+            </div>
+            <p id="b2b-live-pitch-desc">
+              Desenvolvimento de sistemas personalizados, painéis financeiros e ferramentas internas integradas via API.
+            </p>
+          </div>
+
+          <div class="hero-actions">
+            <a href="#contato" class="btn-whatsapp-b2b" id="b2b-hero-wa-btn"
+              data-wa-direct="Olá Marcos Siqueira! Vi seu site 3D interativo e quero falar sobre *Softwares & Sistemas em JS* para minha empresa.">
+              <span class="wa-live-dot" aria-hidden="true"></span>
+              <span>Falar no WhatsApp Agora</span>
+              <span aria-hidden="true">↗</span>
+            </a>
+            <button type="button" class="btn-outline" data-gl-helmet="hover">
+              <span>⚡ Revelar Ranger</span>
+            </button>
+          </div>
+        </div>
+
+        <div class="hero-center-hint is-entrance-hidden" id="hero-center-hint">
+          <span>Clique nos serviços ou nas esferas Morphin para transformar o palco 3D</span>
+        </div>
+
+        <!-- Right Morphin Selector -->
+        <div class="morphin-dock is-entrance-hidden" id="morphin-dock"
+          aria-label="Seletor Morphin de Cores do Ranger">
+          <div class="morphin-dock-top">
+            <span class="morphin-title">IT'S MORPHIN TIME</span>
+            <span class="morphin-active-name" id="morphin-active-name">RANGER PRATA</span>
+          </div>
+
+          <div class="morphin-balls" role="radiogroup" aria-label="Escolher Ranger">
+            <button type="button" class="morphin-ball is-active" data-ranger-select="silver"
+              style="--ball-color:linear-gradient(135deg,#FFFFFF,#8E9BAE); --ball-ring:#E2E8F0" title="Ranger Prata">
+              <span class="ball-core"></span>
+            </button>
+            <button type="button" class="morphin-ball" data-ranger-select="red"
+              style="--ball-color:#FF1E27; --ball-ring:#FF1E27" title="Ranger Vermelho">
+              <span class="ball-core"></span>
+            </button>
+            <button type="button" class="morphin-ball" data-ranger-select="blue"
+              style="--ball-color:#0088FF; --ball-ring:#0088FF" title="Ranger Azul">
+              <span class="ball-core"></span>
+            </button>
+            <button type="button" class="morphin-ball" data-ranger-select="green"
+              style="--ball-color:#00E676; --ball-ring:#00E676" title="Ranger Verde">
+              <span class="ball-core"></span>
+            </button>
+            <button type="button" class="morphin-ball" data-ranger-select="yellow"
+              style="--ball-color:#FFD000; --ball-ring:#FFD000" title="Ranger Amarelo">
+              <span class="ball-core"></span>
+            </button>
+            <button type="button" class="morphin-ball" data-ranger-select="pink"
+              style="--ball-color:#FF2A85; --ball-ring:#FF2A85" title="Ranger Rosa">
+              <span class="ball-core"></span>
+            </button>
+            <button type="button" class="morphin-ball" data-ranger-select="black"
+              style="--ball-color:#11130E; --ball-ring:#11130E; border-color:#11130E" title="Ranger Preto">
+              <span class="ball-core" style="border: 2px solid #FFFFFF"></span>
+            </button>
+          </div>
+
+          <div class="morphin-dock-actions">
+            <button type="button" class="morphin-lock-btn" data-toggle-helmet>
+              Fixar Ranger: OFF
+            </button>
+            <button type="button" class="morphin-ghost-btn" id="btn-toggle-boxes-visibility"
+              title="Tela cheia: ocultar boxes e prender o scroll">
+              👁 Boxes
+            </button>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ===================================================================
+         SINGLE DIRECT B2B WHATSAPP BRIEFING & CONTACT CARD
+    ==================================================================== -->
+    <div class="parallax-sections-stack" id="parallax-content-sheet">
+      <section id="contato" class="content-section content-section--last parallax-menu-card" data-menu-card="0" data-section-ranger="black" style="--card-z:24">
+        <div class="container">
+          <div class="contact-box">
+            <div class="contact-copy">
+              <span class="eyebrow">CONEXÃO DIRETA B2B • RESPOSTA IMEDIATA</span>
+              <h2 class="section-heading">PRONTO PARA ESCALAR <span class="text-accent">SUA OPERAÇÃO?</span></h2>
+              <p>
+                Marque os serviços que sua empresa precisa e clique em <strong>Iniciar Conversa no WhatsApp</strong> para falar diretamente comigo já com seu escopo estruturado.
+              </p>
+            </div>
+
+            <form id="briefing-form" class="briefing-form">
+              <div class="form-group">
+                <label class="form-label">1. O que vamos construir ou escalar?</label>
+                <div class="service-selector" id="service-selector">
+                  <button type="button" class="service-chip is-selected" data-service="Sistema / Software em JS" data-chip-ranger="blue">
+                    Sistema / Software em JS
+                  </button>
+                  <button type="button" class="service-chip" data-service="Site 3D / Landing Page" data-chip-ranger="red">
+                    Site 3D / Landing Page
+                  </button>
+                  <button type="button" class="service-chip" data-service="Automação IA / WhatsApp" data-chip-ranger="green">
+                    Automação IA / WhatsApp
+                  </button>
+                  <button type="button" class="service-chip" data-service="Gestão de Tráfego Pago" data-chip-ranger="yellow">
+                    Gestão de Tráfego Pago
+                  </button>
+                </div>
+              </div>
+
+              <div class="form-row">
+                <div class="form-group">
+                  <label for="client-name" class="form-label">2. Seu Nome / Empresa</label>
+                  <input type="text" id="client-name" class="form-input" placeholder="Ex: Marcos / Empresa B2B" required />
+                </div>
+                <div class="form-group">
+                  <label for="client-contact" class="form-label">3. Seu WhatsApp (opcional)</label>
+                  <input type="text" id="client-contact" class="form-input" placeholder="(00) 99999-9999" />
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label for="client-goal" class="form-label">4. Objetivo principal em 1 frase (opcional):</label>
+                <textarea id="client-goal" class="form-textarea" rows="2"
+                  placeholder="Ex: Quero automatizar meu atendimento no WhatsApp com IA e rodar tráfego pago..."></textarea>
+              </div>
+
+              <div class="form-actions">
+                <button type="submit" class="btn-whatsapp-b2b">
+                  <span class="wa-live-dot" aria-hidden="true"></span>
+                  <span>Iniciar Conversa no WhatsApp</span>
+                  <span aria-hidden="true">↗</span>
+                </button>
+                <span class="copy-feedback" id="copy-feedback" aria-live="polite"></span>
+              </div>
+            </form>
+          </div>
+        </div>
+
+        <footer class="site-footer">
+          <div class="container footer-inner">
+            <div>
+              <strong>MARCOS SIQUEIRA<span class="dot-accent">.</span></strong>
+              <span> — Programador JS · Web Design 3D · Automações IA · Tráfego Pago B2B</span>
+            </div>
+            <a href="#topo" class="back-top-link">Voltar ao palco 3D ↑</a>
+          </div>
+        </footer>
+      </section>
+    </div>
+
+  </main>
+</body>
+
+</html>

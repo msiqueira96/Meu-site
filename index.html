@@ -13,9 +13,9 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="css/liquid-motion.css?v=62" />
-  <script defer src="js/three-vendor.min.js?v=62"></script>
-  <script defer src="js/liquid-motion.js?v=62"></script>
+  <link rel="stylesheet" href="css/liquid-motion.css?v=63" />
+  <script defer src="js/three-vendor.min.js?v=63"></script>
+  <script defer src="js/liquid-motion.js?v=63"></script>
 </head>
 
 <body>
@@ -65,12 +65,26 @@
     </nav>
 
     <div class="header-actions">
-      <a href="#contato" class="cta-pill">
-        <span>Contratar Projeto</span>
+      <a href="#contato" class="btn-whatsapp-b2b" data-wa-direct="Olá Marcos Siqueira! Vim pelo seu site interativo e quero conversar sobre um projeto B2B para minha empresa.">
+        <span class="wa-live-dot" aria-hidden="true"></span>
+        <span>Falar no WhatsApp</span>
         <span aria-hidden="true">↗</span>
       </a>
     </div>
   </header>
+
+  <!-- Floating Awwwards Version Switcher (Allows testing both folders with 1 click) -->
+  <nav class="awwwards-version-switcher" aria-label="Alternar versão do site">
+    <a href="/versao-completa/" class="version-switch-link is-active">1. Versão Completa</a>
+    <a href="/versao-direta/" class="version-switch-link">2. Versão Direta WhatsApp</a>
+  </nav>
+
+  <!-- Floating Direct WhatsApp Awwwards FAB -->
+  <a href="#contato" class="wa-floating-fab" data-wa-direct="Olá Marcos Siqueira! Vim pelo seu portfólio 3D interativo e quero falar sobre uma solução para minha empresa.">
+    <span class="wa-fab-pulse" aria-hidden="true"></span>
+    <span>WhatsApp Direto</span>
+    <span aria-hidden="true">↗</span>
+  </a>
 
   <!-- Minimal Flat White Gear Icon & 3 Complete Quality Presets (Fraco / Normal / Forte) -->
   <aside class="quality-gear-widget" id="quality-gear-widget" aria-label="Qualidade do Site">
@@ -135,9 +149,10 @@
             </p>
 
             <div class="hero-actions">
-              <a href="#exemplos" class="btn-primary">
-                <span>Testar Exemplos Práticos</span>
-                <span aria-hidden="true">↓</span>
+              <a href="#contato" class="btn-whatsapp-b2b" data-wa-direct="Olá Marcos Siqueira! Vi seu site 3D interativo e quero iniciar um projeto para minha empresa.">
+                <span class="wa-live-dot" aria-hidden="true"></span>
+                <span>Chamar no WhatsApp</span>
+                <span aria-hidden="true">↗</span>
               </a>
               <button type="button" class="btn-outline" data-gl-helmet="hover">
                 <span>⚡ Segurar: Revelar Ranger</span>
@@ -666,9 +681,10 @@
               </div>
 
               <div class="form-actions">
-                <button type="submit" class="btn-primary">
-                  <span>Copiar Mensagem Pronta</span>
-                  <span aria-hidden="true">→</span>
+                <button type="submit" class="btn-whatsapp-b2b">
+                  <span class="wa-live-dot" aria-hidden="true"></span>
+                  <span>Iniciar Conversa no WhatsApp</span>
+                  <span aria-hidden="true">↗</span>
                 </button>
                 <span class="copy-feedback" id="copy-feedback" aria-live="polite"></span>
               </div>

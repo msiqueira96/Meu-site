@@ -40,7 +40,8 @@
     }, 450);
   });
 
-  const GL_ROOT = "assets/gl";
+  const ASSET_ROOT_PREFIX = document.documentElement.getAttribute("data-asset-root") || "";
+  const GL_ROOT = `${ASSET_ROOT_PREFIX}assets/gl`;
 
   const ASSETS = {
     textures: {
@@ -4176,7 +4177,11 @@
       const statusTextSpan = statusPill ? statusPill.querySelector("span:last-child") : null;
       const headlineEl = heroIntroBox.querySelector(".hero-headline");
       const bioEl = heroIntroBox.querySelector(".hero-short-bio");
-      const primaryBtn = heroIntroBox.querySelector(".btn-primary");
+      const b2bPillsEl = heroIntroBox.querySelector(".b2b-interactive-pills");
+      const b2bPitchCardEl = heroIntroBox.querySelector(".b2b-live-pitch-card");
+      const primaryBtn =
+        heroIntroBox.querySelector(".btn-primary") ||
+        heroIntroBox.querySelector(".btn-whatsapp-b2b");
       const outlineBtn = heroIntroBox.querySelector(".btn-outline");
 
       leftBoxSteps.push({
@@ -4188,20 +4193,40 @@
         type: "richText",
         el: headlineEl,
       });
-      leftBoxSteps.push({
-        type: "richText",
-        el: bioEl,
-      });
-      leftBoxSteps.push({
-        type: "richText",
-        el: primaryBtn,
-        containerEl: primaryBtn,
-      });
-      leftBoxSteps.push({
-        type: "richText",
-        el: outlineBtn,
-        containerEl: outlineBtn,
-      });
+      if (bioEl) {
+        leftBoxSteps.push({
+          type: "richText",
+          el: bioEl,
+        });
+      }
+      if (b2bPillsEl) {
+        leftBoxSteps.push({
+          type: "reveal",
+          el: b2bPillsEl,
+          weight: 14,
+        });
+      }
+      if (b2bPitchCardEl) {
+        leftBoxSteps.push({
+          type: "reveal",
+          el: b2bPitchCardEl,
+          weight: 14,
+        });
+      }
+      if (primaryBtn) {
+        leftBoxSteps.push({
+          type: "richText",
+          el: primaryBtn,
+          containerEl: primaryBtn,
+        });
+      }
+      if (outlineBtn) {
+        leftBoxSteps.push({
+          type: "richText",
+          el: outlineBtn,
+          containerEl: outlineBtn,
+        });
+      }
     }
     const leftBoxTyper = createSequenceTypewriter(leftBoxSteps);
     leftBoxTyper.setProgress(0);
@@ -4673,7 +4698,8 @@
 
       // Drive scroll-based typewriter on the headers/steps of Menu 2, Menu 3, Menu 4 as they enter
       extraSectionTypers.forEach(({ secEl, typer }, tIdx) => {
-        const cardIdx = tIdx + 1;
+        const foundIdx = menuCards.indexOf(secEl);
+        const cardIdx = foundIdx >= 0 ? foundIdx : tIdx + 1;
         const uTop = untransformedTops[cardIdx] !== undefined ? untransformedTops[cardIdx] : vh;
         const pSecWrite = clamp01((vh * 0.85 - uTop) / (vh * 0.58));
         if (uTop > vh * 1.02) {
@@ -4898,7 +4924,84 @@
     });
     updateTrafficComparison();
 
-    // 6. Contact Briefing Form
+    // 6. B2B Direct WhatsApp Conversion Engine & Interactive Service Configurator
+    const getWhatsAppNumber = () => {
+      const attr = document.documentElement.getAttribute("data-whatsapp") || "";
+      return attr.replace(/\D+/g, "");
+    };
+
+    const buildWhatsAppUrl = (messageText) => {
+      const phone = getWhatsAppNumber();
+      const encoded = encodeURIComponent(messageText);
+      if (phone && phone.length >= 10) {
+        return `https://wa.me/${phone}?text=${encoded}`;
+      }
+      return `https://api.whatsapp.com/send?text=${encoded}`;
+    };
+
+    const openWhatsAppWithMsg = (messageText) => {
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(messageText).catch(() => {});
+      }
+      const url = buildWhatsAppUrl(messageText);
+      window.open(url, "_blank", "noopener,noreferrer");
+    };
+
+    // Direct WhatsApp trigger buttons ([data-wa-direct])
+    document.querySelectorAll("[data-wa-direct]").forEach((btn) => {
+      btn.addEventListener("click", (e) => {
+        e.preventDefault();
+        const customService = btn.getAttribute("data-wa-service") || "";
+        const customMsg =
+          btn.getAttribute("data-wa-direct") ||
+          (customService
+            ? `Olá Marcos Siqueira! Vim pelo seu site interativo e quero conversar sobre *${customService}* para minha empresa.`
+            : "Olá Marcos Siqueira! Vim pelo seu site interativo e quero conversar sobre um projeto B2B para minha empresa.");
+        openWhatsAppWithMsg(customMsg);
+      });
+    });
+
+    // Interactive B2B Service Pills in Direct Version ([data-b2b-pill])
+    const b2bPills = document.querySelectorAll("[data-b2b-pill]");
+    const b2bPitchTitle = document.getElementById("b2b-live-pitch-title");
+    const b2bPitchDesc = document.getElementById("b2b-live-pitch-desc");
+    const b2bPitchMetric = document.getElementById("b2b-live-pitch-metric");
+    const b2bHeroWaBtn = document.getElementById("b2b-hero-wa-btn");
+
+    if (b2bPills.length) {
+      b2bPills.forEach((pill) => {
+        pill.addEventListener("click", () => {
+          b2bPills.forEach((p) => p.classList.toggle("is-active", p === pill));
+          const title = pill.getAttribute("data-b2b-title") || "";
+          const desc = pill.getAttribute("data-b2b-desc") || "";
+          const metric = pill.getAttribute("data-b2b-metric") || "";
+          const rangerKey = pill.getAttribute("data-b2b-ranger") || "silver";
+          const serviceName = pill.getAttribute("data-b2b-pill") || "Projeto B2B";
+
+          if (b2bPitchTitle && title) b2bPitchTitle.textContent = title;
+          if (b2bPitchDesc && desc) b2bPitchDesc.textContent = desc;
+          if (b2bPitchMetric && metric) b2bPitchMetric.textContent = metric;
+          if (b2bHeroWaBtn) {
+            b2bHeroWaBtn.setAttribute(
+              "data-wa-direct",
+              `Olá Marcos Siqueira! Vi seu site 3D interativo e quero falar sobre *${serviceName}* para minha empresa.`
+            );
+          }
+          if (typeof window.__setPortfolioRangerFromScroll === "function") {
+            window.__setPortfolioRangerFromScroll(rangerKey);
+          }
+
+          // Also sync with bottom briefing chips if present
+          document.querySelectorAll("#service-selector .service-chip").forEach((chip) => {
+            if (chip.dataset.service && chip.dataset.service.toLowerCase().includes(serviceName.split(" ")[0].toLowerCase())) {
+              chip.classList.add("is-selected");
+            }
+          });
+        });
+      });
+    }
+
+    // Contact Briefing Form -> Opens WhatsApp Directly + Copies Backup Message
     const serviceChips = document.querySelectorAll("#service-selector .service-chip");
     const clientName = document.getElementById("client-name");
     const clientContact = document.getElementById("client-contact");
@@ -4909,6 +5012,10 @@
     serviceChips.forEach((chip) => {
       chip.addEventListener("click", () => {
         chip.classList.toggle("is-selected");
+        const rKey = chip.getAttribute("data-chip-ranger");
+        if (rKey && typeof window.__setPortfolioRangerFromScroll === "function") {
+          window.__setPortfolioRangerFromScroll(rKey);
+        }
       });
     });
 
@@ -4918,20 +5025,19 @@
         const selected = Array.from(serviceChips)
           .filter((c) => c.classList.contains("is-selected"))
           .map((c) => c.dataset.service);
-        const servicesStr = selected.length ? selected.join(" + ") : "Projeto Digital";
-        const nameStr = clientName && clientName.value.trim() ? clientName.value.trim() : "";
-        const contactStr = clientContact && clientContact.value.trim() ? clientContact.value.trim() : "";
-        const goalStr = clientGoal && clientGoal.value.trim() ? clientGoal.value.trim() : "";
+        const servicesStr = selected.length ? selected.join(" + ") : "Projeto B2B Sob Medida";
+        const nameStr = clientName && clientName.value.trim() ? clientName.value.trim() : "Empresa / Parceiro B2B";
+        const contactStr = clientContact && clientContact.value.trim() ? ` (${clientContact.value.trim()})` : "";
+        const goalStr = clientGoal && clientGoal.value.trim() ? `\n• Objetivo: ${clientGoal.value.trim()}` : "";
 
-        const msg = `Olá Marcos Siqueira! Meu nome é ${nameStr} (${contactStr}). Tenho interesse em: ${servicesStr}. Objetivo: ${goalStr}`;
-        if (navigator.clipboard && navigator.clipboard.writeText) {
-          navigator.clipboard.writeText(msg).catch(() => { });
-        }
+        const msg = `Olá Marcos Siqueira! Vim pelo seu portfólio interativo.\n• Nome/Empresa: ${nameStr}${contactStr}\n• Interesse B2B: *${servicesStr}*${goalStr}`;
+        openWhatsAppWithMsg(msg);
+
         if (copyFeedback) {
-          copyFeedback.textContent = "✓ Mensagem copiada! Agora é só colar e enviar.";
+          copyFeedback.textContent = "✓ Redirecionando para o WhatsApp (mensagem também copiada)!";
           setTimeout(() => {
             copyFeedback.textContent = "";
-          }, 4000);
+          }, 5000);
         }
       });
     }
