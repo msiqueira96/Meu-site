@@ -4464,10 +4464,62 @@
     const notebookLidChin = document.getElementById("notebook-lid-chin");
     const notebookScreenGlare = document.getElementById("notebook-screen-glare");
     const notebookSiteUi = document.getElementById("notebook-site-ui");
+    const nbUrlText = notebookSiteUi ? notebookSiteUi.querySelector(".nb-url-pill span:last-child") : null;
+    const nbBrowserMeta = notebookSiteUi ? notebookSiteUi.querySelector(".nb-browser-meta") : null;
+    const nbMenuItems = notebookSiteUi ? notebookSiteUi.querySelectorAll(".nb-site-menu span") : [];
+    const nbHudLeftSpans = notebookSiteUi ? notebookSiteUi.querySelectorAll(".nb-viewport-hud-left span") : [];
+    const nbHudRightSpan = notebookSiteUi ? notebookSiteUi.querySelector(".nb-viewport-hud-right span") : null;
     const notebookBase = document.getElementById("notebook-base");
     const notebookStaticScreen = document.getElementById("notebook-static-screen");
     const heroGlWrap = heroFrameCard ? heroFrameCard.querySelector(".gl-wrap") : null;
     const notebookTvFx = document.getElementById("notebook-tv-fx");
+
+    // Subtle 3D Mouse Parallax for the Notebook Scene (Desktop only, zero impact at scrollY = 0)
+    let nbPointerX = 0;
+    let nbPointerY = 0;
+    window.addEventListener("pointermove", (e) => {
+      nbPointerX = (e.clientX / Math.max(1, window.innerWidth)) * 2 - 1;
+      nbPointerY = (e.clientY / Math.max(1, window.innerHeight)) * 2 - 1;
+    }, { passive: true });
+
+    const NB_SHOWCASE_STAGES = [
+      {
+        url: "https://marcossiqueira.com.br/studio-3d",
+        meta: "WEBGL 2.0 · 120FPS",
+        left1: "00 // HERO 3D STAGE",
+        left2: "INTERACTIVE WEBGL",
+        right: "● SISTEMA B2B ONLINE",
+      },
+      {
+        url: "https://marcossiqueira.com.br/softwares-js",
+        meta: "SAAS · ERP · OCR IA",
+        left1: "01 // SOFTWARES_JS.APP",
+        left2: "Nota_Fiscal.pdf",
+        right: "✓ Extraído em 0,7s",
+      },
+      {
+        url: "https://marcossiqueira.com.br/web-design-3d",
+        meta: "PADRÃO AWWWARDS",
+        left1: "02 // WEB_DESIGN_3D.GL",
+        left2: "Performance WebGL",
+        right: "✓ 120FPS Fluido",
+      },
+      {
+        url: "https://marcossiqueira.com.br/automacao-ia",
+        meta: "WHATSAPP IA 24/7",
+        left1: "03 // AUTOMACAO_IA.N8N",
+        left2: "Agente SDR WhatsApp",
+        right: "✓ Reunião Agendada (1,2s)",
+      },
+      {
+        url: "https://marcossiqueira.com.br/trafego-b2b",
+        meta: "META & GOOGLE ADS",
+        left1: "04 // TRAFEGO_B2B.ADS",
+        left2: "Funil B2B + IA 24h",
+        right: "✓ +60% Leads Qualificados",
+      },
+    ];
+    let lastNbStageIdx = -1;
     const tvOffScanbeam = document.getElementById("tv-off-scanbeam");
     const tvOffPhosphorDot = document.getElementById("tv-off-phosphor-dot");
     const colorCircleWidget = document.getElementById("color-circle-widget");
@@ -4746,7 +4798,8 @@
 
       if (notebookRig && notebookLid) {
         const targetNotebookScale = isMobile ? 0.84 : (vw <= 1100 ? 0.56 : 0.48);
-        const baseScale = 1 - pShrink * (1 - targetNotebookScale);
+        const pReelZoomEnd = easeInOutCubic(rangeProgress(p, 0.31, 0.36));
+        const baseScale = (1 - pShrink * (1 - targetNotebookScale)) * (1 + pReelZoomEnd * 0.08);
 
         // Shift slightly upward so the Unibody base below the lid sits balanced in the center
         const liftY = -pShrink * (isMobile ? vh * 0.025 : vh * 0.046) * (1 - easeInOutCubic(rangeProgress(pTvOff, 0.0, 0.42)));
@@ -4754,7 +4807,54 @@
         const finalScaleX = baseScale * tvScaleX;
         const finalScaleY = baseScale * tvScaleY;
 
-        notebookRig.style.transform = `translate3d(0, ${liftY.toFixed(1)}px, 0) scaleX(${finalScaleX.toFixed(4)}) scaleY(${finalScaleY.toFixed(4)})`;
+        // 3D Motion Reel Perspective & Orbital Arcs (Active ONLY while scrolled into the Notebook phase; 0deg at scrollY=0!)
+        const p3dActive = pShrink * (1 - clamp01(pTvOff * 3.5));
+        const pOrbit = rangeProgress(p, 0.04, 0.35);
+        const maxYawDeg = isMobile ? 6 : 14;
+        const maxPitchDeg = isMobile ? 3 : 6;
+        const orbitYawDeg = Math.sin(pOrbit * Math.PI * 2.0) * maxYawDeg * p3dActive + (!isMobile ? nbPointerX * 4.5 * p3dActive : 0);
+        const lidOpenPitchDeg = (1 - easeOutCubic(rangeProgress(p, 0.015, 0.12))) * -16 * p3dActive;
+        const orbitPitchDeg = lidOpenPitchDeg + Math.cos(pOrbit * Math.PI) * (maxPitchDeg * 0.5) * p3dActive + (!isMobile ? -nbPointerY * 3.0 * p3dActive : 0);
+
+        if (p3dActive > 0.002 && pTvOff < 0.02) {
+          notebookRig.style.transform =
+            `perspective(1350px) translate3d(0, ${liftY.toFixed(1)}px, 0) rotateY(${orbitYawDeg.toFixed(2)}deg) rotateX(${orbitPitchDeg.toFixed(2)}deg) scaleX(${finalScaleX.toFixed(4)}) scaleY(${finalScaleY.toFixed(4)})`;
+        } else {
+          notebookRig.style.transform = `translate3d(0, ${liftY.toFixed(1)}px, 0) scaleX(${finalScaleX.toFixed(4)}) scaleY(${finalScaleY.toFixed(4)})`;
+        }
+
+        // Dynamic Studio Rim-Light Reflection Sweep on the Metallic Lid
+        if (pBezel > 0.05) {
+          const rimX = (-orbitYawDeg * 1.8).toFixed(1);
+          notebookLid.style.boxShadow =
+            `${rimX}px 28px 85px rgba(0, 0, 0, 0.94), ${(-orbitYawDeg * 0.9).toFixed(1)}px -2px 34px rgba(0, 240, 255, ${(0.24 * pBezel).toFixed(2)}), ${(orbitYawDeg * 0.9).toFixed(1)}px 4px 42px rgba(0, 255, 102, ${(0.22 * pBezel).toFixed(2)})`;
+        } else {
+          notebookLid.style.boxShadow = "";
+        }
+
+        // Cycle the 4 MS_OS Showcases inside the Notebook's Website UI as the user scrolls through Cena 1
+        let stageIdx = 0;
+        if (p >= 0.29) stageIdx = 4;
+        else if (p >= 0.23) stageIdx = 3;
+        else if (p >= 0.17) stageIdx = 2;
+        else if (p >= 0.11) stageIdx = 1;
+        else stageIdx = 0;
+
+        if (stageIdx !== lastNbStageIdx) {
+          lastNbStageIdx = stageIdx;
+          const st = NB_SHOWCASE_STAGES[stageIdx] || NB_SHOWCASE_STAGES[0];
+          if (nbUrlText) nbUrlText.textContent = st.url;
+          if (nbBrowserMeta) nbBrowserMeta.textContent = st.meta;
+          if (nbHudLeftSpans.length >= 2) {
+            nbHudLeftSpans[0].textContent = st.left1;
+            nbHudLeftSpans[1].textContent = st.left2;
+          }
+          if (nbHudRightSpan) nbHudRightSpan.textContent = st.right;
+          nbMenuItems.forEach((mEl, mIdx) => {
+            mEl.classList.toggle("is-active", mIdx === stageIdx);
+          });
+        }
+
         notebookRig.style.opacity = tvPowerOpacity.toFixed(3);
         notebookRig.style.visibility = tvPowerOpacity <= 0.005 ? "hidden" : "visible";
         notebookRig.style.filter = pTvOff > 0.005 ? `brightness(${brightnessBoost.toFixed(2)}) contrast(${(1 + pTvOff * 0.6).toFixed(2)})` : "none";
